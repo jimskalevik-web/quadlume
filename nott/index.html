@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Quadlume</title>
+<meta name="description" content="Daily four-in-a-row puzzles.">
+<meta name="theme-color" content="#0A0F1E">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Quadlume">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;800&family=Figtree:wght@400;600;700&display=swap">
+<style>
+:root{
+  color-scheme:dark;
+  --ink:#0A0F1E;--ink-2:#121936;--board:#1B2347;--board-edge:#2A3466;--hole:#0E142B;
+  --amber:#F6B73C;--amber-glow:rgba(246,183,60,.55);--coral:#FF6B7A;--coral-glow:rgba(255,107,122,.45);
+  --good:#6FE0A8;--text:#E8ECF8;--muted:#8F98BD;--line:#253060;
+  --display:'Unbounded','Arial Black',system-ui,sans-serif;--body:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+[hidden]{display:none!important}
+*,*::before,*::after{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;-webkit-tap-highlight-color:transparent}
+html{background:var(--ink)}
+body{background:radial-gradient(120% 40% at 50% 0%,#141C3C 0%,var(--ink) 60%) var(--ink);color:var(--text);font-family:var(--body);font-size:15px;line-height:1.5;padding-inline:16px;padding-block:16px 40px}
+.wrap{max-width:440px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+p{margin:0}.muted{color:var(--muted)}.small{font-size:13px}
+.toprow{display:flex;align-items:center;gap:10px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(26px,8vw,34px);line-height:1;margin:0 auto 0 0;letter-spacing:-.02em}
+.toprow select{font:600 13px var(--body);color:var(--text);background:var(--ink-2);border:1px solid var(--line);border-radius:10px;padding:7px 8px;max-width:104px}
+.statline{display:flex;gap:14px;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.statline b{color:var(--text)}
+
+.meta{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;background:var(--ink-2);border:1px solid var(--line);border-radius:999px;padding:3px 10px}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--good)}
+.chip.n4 i{background:var(--amber)}.chip.n5 i{background:var(--coral)}
+.linkbtn{background:none;border:0;color:var(--muted);font:600 13px var(--body);cursor:pointer;padding:4px 0}
+.task{display:flex;flex-direction:column;gap:6px}
+.task h2{font-family:var(--display);font-weight:800;font-size:clamp(19px,5.6vw,24px);line-height:1.1;margin:0;text-wrap:balance}
+.pips{display:flex;gap:6px;align-items:center}
+.pips i{width:14px;height:14px;border-radius:50%;border:2px solid var(--amber);box-sizing:border-box}
+.pips i.used{background:var(--amber);box-shadow:0 0 8px var(--amber-glow)}
+.pips span{margin-left:6px;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.banner{border:1px solid var(--amber);border-radius:12px;padding:10px 12px;background:rgba(246,183,60,.08);font-size:14px}
+
+.status{min-height:44px;display:flex;flex-direction:column;justify-content:center}
+.status .main{font-family:var(--display);font-weight:500;font-size:15px}
+.status.bad .main{color:var(--coral)}.status.ok .main{color:var(--good)}
+.status .sub{color:var(--muted);font-size:13px}
+.markers{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;padding-inline:9px;height:18px}
+.markers span{display:flex;justify-content:center;align-items:flex-end;color:var(--amber);font-size:13px;visibility:hidden}
+.markers span.on{visibility:visible;animation:bob 1s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(4px)}}
+.board{background:linear-gradient(180deg,var(--board),#161D3D);border:1px solid var(--board-edge);border-radius:18px;padding:9px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;box-shadow:0 24px 60px -20px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.05);touch-action:manipulation}
+.board.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.col{display:grid;grid-template-rows:repeat(6,auto);gap:5px;border-radius:10px;padding:2px;background:none;border:0;margin:0;min-width:0;cursor:pointer}
+.col:hover:not(:disabled),.col:focus-visible{background:rgba(255,255,255,.06)}
+.col:disabled{cursor:default}
+.cell{aspect-ratio:1;border-radius:50%;position:relative;background:var(--hole);box-shadow:inset 0 2px 5px rgba(0,0,0,.55)}
+.disc{position:absolute;inset:6%;border-radius:50%}
+.disc.p1{background:radial-gradient(circle at 35% 30%,#FFE2A0,var(--amber) 45%,#C9851A);box-shadow:0 0 12px var(--amber-glow)}
+.disc.p2{background:radial-gradient(circle at 35% 30%,#FFC2C8,var(--coral) 45%,#C63A52);box-shadow:0 0 10px var(--coral-glow)}
+.disc.drop{animation:fall .36s cubic-bezier(.55,0,.8,.4)}
+@keyframes fall{from{transform:translateY(var(--fall))}}
+.disc.win{outline:3px solid #fff;outline-offset:2px;animation:winp 1s ease-in-out infinite}
+@keyframes winp{50%{outline-color:transparent}}
+
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{font:600 15px var(--body);border-radius:12px;padding:12px 16px;cursor:pointer;border:1px solid var(--line);background:var(--ink-2);color:var(--text);flex:1 1 auto;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn.primary{background:var(--amber);color:#2A1A00;border-color:transparent}
+.btn.small{padding:9px 12px;font-size:14px;flex:none}
+.panel{border:1px solid var(--line);border-radius:16px;background:var(--ink-2);padding:16px;display:flex;flex-direction:column;gap:12px}
+.verdict{font-family:var(--display);font-weight:800;font-size:26px;line-height:1.05;color:var(--good)}
+.resline{font-size:17px;font-weight:600}
+.seq{font-size:22px;letter-spacing:2px}
+.next{color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
+.next b{color:var(--text);font-family:var(--display);font-weight:500}
+label.k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+input[type=text]{width:100%;box-sizing:border-box;background:var(--ink);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;font:14px var(--body)}
+.card{border:1px dashed var(--line);border-radius:14px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:rgba(18,25,54,.6)}
+.card b{display:block}.card p{font-size:13px;color:var(--muted)}
+.card .grow{flex:1 1 180px}
+.card.hi{border-style:solid;border-color:var(--amber)}
+.x{background:none;border:0;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 6px}
+.rules{border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:8px}
+.rules h3{font-family:var(--display);font-weight:500;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0}
+.rules ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px;color:var(--muted)}
+.rules b{color:var(--text)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--text);color:var(--ink);font-weight:600;padding:10px 16px;border-radius:999px;z-index:20}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="toprow">
+      <h1>Quadlume</h1>
+      <select id="lang" aria-label="Språk"></select>
+    </div>
+  </header>
+  <div class="statline"><span>🔥 <b id="s-streak">0</b> <span data-t="streak"></span></span><span>🧩 <b id="s-total">0</b> <span data-t="total"></span></span></div>
+
+  <div class="card hi" id="install" hidden>
+    <div class="grow"><b data-t="inst_title"></b><p id="inst-text"></p></div>
+    <button class="btn primary small" id="inst-btn" type="button" data-t="inst_btn"></button>
+    <button class="x" id="inst-x" type="button" data-ta="close">×</button>
+  </div>
+
+  <div class="banner" id="chal-banner" hidden></div>
+
+  <div class="meta">
+    <span class="chip" id="chip"><i></i><span id="chip-text"></span></span>
+    <button class="linkbtn" id="back-daily" type="button" data-t="back_daily" hidden></button>
+  </div>
+  <div class="task">
+    <h2 id="task"></h2>
+    <div class="pips" id="pips"></div>
+  </div>
+
+  <div>
+    <div class="markers" id="markers" aria-hidden="true"></div>
+    <div class="board" id="board"></div>
+  </div>
+  <div class="status" id="status" aria-live="polite"><div class="main" id="st-main"></div><div class="sub" id="st-sub"></div></div>
+
+  <div class="actions" id="wrong-actions" hidden>
+    <button class="btn primary" id="retry" type="button" data-t="retry"></button>
+    <button class="btn" id="hint" type="button" data-t="hint" hidden></button>
+  </div>
+
+  <div class="panel" id="result" hidden>
+    <div class="verdict" data-t="solved"></div>
+    <div class="resline" id="res-line"></div>
+    <div class="seq" id="res-seq"></div>
+    <p id="res-cmp" hidden></p>
+    <div class="actions">
+      <button class="btn primary" id="next" type="button" data-t="next_nut"></button>
+      <button class="btn" id="challenge" type="button" data-t="challenge"></button>
+    </div>
+    <div><label class="k" for="name" data-t="name_label"></label>
+      <input type="text" id="name" maxlength="20" data-tp="name_ph" autocomplete="nickname"></div>
+    <div class="next" id="countdown" hidden><span data-t="next_in"></span> <b>00:00:00</b></div>
+  </div>
+
+  <div class="card" id="notif" hidden>
+    <div class="grow"><b data-t="notif_title"></b><p id="notif-text"></p></div>
+    <button class="btn small" id="notif-btn" type="button" data-t="notif_btn"></button>
+  </div>
+
+  <section class="rules">
+    <h3 data-t="how_title"></h3>
+    <ul><li data-th="how1"></li><li data-th="how2"></li><li data-th="how3"></li></ul>
+  </section>
+</div>
+
+<script>
+(function(){
+const PUZZLES={"d3":["3401362324","133313334115","54312504424412223012","42312425323223553356","4232253321303355","2350323424","544130534221","3422233442","3223353433264044","336512544246","231335252462","233234524201224353","1224153324","120535352133533415","5233203525122152","3401233003362516411244","2445244542243256","344522554121","15636114343523","2344441530063233","115043315332","2345311432","354222333323","31323342634531","316221332233","3542123321324233","45216152422523","2335536162","2203453231552233","331642362550430315","332442313243","433532144423","334141441436","1434154342","4221242233342511","543346343363412414","542212264562411115","111106333245652553","42521325441113","2114243133","43335522523323","546536522142","3224343313306556","21352124125341","123435213315335622","5302361252232231","542223323343","123413262045","4344443254","334235213554123300251144","3633330412","5424533244","420410312413","4244232523323325","52422612233253","315445231240","414523445325245214","6334452332342322","313302513255","3233354211361440","33325434203344","40123334442234266423","344153323516","342234312353","65223532345343","422142560014","24542521024233","235234221431","0134331203321411","022425441132","2334322442","341545433436","045331312533150322","44133121310642232311","5456333263344531441045","4222354534","3335222234422331","146325352333","6243041115333414430360","25334420322262333441","553463422033","6230530121242364324525","33326251346323","3343423131","35512412233503334655","14521443025345","203234335124","3624635452322333","30525433353130","143025532654","551333114154254430","5443234435","134403434152343321","444043334453335111611126","2202542336355412","2054224521","0344310511","234261343443122405353422","5502261423310331","244231453433","3124223144","11533350134541","132120222654633233","1323234154314444","4243653446","231110123234334144","52245016622522","3113633312341425655141","5216312432","34554414403314","2154421644223151","4361132132035543","33353334424214","311213313525","2513522464244235414211","543634554346340223","34346223322220335544","31424331433314","651252334222535265","533334253154151443"],"d4":["31241151252212","433433334244","3116341232544442242253","33212522213354","4226353426543423413532","51142235213325","344223334435154304522251","334421222202455003","035325301353251141","434312554442","333533344251","433536434334","421356353041","2344323344","31033533234010","52150455362415","6336203334632602","14214122254412","5543115421333313","454544333243","1142416544341520","343344313543","22416554233625","51555611314354511234","223434444422","135525522521503361","3335316442","444423324433","54134433114555","3424443233","26332025353233","32251322342533","3225133155504531","3462033345223051234214","3523253422","334243465420503321314411","31135433404353","25641312452152","3350323334114144","3545424421","4543113262","3342344124","411212422630632426","456213322456","63321232225111","4552441040","53253432221245","56133333255602532541","6242244344423262","3334532345","634005202234232244","22233233440223","422545324334225331","323440623335","4412262233525532","210312444551","144255444223","4413422322","353243263243223521445144","6233042443343413","322143231115","236431243304335546","12444235354433","413334143225","420525441223","4334424432","23423233351653","44234344423556","6235315332","342245242322555031","322334162042343364","6245112334","4435435636","23433141223334","24343332304645","1132232233","3424454234330142061166","421406450324","54541345464234","1134414134143613","3453453321436301","401115144144522241","3541421604433442","5524411152401414","235422115345","5313545445234436","421333233512344624","333426423245","430511563513","3441543212412252","623132643340","1441353233","332521331313","33224541125131","02313424332162","5312125115243314","145223002442","32542321345413431143","302334043521","5125545542","430112502411113565","31153314453331","4343321532","25335120644255","14302530325363","422436544351304422","3436324313","532551353211","215315311364","43344543345632","345421313342","424362224432","1425244512","531134331213","4365123332322124","2442131122445111","34430032363443","31233525322323514512","3232254555223213","5444334345423120","2336433232532154","2031251314","343462544550222344","3121241013","223034453365","545121142303","3332332234664525","310234243333","5563332114","5314454544325346","544316333544","434125441432411033322131","43126533353452663226","215324224122","425133231230244036","2223423442","024433303313","1323154524","643315343211","3633605232243032","413530333651","313435125313","3122353122233442","33353445135153","133243244334134542266125","423330221133","42303532510333","5546322115244222","6333245111","2443661226221254","423113342410","41221320201322","45522632415223","224223233533423514","423534342343243152","313533132435","2234243233","33253444213223","3342222551123162","360631233433","23501542264411","1452622335325523","4333311551","22253121233462334435","2253263531","3125354426","21535423343201","63203322243433","3453225422","455413415043","2023223130","544515552140","5143322304555133","5121533553","42166332044334423524","23452254342242","3301212633","5133344521443336","424214402321442215","2351043542","5554333343","5231336224433341412415","2523431646353553","15333421355045331455","33413501324414144133","3221122332354251","0342354134523223","4442324433455555","134114463012","326441033433342115","22434345311114","3542321444334534","5324353354","44414235543315","352225445430444123","0324532232333422","442225432352","13125223553140","0240412313","344335311345"],"d5":["2132211415352243","4146253261","4521202242420465","4541425426422212","1235243333314212452551","51134121433535","4320413431643316","345144444333165023","23053243313355","3532403365121323","3423322114","0225244232","4312161331","342245434554","2221611332533224","322161433525133213","532533505232","32151326313334","34626432224233342314","31144265450210","34506140045441","343101324423","141331332353","1515215340","24443143343313","144401341342112232214336","146536332231304412","3345344225","411314212516524425","3015316332","0051113532","31242420322433452341","4243423454","3332362322623666","231115352031","2345303444433041231221","224362433431","42222430342331","3224535345335121322524","132434424120","35555223321221","50202253333615","422542332234","561323143533","0243255421","643332334124","113234400642","662553363551","35330253335214211544","3532333341","211331341224426340","533352423554","2134232233323401","353531634250","461435441253255223","334133122412154443342621","234524532033323025","24436212204344","4412333033","3433153533","5222241022","443335553303","3443244134003345","3334324351","644214222204","224246112334","331333451552312111","44343133322301","5254222124264133","036334145233","1554542122","443246242332","1335514531","303452433312311016","312411355232133322","5225234334","21454133131550344334","2422213111344445","2124131453","4442533235","5324513142","355322322531061150","0551633311","442343264054","1244554323","5333343314412202","24555546455400","3335434222450453","2224114353","5245114621421250241433","213534431532311311","6434450021224330","2233363321","1042313330","2234413145","353412614432254255132123","15322163323462","3352343324","323243362323224661","324123353113","4240134024","53435254454254","552314422544","2451323334342341","22344542564443","136422243342235144","23033444340265","333225212244","35143133453344","236412323323"],"l3":["434323413324","422313332213","301333262436132265","3144312542","4342251153216222","21335521355605143353","2351434112","324336223114251311","1241435312","15432143353332","03135542453333164464","142253312541","2535203233","440342135521","4353313143352265","3132235133","32345311351300262445","4532224435","22626544535322","534135202431","251422422445","054032325345","4424411344331535","5533133354322644542055","50323201533501","54355444511223","333442253115","034133214513","3103424333","323622635463","5334241212442344112352","246514234030","13133240403424","124113253203221231","63223430332243","431410312555","33215441455614","23241365223522","163012112331","421313152133","3633051432","1444124144","2163523222136236","1340053411","34332215306125103324","33323032032521425026","34414415443033","2455534143","222331403224","31436144464435252230","3235233350","423314343313","21242112502443","41044243236135","533554153441","453312346531346443242220","33343435532252","31632426433523623245","321331231143","45132551123123263110"],"l4":["331045426652","2133311423","145354221345","365403513243","4232346125","124541463435","2435244331","123046316440","1323354123","321224261223","531645133241","023131124126","22536142362234","222342153242","406234253555","1243133220","446244243135","652620333113","42213643344125","3422223145","44123643341330","1342455221","431351403233","52124224452524133330","4345211223","2334312354","525051332625","3223245254","054530533341","41311540232654","2234312446","3453334651","1354242135","4232253444","2351434135","4343123233","334532334635","302402342244","312234542662","5352146342","0243162413","40213325315533","4632312444","125350330533","3434335144443132251502","355534144223360004","2432433201343344","13233546422433","132051242231","24434342542211","5334532115","4452245305244123566432","31243233513423","51306314323143","4432413542","32242444646405203233","3512233213332114","3402332410334401","2145212352","3553244231353413","4343362401444212","353334543203244644","0453441225","3143440525363243","434304531634443312","01434443223533","3321253434","532112122444","4212211322","42135434414461","2003115222346142","434044364124","35341443323635510000","321540353443","31003236133641","6342241142152133004244","24236421315233","44214335314212","333532335424","412224455563","254413113444","35053412344333","326441234226","462326322035","1525142442","1336235415","41511345261544","5421032534","56024230513551","022343505032","4133421123","323533035451","33322251543334","4135524226","452353342234","1254431443","0643220534466213232245","35433441554255","2332343423","145530233641","25425424314422201361","222332334234","5163315322153112","453432423003","1512444543054451","243231342322","3332330424","314543443514","3345422442243122","3331423312","143253353343","114531420411","3314425125","3134463344","34134255615144","25545531621345","44133431001633","123341352522","42343044354302","4334334444353262","124442552335","2520325352353401125325","4034432122352544","41424633240414","424342253224","113215211333","3265353324222236","532335513314","42303642633433","56531355353524","32122455462205","14555535144224","34313403432655","00242443053261335322","333433443200202224","333424455542","02313334302521223215","2444104420","40213553363340234442","211212441141242324553433","43343554225513424433","444223352446","34313443234365","31533431404325","2334324122","124424234522","144354354311","125422054122532440","531115535334100345423644","2162242213343320413146","2154242416455213","5412425341","2224111323433133","22233121133254154332","345046322543535524","6325343625","334132462245143614","3662243346342224","5012542334","13351143344343"],"l5":["25135251553132","30614554523125","2323313344","210340144026","533133263523","222231244531","441625422314","453335411321","4623233433","2323155133","434123301162","6425413235","513521345645","363533250121","233142321521","34463335324652","5323214113324236","3452351440","042621415410","3120341332631324","31613433651334","1621262032016504532633","5345325545","0243353243","243443413424","43231420444455323222","33345535632346","424545552433","125134403203343324","0443122152","524552440543312362","0331452415","232334551531","3535345251155111421333","22256431151613402153","122343163332242361024415","332101343524","21342203442642","32532124134422","322133323540312555","42334534213403","5554632436","44450244452332","3524224552","30341530136123","2050234255","463412463542","244224422245563633","3001125445","22333115244155","355243413153","31541334334321","2143142435","3225241325635233","332334355541","1241422325","313322333445651116","202335423033","2624412232","232544523446","6466242232252445500164","42444531433225","420353345133","5454240226441333","333225553144","2533414232342055","20134543344244012532","3514415251","4224532345","112114232432","2134532525335512","324321223315223355","243332326543","433532350423","322335244022","05444632505243","2122220442","3533310453","13255332124133","3332345143","2042135024525555","23235135524534332145","2454232532","3224411334","314221430422454436","6143113336","355015532235340332","16531534263455","332342214524433252443551","24332335414224364530","62414544360440","2551334532331231","3321243320323144","424542144326","3355523420","31450442244111141225","44524423331641303532","43423503163234","6505422331553314311220","2233342114","104544412310","5414614102222244","5433304233","33253433423221","124342204445","531633213534634222","1140425251","4613333136041245","35533532544334","5604451243","25342553323620","35525432033314","15123314524444212116","31421523332214542323","5444423426435131223323","43341430451331","234224344533553643524112","436534325325225255","353445434414511535125306","430432320343","64533211212263355554","123126212433331254","452152344543114534533236","13233533423645","1264250125321212","1064333355535512","03433421404511","31031131330424134145","1145633436","5241242503","34433245313423154222","2452454433","3314413533","4346433235233445","115561344333","333133113522555541","215345352422","3214323342255135312204","433215415254335524","3433525134245532430554"]};
+/* Løser for fire på rad-nøtter. Gul = 1 (spilleren), rød = 2. Rad 0 er nederst. */
+const W=7,H=6;
+function mkState(){return {g:Array.from({length:W},()=>Array(H).fill(0)),h:Array(W).fill(0)};}
+function fromSeq(seq){const S=mkState();let p=1;for(const ch of seq){drop(S,+ch,p);p=3-p;}return S;}
+function drop(S,c,p){const r=S.h[c];S.g[c][r]=p;S.h[c]=r+1;return r;}
+function undo(S,c){S.h[c]--;S.g[c][S.h[c]]=0;}
+function lineAt(S,c,r){
+  const p=S.g[c][r];if(!p) return null;
+  for(const [dc,dr] of [[1,0],[0,1],[1,1],[1,-1]]){
+    const line=[[c,r]];
+    for(const s of [1,-1]){let cc=c+dc*s,rr=r+dr*s;while(cc>=0&&cc<W&&rr>=0&&rr<H&&S.g[cc][rr]===p){line.push([cc,rr]);cc+=dc*s;rr+=dr*s;}}
+    if(line.length>=4) return line;
+  }
+  return null;
+}
+function immWins(S,p){const out=[];for(let c=0;c<W;c++){if(S.h[c]>=H) continue;const r=drop(S,c,p);if(lineAt(S,c,r)) out.push(c);undo(S,c);}return out;}
+/* Gul er i trekket: kan gul tvinge frem seier innen n egne trekk? */
+function canWin(S,n){
+  if(immWins(S,1).length) return true;
+  if(n<=1) return false;
+  const rw=immWins(S,2);
+  if(rw.length>1) return false;
+  for(let c=0;c<W;c++){
+    if(S.h[c]>=H) continue;
+    if(rw.length&&c!==rw[0]) continue;
+    drop(S,c,1);const ok=redAllLose(S,n-1);undo(S,c);
+    if(ok) return true;
+  }
+  return false;
+}
+/* Rød er i trekket: vinner gul innen n egne trekk uansett hva rød gjør? */
+function redAllLose(S,n){
+  if(immWins(S,2).length) return false;
+  const yt=immWins(S,1);
+  if(yt.length>=2) return n>=1;
+  let any=false;
+  for(let c=0;c<W;c++){
+    if(S.h[c]>=H) continue;
+    if(yt.length===1&&c!==yt[0]) continue;
+    any=true;
+    drop(S,c,2);const ok=canWin(S,n);undo(S,c);
+    if(!ok) return false;
+  }
+  return any;
+}
+/* Hvilke trekk for gul holder seieren innen n trekk? */
+function winningMoves(S,n){
+  const out=[];
+  for(let c=0;c<W;c++){
+    if(S.h[c]>=H) continue;
+    const r=drop(S,c,1);
+    const ok=!!lineAt(S,c,r)||(n>1&&redAllLose(S,n-1));
+    undo(S,c);
+    if(ok) out.push(c);
+  }
+  return out;
+}
+function minWin(S,max){for(let n=1;n<=max;n++) if(canWin(S,n)) return n;return 0;}
+/* Rødts beste forsvar: vinn selv, ellers avverg, ellers hold ut lengst mulig. n = trekk gul har igjen. */
+function redReply(S,n){
+  let best=-1,bs=-1e9;
+  for(let c=0;c<W;c++){
+    if(S.h[c]>=H) continue;
+    const r=drop(S,c,2);let s;
+    if(lineAt(S,c,r)) s=1000;
+    else{const m=n>0?minWin(S,n):0;s=m===0?500:m*10;}
+    undo(S,c);
+    s-=Math.abs(c-3)*0.1;
+    if(s>bs){bs=s;best=c;}
+  }
+  return best;
+}
+const LANGS=[['nb','Norsk'],['en','English'],['sv','Svenska'],['da','Dansk'],['de','Deutsch'],['es','Español']];
+const LOCALES={nb:'nb-NO',en:'en-GB',sv:'sv-SE',da:'da-DK',de:'de-DE',es:'es-ES'};
+const I18N={
+nb:{language:'Språk',tagline:'Fire på rad-nøtter. Finn trekkene som vinner.',
+daily_no:'Dagens nøtt #{n}',extra_no:'Nøtt {n}',chal_no:'Utfordring',diff_3:'Lett',diff_4:'Middels',diff_5:'Vanskelig',
+task:'Gul vinner på {n} trekk',moves:'Trekk {a} av {n}',
+st_start:'Du er gul. Trykk på en kolonne.',st_good:'Riktig! Rød svarer …',st_next:'Riktig. Finn neste trekk.',
+st_wrong:'Rød slapp unna',st_wrong_sub:'Det trekket vinner ikke på {n} trekk.',st_hint:'Pilen viser riktig trekk.',
+st_done:'Fire på rad!',st_solved_before:'Du har løst denne nøtten.',
+retry:'Prøv igjen',hint:'Vis et trekk',
+solved:'Løst!',res_1:'På første forsøk',res_n:'På {n} forsøk',res_hint:'Med hint',
+challenge:'Utfordre en venn',next_nut:'En nøtt til',back_daily:'‹ Dagens nøtt',
+streak:'dager på rad',total:'nøtter løst',next_in:'Ny nøtt om',
+chal_from:'{o} løste denne nøtten: {r}. Klarer du det bedre?',cmp_win:'Du slo {o}!',cmp_tie:'Likt med {o}.',cmp_loss:'{o} var bedre denne gangen.',
+share_msg:'Jeg løste denne Quadlume-nøtten: {r}. Klarer du det bedre?',
+name_label:'Navnet ditt i utfordringer',name_ph:'F.eks. Alex',friend:'En venn',
+inst_title:'Legg Quadlume på hjemskjermen',inst_text:'Da er dagens nøtt ett trykk unna.',inst_btn:'Installer',
+inst_ios:'Trykk Del-knappen nederst i Safari og velg «Legg til på Hjem-skjerm».',inst_other:'Åpne menyen i nettleseren (⋮) og velg «Installer app» eller «Legg til på startskjermen».',close:'Lukk',
+notif_title:'Varsel når dagens nøtt er klar',notif_text:'Du får et varsel og et merke på app-ikonet.',notif_btn:'Slå på varsel',notif_on:'Varsel er slått på.',
+notif_denied:'Varsler er blokkert. Du kan slå dem på i innstillingene for nettstedet.',notif_unsup:'Nettleseren støtter ikke varsler her. Installer appen først og prøv igjen.',
+push_title:'Dagens nøtt er klar',push_body:'Finner du trekkene som vinner?',
+how_title:'Slik spiller du',how1:'Du er gul. Finn trekkene som gir <b>fire på rad</b> innen antall trekk som står over brettet.',
+how2:'Rød forsvarer seg så godt det går. Bare trekk som fortsatt vinner i tide, godtas.',how3:'Alle får samme nøtt hver dag. Den er lettest på mandag og vanskeligst i helgen.',
+copied:'Kopiert!',col_aria:'Slipp i kolonne {c}'},
+en:{language:'Language',tagline:'Four-in-a-row puzzles. Find the winning moves.',
+daily_no:'Daily puzzle #{n}',extra_no:'Puzzle {n}',chal_no:'Challenge',diff_3:'Easy',diff_4:'Medium',diff_5:'Hard',
+task:'Yellow wins in {n} moves',moves:'Move {a} of {n}',
+st_start:'You’re yellow. Tap a column.',st_good:'Correct! Red replies …',st_next:'Correct. Find the next move.',
+st_wrong:'Red got away',st_wrong_sub:'That move doesn’t win in {n} moves.',st_hint:'The arrow shows the right move.',
+st_done:'Four in a row!',st_solved_before:'You’ve solved this puzzle.',
+retry:'Try again',hint:'Show a move',
+solved:'Solved!',res_1:'On the first try',res_n:'In {n} tries',res_hint:'With a hint',
+challenge:'Challenge a friend',next_nut:'One more puzzle',back_daily:'‹ Daily puzzle',
+streak:'day streak',total:'puzzles solved',next_in:'New puzzle in',
+chal_from:'{o} solved this puzzle: {r}. Can you do better?',cmp_win:'You beat {o}!',cmp_tie:'Level with {o}.',cmp_loss:'{o} did better this time.',
+share_msg:'I solved this Quadlume puzzle: {r}. Can you do better?',
+name_label:'Your name in challenges',name_ph:'E.g. Alex',friend:'A friend',
+inst_title:'Add Quadlume to your home screen',inst_text:'Then the daily puzzle is one tap away.',inst_btn:'Install',
+inst_ios:'Tap the Share button at the bottom of Safari and choose “Add to Home Screen”.',inst_other:'Open the browser menu (⋮) and choose “Install app” or “Add to Home screen”.',close:'Close',
+notif_title:'Get notified when the daily puzzle is ready',notif_text:'You get a notification and a badge on the app icon.',notif_btn:'Turn on notifications',notif_on:'Notifications are on.',
+notif_denied:'Notifications are blocked. You can turn them on in the site settings.',notif_unsup:'This browser doesn’t support notifications here. Install the app first and try again.',
+push_title:'The daily puzzle is ready',push_body:'Can you find the winning moves?',
+how_title:'How to play',how1:'You’re yellow. Find the moves that give <b>four in a row</b> within the number of moves shown above the board.',
+how2:'Red defends as well as it can. Only moves that still win in time are accepted.',how3:'Everyone gets the same puzzle each day. It’s easiest on Monday and hardest at the weekend.',
+copied:'Copied!',col_aria:'Drop in column {c}'},
+sv:{language:'Språk',tagline:'Fyra i rad-nötter. Hitta dragen som vinner.',
+daily_no:'Dagens nöt #{n}',extra_no:'Nöt {n}',chal_no:'Utmaning',diff_3:'Lätt',diff_4:'Medel',diff_5:'Svår',
+task:'Gul vinner på {n} drag',moves:'Drag {a} av {n}',
+st_start:'Du är gul. Tryck på en kolumn.',st_good:'Rätt! Röd svarar …',st_next:'Rätt. Hitta nästa drag.',
+st_wrong:'Röd kom undan',st_wrong_sub:'Det draget vinner inte på {n} drag.',st_hint:'Pilen visar rätt drag.',
+st_done:'Fyra i rad!',st_solved_before:'Du har löst den här nöten.',
+retry:'Försök igen',hint:'Visa ett drag',
+solved:'Löst!',res_1:'På första försöket',res_n:'På {n} försök',res_hint:'Med ledtråd',
+challenge:'Utmana en vän',next_nut:'En nöt till',back_daily:'‹ Dagens nöt',
+streak:'dagar i rad',total:'lösta nötter',next_in:'Ny nöt om',
+chal_from:'{o} löste den här nöten: {r}. Klarar du det bättre?',cmp_win:'Du slog {o}!',cmp_tie:'Lika med {o}.',cmp_loss:'{o} var bättre den här gången.',
+share_msg:'Jag löste den här Quadlume-nöten: {r}. Klarar du det bättre?',
+name_label:'Ditt namn i utmaningar',name_ph:'T.ex. Alex',friend:'En vän',
+inst_title:'Lägg Quadlume på hemskärmen',inst_text:'Då är dagens nöt ett tryck bort.',inst_btn:'Installera',
+inst_ios:'Tryck på Dela-knappen längst ned i Safari och välj ”Lägg till på hemskärmen”.',inst_other:'Öppna webbläsarens meny (⋮) och välj ”Installera app” eller ”Lägg till på startskärmen”.',close:'Stäng',
+notif_title:'Avisering när dagens nöt är klar',notif_text:'Du får en avisering och en bricka på appikonen.',notif_btn:'Slå på aviseringar',notif_on:'Aviseringar är på.',
+notif_denied:'Aviseringar är blockerade. Du kan slå på dem i webbplatsens inställningar.',notif_unsup:'Webbläsaren stöder inte aviseringar här. Installera appen först och försök igen.',
+push_title:'Dagens nöt är klar',push_body:'Hittar du dragen som vinner?',
+how_title:'Så spelar du',how1:'Du är gul. Hitta dragen som ger <b>fyra i rad</b> inom det antal drag som står ovanför brädet.',
+how2:'Röd försvarar sig så gott det går. Bara drag som fortfarande vinner i tid godkänns.',how3:'Alla får samma nöt varje dag. Den är lättast på måndag och svårast på helgen.',
+copied:'Kopierat!',col_aria:'Släpp i kolumn {c}'},
+da:{language:'Sprog',tagline:'Fire på stribe-nødder. Find de træk, der vinder.',
+daily_no:'Dagens nød #{n}',extra_no:'Nød {n}',chal_no:'Udfordring',diff_3:'Let',diff_4:'Mellem',diff_5:'Svær',
+task:'Gul vinder på {n} træk',moves:'Træk {a} af {n}',
+st_start:'Du er gul. Tryk på en kolonne.',st_good:'Rigtigt! Rød svarer …',st_next:'Rigtigt. Find det næste træk.',
+st_wrong:'Rød slap væk',st_wrong_sub:'Det træk vinder ikke på {n} træk.',st_hint:'Pilen viser det rigtige træk.',
+st_done:'Fire på stribe!',st_solved_before:'Du har løst denne nød.',
+retry:'Prøv igen',hint:'Vis et træk',
+solved:'Løst!',res_1:'I første forsøg',res_n:'På {n} forsøg',res_hint:'Med hint',
+challenge:'Udfordr en ven',next_nut:'En nød til',back_daily:'‹ Dagens nød',
+streak:'dage i træk',total:'nødder løst',next_in:'Ny nød om',
+chal_from:'{o} løste denne nød: {r}. Kan du gøre det bedre?',cmp_win:'Du slog {o}!',cmp_tie:'Lige med {o}.',cmp_loss:'{o} var bedre denne gang.',
+share_msg:'Jeg løste denne Quadlume-nød: {r}. Kan du gøre det bedre?',
+name_label:'Dit navn i udfordringer',name_ph:'Fx Alex',friend:'En ven',
+inst_title:'Læg Quadlume på hjemmeskærmen',inst_text:'Så er dagens nød ét tryk væk.',inst_btn:'Installer',
+inst_ios:'Tryk på Del-knappen nederst i Safari, og vælg »Føj til hjemmeskærm«.',inst_other:'Åbn browserens menu (⋮), og vælg »Installer app« eller »Føj til startskærm«.',close:'Luk',
+notif_title:'Notifikation, når dagens nød er klar',notif_text:'Du får en notifikation og et mærke på appikonet.',notif_btn:'Slå notifikationer til',notif_on:'Notifikationer er slået til.',
+notif_denied:'Notifikationer er blokeret. Du kan slå dem til i indstillingerne for webstedet.',notif_unsup:'Browseren understøtter ikke notifikationer her. Installer appen først, og prøv igen.',
+push_title:'Dagens nød er klar',push_body:'Kan du finde de træk, der vinder?',
+how_title:'Sådan spiller du',how1:'Du er gul. Find de træk, der giver <b>fire på stribe</b> inden for det antal træk, der står over brættet.',
+how2:'Rød forsvarer sig så godt, den kan. Kun træk, der stadig vinder i tide, godkendes.',how3:'Alle får den samme nød hver dag. Den er lettest om mandagen og sværest i weekenden.',
+copied:'Kopieret!',col_aria:'Slip i kolonne {c}'},
+de:{language:'Sprache',tagline:'Vier-gewinnt-Rätsel. Finde die Gewinnzüge.',
+daily_no:'Tagesrätsel #{n}',extra_no:'Rätsel {n}',chal_no:'Herausforderung',diff_3:'Leicht',diff_4:'Mittel',diff_5:'Schwer',
+task:'Gelb gewinnt in {n} Zügen',moves:'Zug {a} von {n}',
+st_start:'Du bist Gelb. Tipp auf eine Spalte.',st_good:'Richtig! Rot antwortet …',st_next:'Richtig. Finde den nächsten Zug.',
+st_wrong:'Rot ist entkommen',st_wrong_sub:'Dieser Zug gewinnt nicht in {n} Zügen.',st_hint:'Der Pfeil zeigt den richtigen Zug.',
+st_done:'Vier in einer Reihe!',st_solved_before:'Du hast dieses Rätsel gelöst.',
+retry:'Nochmal versuchen',hint:'Einen Zug zeigen',
+solved:'Gelöst!',res_1:'Beim ersten Versuch',res_n:'In {n} Versuchen',res_hint:'Mit Hinweis',
+challenge:'Freund herausfordern',next_nut:'Noch ein Rätsel',back_daily:'‹ Tagesrätsel',
+streak:'Tage in Folge',total:'Rätsel gelöst',next_in:'Neues Rätsel in',
+chal_from:'{o} hat dieses Rätsel gelöst: {r}. Schaffst du es besser?',cmp_win:'Du hast {o} geschlagen!',cmp_tie:'Gleichauf mit {o}.',cmp_loss:'{o} war diesmal besser.',
+share_msg:'Ich habe dieses Quadlume-Rätsel gelöst: {r}. Schaffst du es besser?',
+name_label:'Dein Name in Herausforderungen',name_ph:'Z. B. Alex',friend:'Ein Freund',
+inst_title:'Quadlume zum Startbildschirm hinzufügen',inst_text:'Dann ist das Tagesrätsel nur einen Tipp entfernt.',inst_btn:'Installieren',
+inst_ios:'Tipp unten in Safari auf „Teilen“ und wähle „Zum Home-Bildschirm“.',inst_other:'Öffne das Browsermenü (⋮) und wähle „App installieren“ oder „Zum Startbildschirm hinzufügen“.',close:'Schließen',
+notif_title:'Benachrichtigung, wenn das Tagesrätsel bereit ist',notif_text:'Du bekommst eine Benachrichtigung und ein Kennzeichen am App-Symbol.',notif_btn:'Benachrichtigungen einschalten',notif_on:'Benachrichtigungen sind eingeschaltet.',
+notif_denied:'Benachrichtigungen sind blockiert. Du kannst sie in den Website-Einstellungen einschalten.',notif_unsup:'Der Browser unterstützt hier keine Benachrichtigungen. Installiere zuerst die App und versuch es noch einmal.',
+push_title:'Das Tagesrätsel ist bereit',push_body:'Findest du die Gewinnzüge?',
+how_title:'So wird gespielt',how1:'Du bist Gelb. Finde die Züge, die <b>vier in einer Reihe</b> bringen, innerhalb der Zugzahl über dem Brett.',
+how2:'Rot verteidigt sich, so gut es geht. Nur Züge, die noch rechtzeitig gewinnen, werden angenommen.',how3:'Alle bekommen jeden Tag dasselbe Rätsel. Montags ist es am leichtesten, am Wochenende am schwersten.',
+copied:'Kopiert!',col_aria:'In Spalte {c} werfen'},
+es:{language:'Idioma',tagline:'Acertijos de cuatro en raya. Encuentra las jugadas ganadoras.',
+daily_no:'Acertijo del día n.º {n}',extra_no:'Acertijo {n}',chal_no:'Reto',diff_3:'Fácil',diff_4:'Medio',diff_5:'Difícil',
+task:'El amarillo gana en {n} jugadas',moves:'Jugada {a} de {n}',
+st_start:'Eres el amarillo. Pulsa una columna.',st_good:'¡Correcto! El rojo responde…',st_next:'Correcto. Encuentra la siguiente jugada.',
+st_wrong:'El rojo se ha escapado',st_wrong_sub:'Esa jugada no gana en {n} jugadas.',st_hint:'La flecha muestra la jugada correcta.',
+st_done:'¡Cuatro en raya!',st_solved_before:'Ya has resuelto este acertijo.',
+retry:'Intentar de nuevo',hint:'Mostrar una jugada',
+solved:'¡Resuelto!',res_1:'Al primer intento',res_n:'En {n} intentos',res_hint:'Con pista',
+challenge:'Retar a un amigo',next_nut:'Otro acertijo',back_daily:'‹ Acertijo del día',
+streak:'días seguidos',total:'acertijos resueltos',next_in:'Nuevo acertijo en',
+chal_from:'{o} resolvió este acertijo: {r}. ¿Puedes hacerlo mejor?',cmp_win:'¡Has ganado a {o}!',cmp_tie:'Empate con {o}.',cmp_loss:'{o} lo hizo mejor esta vez.',
+share_msg:'He resuelto este acertijo de Quadlume: {r}. ¿Puedes hacerlo mejor?',
+name_label:'Tu nombre en los retos',name_ph:'P. ej. Alex',friend:'Un amigo',
+inst_title:'Añade Quadlume a tu pantalla de inicio',inst_text:'Así tendrás el acertijo del día a un toque.',inst_btn:'Instalar',
+inst_ios:'Pulsa el botón Compartir en la parte inferior de Safari y elige «Añadir a pantalla de inicio».',inst_other:'Abre el menú del navegador (⋮) y elige «Instalar aplicación» o «Añadir a pantalla de inicio».',close:'Cerrar',
+notif_title:'Aviso cuando el acertijo del día esté listo',notif_text:'Recibirás una notificación y una marca en el icono de la app.',notif_btn:'Activar notificaciones',notif_on:'Las notificaciones están activadas.',
+notif_denied:'Las notificaciones están bloqueadas. Puedes activarlas en los ajustes del sitio.',notif_unsup:'El navegador no admite notificaciones aquí. Instala primero la app e inténtalo de nuevo.',
+push_title:'El acertijo del día está listo',push_body:'¿Encuentras las jugadas ganadoras?',
+how_title:'Cómo se juega',how1:'Eres el amarillo. Encuentra las jugadas que dan <b>cuatro en raya</b> dentro del número de jugadas indicado sobre el tablero.',
+how2:'El rojo se defiende lo mejor que puede. Solo se aceptan las jugadas que siguen ganando a tiempo.',how3:'Todos reciben el mismo acertijo cada día. El lunes es el más fácil y el fin de semana, el más difícil.',
+copied:'¡Copiado!',col_aria:'Soltar en la columna {c}'}
+};
+const APP_NAME='Quadlume',BASE_URL='https://quadlume.com/nott/';
+const LAUNCH=Date.UTC(2026,8,1);
+const $=id=>document.getElementById(id);
+const EMBEDDED=(()=>{try{return window.top!==window.self;}catch(e){return true;}})();
+
+/* ---------- lagring og språk ---------- */
+let store={v:2,lang:null,name:'',daily:{},cur:null,extra:0,notif:false,instX:0};
+try{const s=JSON.parse(localStorage.getItem('qn-v1')||'null');if(s&&typeof s==='object'){const old=(s.v||1)<2;store=Object.assign(store,s);if(old){store.v=2;store.cur=null;store.base=(store.base||0)+(store.extra||0);store.extra=0;store.fresh=true;}}}catch(e){}
+function save(){try{localStorage.setItem('qn-v1',JSON.stringify(store));}catch(e){}}
+function detectLang(){
+  const list=(navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||'en']);
+  for(const l of list){const b=String(l).toLowerCase().split('-')[0];if(b==='nb'||b==='nn'||b==='no') return 'nb';if(I18N[b]) return b;}
+  return 'en';
+}
+let lang=store.lang&&I18N[store.lang]?store.lang:detectLang();
+function t(k,p){let s=(I18N[lang]&&I18N[lang][k]!=null)?I18N[lang][k]:(I18N.en[k]!=null?I18N.en[k]:k);if(p) s=s.replace(/\{(\w+)\}/g,(m,x)=>p[x]!=null?p[x]:m);return s;}
+function locale(){return LOCALES[lang]||'en-GB';}
+function applyStatic(){
+  document.documentElement.lang=lang;
+  document.querySelectorAll('[data-t]').forEach(el=>{el.textContent=t(el.dataset.t);});
+  document.querySelectorAll('[data-th]').forEach(el=>{el.innerHTML=t(el.dataset.th);});
+  document.querySelectorAll('[data-tp]').forEach(el=>{el.placeholder=t(el.dataset.tp);});
+  document.querySelectorAll('[data-ta]').forEach(el=>{el.setAttribute('aria-label',t(el.dataset.ta));});
+  $('lang').setAttribute('aria-label',t('language'));
+}
+const sel=$('lang');
+LANGS.forEach(([c,n])=>{const o=document.createElement('option');o.value=c;o.textContent=n;sel.appendChild(o);});
+sel.value=lang;
+sel.addEventListener('change',()=>{lang=sel.value;store.lang=lang;save();applyStatic();render();writeState();});
+
+/* ---------- hvilke nøtter ---------- */
+function todayIdx(){const d=new Date();return Math.floor((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())-LAUNCH)/864e5)+1;}
+function weekdayOf(d){return (new Date(LAUNCH+(d-1)*864e5).getUTCDay()+6)%7;} /* mandag = 0 */
+function dailySpec(d){
+  const m=weekdayOf(d),week=Math.floor((d-1+weekdayOf(1))/7);
+  let N,idx;
+  if(m<2){N=3;idx=week*2+m;}else if(m<5){N=4;idx=week*3+(m-2);}else{N=5;idx=week*2+(m-5);}
+  const pool=PUZZLES['d'+N];return {seq:pool[idx%pool.length],N};
+}
+function ladderSpec(i){
+  const cnt={3:0,4:0,5:0};let N=3;
+  for(let k=0;k<=i;k++){N=k<4?3:k<14?4:((k-14)%3===2?5:4);if(k<i) cnt[N]++;}
+  const pool=PUZZLES['l'+N];return {seq:pool[cnt[N]%pool.length],N};
+}
+
+/* ---------- spilltilstand ---------- */
+let mode=null,game=null;
+function modeKey(m){return m.kind==='daily'?'d'+m.day:m.kind==='extra'?'x'+m.idx:'c'+m.src.t+m.src.id;}
+function specFor(m){
+  if(m.kind==='daily') return dailySpec(m.day);
+  if(m.kind==='extra') return ladderSpec(m.idx);
+  return m.src.t==='d'?dailySpec(m.src.id):ladderSpec(m.src.id);
+}
+function open(m){
+  mode=m;const spec=specFor(m),key=modeKey(m);
+  const cur=store.cur&&store.cur.key===key?store.cur:null;
+  game={spec,S:fromSeq(spec.seq),n:spec.N,used:0,fails:cur?cur.fails:0,hint:cur?(+cur.hint||0):0,hf:cur?(cur.hf||0):0,phase:'play',winLine:null,dropAnim:null,msg:'start'};
+  if(m.kind==='daily'&&store.daily[m.day]){const r=store.daily[m.day];game.fails=r.a-1;game.hint=r.h?1:0;game.phase='done';game.msg='before';}
+  render();
+}
+function saveCur(){store.cur={key:modeKey(mode),fails:game.fails,hint:game.hint,hf:game.hf};save();}
+function reset(){const g=game;g.S=fromSeq(g.spec.seq);g.n=g.spec.N;g.used=0;g.winLine=null;g.dropAnim=null;g.phase='play';g.msg=g.hint?'hint':'start';render();}
+
+function tap(c){
+  const g=game;if(!g||g.phase!=='play'||g.S.h[c]>=H) return;
+  const good=winningMoves(g.S,g.n).includes(c);
+  const r=drop(g.S,c,1);g.dropAnim={c,r};g.used++;
+  if(good){
+    const line=lineAt(g.S,c,r);
+    if(line){g.winLine=line;return finish();}
+    g.n--;g.phase='busy';g.msg='good';render();
+    setTimeout(()=>{if(game!==g) return;const rc=redReply(g.S,g.n);const rr=drop(g.S,rc,2);g.dropAnim={c:rc,r:rr};g.phase='play';g.msg='next';render();},650);
+  }else{
+    g.phase='busy';g.msg='wrong';render();
+    setTimeout(()=>{
+      if(game!==g) return;
+      const rc=redReply(g.S,Math.max(1,g.n-1));
+      if(rc>=0){const rr=drop(g.S,rc,2);g.dropAnim={c:rc,r:rr};const l=lineAt(g.S,rc,rr);if(l) g.winLine=l;}
+      g.fails++;saveCur();g.phase='wrong';render();
+      const b=$('board');b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake');
+    },650);
+  }
+}
+function finish(){
+  const g=game;g.phase='done';g.msg='done';
+  const a=g.fails+1,h=g.hint?1:0,today=todayIdx();
+  if(mode.kind==='daily'){if(!store.daily[mode.day]) store.daily[mode.day]={a,h};}
+  else if(mode.kind==='extra'){store.extra=Math.max(store.extra,mode.idx+1);}
+  store.cur=null;save();render();updateBadge();writeState();
+}
+$('retry').addEventListener('click',reset);
+$('hint').addEventListener('click',()=>{game.hint++;game.hf=game.fails;saveCur();reset();});
+
+/* ---------- resultat ---------- */
+function resText(a,h){return h?t('res_hint'):a===1?t('res_1'):t('res_n',{n:a});}
+function lcFirst(s){return s.charAt(0).toLowerCase()+s.slice(1);}
+function rankOf(a,h){return h?99:a;}
+function streak(){const td=todayIdx();let d=store.daily[td]?td:td-1,n=0;while(store.daily[d]){n++;d--;}return n;}
+function totalSolved(){return Object.keys(store.daily).length+store.extra+(store.base||0);}
+
+/* ---------- visning ---------- */
+function render(){
+  const g=game,N=g.spec.N,S=g.S;
+  $('s-streak').textContent=streak();$('s-total').textContent=totalSolved();
+  const chip=$('chip');chip.className='chip n'+N;
+  $('chip-text').textContent=(mode.kind==='daily'?t('daily_no',{n:mode.day}):mode.kind==='extra'?t('extra_no',{n:mode.idx+1}):t('chal_no'))+' · '+t('diff_'+N);
+  $('back-daily').hidden=mode.kind==='daily';
+  $('task').textContent=t('task',{n:N});
+  const pips=$('pips');pips.innerHTML='';
+  for(let i=0;i<N;i++){const p=document.createElement('i');if(i<g.used) p.className='used';pips.appendChild(p);}
+  if(g.phase!=='done'){const sp=document.createElement('span');sp.textContent=t('moves',{a:Math.min(g.used+1,N),n:N});pips.appendChild(sp);}
+
+  const opp=mode.opp,bn=$('chal-banner');
+  bn.hidden=!opp||g.phase==='done';
+  if(opp) bn.textContent=t('chal_from',{o:opp.name,r:lcFirst(resText(opp.a,opp.h))});
+
+  const winSet=new Set((g.winLine||[]).map(([c,r])=>c+','+r));
+  const bd=$('board');bd.innerHTML='';
+  const can=g.phase==='play';
+  for(let c=0;c<W;c++){
+    const col=document.createElement('button');col.type='button';col.className='col';col.disabled=!can||S.h[c]>=H;
+    col.setAttribute('aria-label',t('col_aria',{c:c+1}));
+    col.addEventListener('click',()=>tap(c));
+    for(let r=H-1;r>=0;r--){
+      const cell=document.createElement('div');cell.className='cell';
+      const v=S.g[c][r];
+      if(v){const d=document.createElement('div');d.className='disc p'+v;
+        if(g.dropAnim&&g.dropAnim.c===c&&g.dropAnim.r===r){d.classList.add('drop');d.style.setProperty('--fall',`-${(H-r)*110}%`);}
+        if(winSet.has(c+','+r)) d.classList.add('win');
+        cell.appendChild(d);}
+      col.appendChild(cell);
+    }
+    bd.appendChild(col);
+  }
+  g.dropAnim=null;
+  const mk=$('markers');mk.innerHTML='';
+  const key=(g.hint>g.used&&g.phase==='play')?winningMoves(S,g.n)[0]:-1;
+  for(let c=0;c<W;c++){const s=document.createElement('span');s.textContent='▼';if(c===key) s.className='on';mk.appendChild(s);}
+
+  const st=$('status');let main='',sub='',cls='';
+  if(g.msg==='start'){main=t('st_start');}
+  else if(g.msg==='hint'){main=t('st_start');sub=t('st_hint');}
+  else if(g.msg==='good'){main=t('st_good');cls='ok';}
+  else if(g.msg==='next'){main=t('st_next');cls='ok';}
+  else if(g.msg==='wrong'){main=t('st_wrong');sub=t('st_wrong_sub',{n:N});cls='bad';}
+  else if(g.msg==='done'){main=t('st_done');cls='ok';}
+  else if(g.msg==='before'){main=t('st_solved_before');}
+  st.className='status '+cls;$('st-main').textContent=main;$('st-sub').textContent=sub;
+
+  $('wrong-actions').hidden=g.phase!=='wrong';
+  $('hint').hidden=!(g.fails-g.hf>=3&&g.hint<N-1);
+
+  const done=g.phase==='done';$('result').hidden=!done;
+  if(done){
+    const a=g.fails+1,h=g.hint;
+    $('res-line').textContent=resText(a,h);
+    $('res-seq').textContent='🟥'.repeat(Math.min(g.fails,8))+(h?'💡':'')+'🟩';
+    const cmp=$('res-cmp');cmp.hidden=!opp;
+    if(opp){const me=rankOf(a,h),ot=rankOf(opp.a,opp.h);cmp.textContent=t(me<ot?'cmp_win':me>ot?'cmp_loss':'cmp_tie',{o:opp.name})+' ('+opp.name+': '+lcFirst(resText(opp.a,opp.h))+')';}
+    $('name').value=store.name||'';
+    $('countdown').hidden=!(mode.kind==='daily'&&mode.day===todayIdx());
+  }
+  renderCards();
+}
+$('back-daily').addEventListener('click',()=>open({kind:'daily',day:todayIdx()}));
+$('next').addEventListener('click',()=>open({kind:'extra',idx:mode.kind==='extra'?mode.idx+1:store.extra}));
+$('name').addEventListener('input',e=>{store.name=e.target.value.slice(0,20);save();});
+
+/* ---------- utfordring ---------- */
+function toast(msg){const el=document.createElement('div');el.className='toast';el.setAttribute('role','status');el.textContent=msg;document.body.appendChild(el);setTimeout(()=>el.remove(),2600);}
+function challengeLink(){
+  const src=mode.kind==='daily'?['d',mode.day]:mode.kind==='extra'?['x',mode.idx]:[mode.src.t,mode.src.id];
+  const name=((store.name||'').trim()||t('friend')).replace(/[.\s]+/g,'_').slice(0,20);
+  return BASE_URL+'#c.'+src[0]+'.'+src[1]+'.'+(game.fails+1)+'.'+(game.hint?1:0)+'.'+encodeURIComponent(name);
+}
+$('challenge').addEventListener('click',async()=>{
+  const msg=t('share_msg',{r:lcFirst(resText(game.fails+1,game.hint))}),url=challengeLink();
+  if(navigator.share){try{await navigator.share({title:APP_NAME,text:msg,url});return;}catch(e){if(e&&e.name==='AbortError') return;}}
+  try{await navigator.clipboard.writeText(msg+'\n'+url);toast(t('copied'));}catch(e){toast(url);}
+});
+let viaChallenge=false;
+function parseHash(){
+  let raw=(location.hash||'').slice(1);if(!raw) return null;
+  try{raw=decodeURIComponent(raw);}catch(e){}
+  const m=/^c\.(d|x)\.(\d+)\.(\d+)\.(0|1)\.(.+)$/.exec(raw);if(!m) return null;
+  try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}
+  const id=+m[2],opp={name:m[5].replace(/_/g,' ').slice(0,20),a:Math.max(1,+m[3]),h:+m[4]===1};
+  if(m[1]==='d'){const td=todayIdx();if(id>td||id<1) return null;if(id===td) return {kind:'daily',day:td,opp};}
+  return {kind:'chal',src:{t:m[1],id},opp};
+}
+window.addEventListener('hashchange',()=>{const m=parseHash();if(m){viaChallenge=true;open(m);}});
+
+/* ---------- installering ---------- */
+let deferred=null;
+function standalone(){return (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;}
+const IOS=/iphone|ipad|ipod/i.test(navigator.userAgent||'');
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;renderCards();});
+window.addEventListener('appinstalled',()=>{deferred=null;renderCards();});
+$('inst-btn').addEventListener('click',async()=>{if(!deferred) return;deferred.prompt();try{await deferred.userChoice;}catch(e){}deferred=null;renderCards();});
+$('inst-x').addEventListener('click',()=>{store.instX=todayIdx();save();renderCards();});
+function renderCards(){
+  const td=todayIdx(),any=totalSolved()>0;
+  const showInst=!EMBEDDED&&!standalone()&&(viaChallenge||(store.instX!==td&&(any||deferred)));
+  $('install').hidden=!showInst;
+  if(showInst){$('inst-btn').hidden=!deferred;$('inst-text').textContent=deferred?t('inst_text'):IOS?t('inst_ios'):t('inst_other');}
+  const showNotif=!EMBEDDED&&any&&game&&game.phase==='done'&&!(store.notif&&('Notification' in window)&&Notification.permission==='granted');
+  $('notif').hidden=!showNotif&&!notifMsg;
+  if(showNotif||notifMsg){$('notif-text').textContent=notifMsg||t('notif_text');$('notif-btn').hidden=!!notifMsg&&store.notif;}
+}
+
+/* ---------- varsel og merke på app-ikonet ----------
+   Uten egen server er dette «beste forsøk»: nettleseren vekker appen i bakgrunnen (periodic background sync)
+   og den viser varselet selv. Pålitelig levering hver dag krever en push-tjeneste. */
+let notifMsg='';
+async function writeState(){
+  if(!('caches' in window)) return;
+  try{
+    const c=await caches.open('qn-state');let old={};const r=await c.match('state');if(r) old=await r.json();
+    const days=Object.keys(store.daily).map(Number);
+    const s={notif:!!store.notif,lastSolved:days.length?Math.max(...days):0,launch:LAUNCH,title:t('push_title'),body:t('push_body'),lastNotified:old.lastNotified||0};
+    await c.put('state',new Response(JSON.stringify(s),{headers:{'Content-Type':'application/json'}}));
+  }catch(e){}
+}
+async function updateBadge(){
+  const unsolved=!store.daily[todayIdx()];
+  try{if(navigator.setAppBadge){if(unsolved) await navigator.setAppBadge(1);else await navigator.clearAppBadge();}}catch(e){}
+  if(!unsolved&&'serviceWorker' in navigator){try{const reg=await navigator.serviceWorker.getRegistration();if(reg&&reg.getNotifications){(await reg.getNotifications({tag:'daily'})).forEach(n=>n.close());}}catch(e){}}
+}
+$('notif-btn').addEventListener('click',async()=>{
+  if(!('Notification' in window)||!('serviceWorker' in navigator)){notifMsg=t('notif_unsup');return renderCards();}
+  let perm='denied';try{perm=await Notification.requestPermission();}catch(e){}
+  if(perm!=='granted'){notifMsg=t('notif_denied');return renderCards();}
+  store.notif=true;save();await writeState();
+  try{const reg=await navigator.serviceWorker.ready;if('periodicSync' in reg) await reg.periodicSync.register('daily-nut',{minInterval:6*60*60*1000});}catch(e){}
+  notifMsg=t('notif_on');renderCards();updateBadge();
+});
+
+/* ---------- klokke ---------- */
+let shownDay=todayIdx();
+function tick(){
+  const now=new Date(),mid=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1);
+  const s=Math.max(0,Math.floor((mid-now)/1000));
+  const b=$('countdown').querySelector('b');
+  if(b) b.textContent=[Math.floor(s/3600),Math.floor(s%3600/60),s%60].map(x=>String(x).padStart(2,'0')).join(':');
+  const td=todayIdx();
+  if(td!==shownDay){shownDay=td;if(mode&&mode.kind==='daily') open({kind:'daily',day:td});updateBadge();}
+}
+setInterval(tick,1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){tick();updateBadge();}});
+
+/* ---------- start ---------- */
+applyStatic();
+const first=parseHash();
+if(first) viaChallenge=true;
+if(store.fresh){delete store.daily[todayIdx()];delete store.fresh;save();}
+open(first||{kind:'daily',day:todayIdx()});
+tick();updateBadge();writeState();
+
+})();
+</script>
+
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
+</script>
+</body>
+</html>
