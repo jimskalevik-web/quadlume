@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Quadlume</title>
-<meta name="description" content="Four in a row in the dark, played like golf.">
+<meta name="description" content="Daily four-in-a-row puzzles.">
 <meta name="theme-color" content="#0A0F1E">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon-32.png" sizes="32x32">
@@ -20,2149 +20,613 @@
 <style>
 :root{
   color-scheme:dark;
-  --ink:#0A0F1E;
-  --ink-2:#121936;
-  --ink-3:#18204A;
-  --board:#1B2347;
-  --board-edge:#2A3466;
-  --fog:#0C1124;
-  --hole:#26315F;
-  --amber:#F6B73C;
-  --amber-glow:rgba(246,183,60,.55);
-  --coral:#FF6B7A;
-  --coral-glow:rgba(255,107,122,.5);
-  --good:#6FE0A8;
-  --text:#E8ECF8;
-  --muted:#8F98BD;
-  --line:#253060;
-  --display:'Unbounded','Arial Black',system-ui,sans-serif;
-  --body:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --ink:#0A0F1E;--ink-2:#121936;--board:#1B2347;--board-edge:#2A3466;--hole:#0E142B;
+  --amber:#F6B73C;--amber-glow:rgba(246,183,60,.55);--coral:#FF6B7A;--coral-glow:rgba(255,107,122,.45);
+  --good:#6FE0A8;--text:#E8ECF8;--muted:#8F98BD;--line:#253060;
+  --display:'Unbounded','Arial Black',system-ui,sans-serif;--body:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
 }
 [hidden]{display:none!important}
 *,*::before,*::after{box-sizing:border-box}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{margin:0;-webkit-tap-highlight-color:transparent}
-img{max-width:100%}
 html{background:var(--ink)}
-body{
-  background:radial-gradient(120% 40% at 50% 0%,#141C3C 0%,var(--ink) 60%) var(--ink);
-  color:var(--text);font-family:var(--body);font-size:15px;line-height:1.5;
-  padding-inline:16px;padding-block:18px 40px;
-}
-.wrap{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
-button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+body{background:radial-gradient(120% 40% at 50% 0%,#141C3C 0%,var(--ink) 60%) var(--ink);color:var(--text);font-family:var(--body);font-size:15px;line-height:1.5;padding-inline:16px;padding-block:16px 40px}
+.wrap{max-width:440px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+p{margin:0}.muted{color:var(--muted)}.small{font-size:13px}
+.toprow{display:flex;align-items:center;gap:10px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(26px,8vw,34px);line-height:1;margin:0 auto 0 0;letter-spacing:-.02em}
+.toprow select{font:600 13px var(--body);color:var(--text);background:var(--ink-2);border:1px solid var(--line);border-radius:10px;padding:7px 8px;max-width:104px}
+.statline{display:flex;gap:14px;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.statline b{color:var(--text)}
 
-header{display:flex;flex-direction:column;gap:4px}
-h1{font-family:var(--display);font-weight:800;font-size:clamp(26px,7.4vw,34px);line-height:1.04;margin:0;text-wrap:balance}
-h1 .dim{color:transparent;-webkit-text-stroke:1.2px var(--muted)}
-h2{font-family:var(--display);font-weight:500;font-size:18px;margin:0;text-wrap:balance}
-.muted{color:var(--muted)}
-p{margin:0}
+.meta{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;background:var(--ink-2);border:1px solid var(--line);border-radius:999px;padding:3px 10px}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--good)}
+.chip.n4 i{background:var(--amber)}.chip.n5 i{background:var(--coral)}
+.linkbtn{background:none;border:0;color:var(--muted);font:600 13px var(--body);cursor:pointer;padding:4px 0}
+.task{display:flex;flex-direction:column;gap:6px}
+.task h2{font-family:var(--display);font-weight:800;font-size:clamp(19px,5.6vw,24px);line-height:1.1;margin:0;text-wrap:balance}
+.pips{display:flex;gap:6px;align-items:center}
+.pips i{width:14px;height:14px;border-radius:50%;border:2px solid var(--amber);box-sizing:border-box}
+.pips i.used{background:var(--amber);box-shadow:0 0 8px var(--amber-glow)}
+.pips span{margin-left:6px;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.banner{border:1px solid var(--amber);border-radius:12px;padding:10px 12px;background:rgba(246,183,60,.08);font-size:14px}
 
-.tabs{display:grid;grid-template-columns:repeat(4,1fr);background:var(--ink-2);border:1px solid var(--line);border-radius:14px;padding:4px;gap:4px}
-.tabs button{font:600 13px var(--body);color:var(--muted);background:none;border:0;border-radius:10px;padding:9px 4px;cursor:pointer}
-.tabs button[aria-selected="true"]{background:var(--board-edge);color:var(--text)}
-.view{display:flex;flex-direction:column;gap:14px}
-
-.eyebrow{display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
-.nav{display:flex;gap:4px}
-.nav button{background:var(--ink-2);border:1px solid var(--line);color:var(--text);border-radius:8px;width:32px;height:28px;cursor:pointer;font:600 14px var(--body)}
-.nav button:disabled{opacity:.3;cursor:default}
-.chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--text);background:var(--ink-3);border:1px solid var(--line);border-radius:999px;padding:3px 10px;align-self:flex-start}
-.chip i{width:8px;height:8px;border-radius:50%;background:var(--amber)}
-.chip.L i{background:var(--coral)}
-.chip.M i{background:#9AA8FF}
-
-.hud{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:14px;background:var(--ink-2);overflow:hidden}
-.hud>div{padding:9px 12px;display:flex;flex-direction:column;gap:2px}
-.hud>div+div{border-left:1px solid var(--line)}
-.k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.hud .v{font-family:var(--display);font-weight:500;font-size:20px;font-variant-numeric:tabular-nums}
-.hud .v small{font-size:13px;color:var(--muted)}
-.matches{display:flex;gap:6px;align-items:center;height:30px}
-.flame{width:10px;height:16px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:linear-gradient(180deg,#FFE3A1,var(--amber) 60%,#E0572E);flex:none}
-.flame.used{background:#2A3160}
-
-.status{min-height:46px;display:flex;flex-direction:column;justify-content:center;gap:2px}
-.status .main{font-family:var(--display);font-weight:500;font-size:16px}
-.status .sub{color:var(--muted);font-size:14px}
-
-.stage{position:relative}
-.markers{display:grid;gap:4px;padding-inline:9px;height:20px;margin-bottom:4px}
-.markers span{display:flex;justify-content:center;align-items:flex-end;font-size:13px;color:var(--coral);visibility:hidden}
-.markers span.on{visibility:visible;animation:pulse 1.2s ease-in-out 3}
-@keyframes pulse{50%{transform:translateY(4px);opacity:.5}}
-.board{
-  background:linear-gradient(180deg,var(--board) 0%,#161D3D 100%);
-  border:1px solid var(--board-edge);border-radius:18px;padding:9px;
-  display:grid;gap:4px;
-  box-shadow:0 24px 60px -20px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.05);
-  touch-action:manipulation;transition:box-shadow .2s;
-}
-.board.flash{box-shadow:0 0 0 2px var(--amber),0 0 50px -6px var(--amber-glow)}
-.col{display:grid;gap:4px;border-radius:10px;padding:2px;cursor:pointer;background:none;border:0;margin:0;min-width:0}
-.col:hover:not(:disabled),.col:focus-visible{background:rgba(255,255,255,.05)}
+.status{min-height:44px;display:flex;flex-direction:column;justify-content:center}
+.status .main{font-family:var(--display);font-weight:500;font-size:15px}
+.status.bad .main{color:var(--coral)}.status.ok .main{color:var(--good)}
+.status .sub{color:var(--muted);font-size:13px}
+.markers{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;padding-inline:9px;height:18px}
+.markers span{display:flex;justify-content:center;align-items:flex-end;color:var(--amber);font-size:13px;visibility:hidden}
+.markers span.on{visibility:visible;animation:bob 1s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(4px)}}
+.board{background:linear-gradient(180deg,var(--board),#161D3D);border:1px solid var(--board-edge);border-radius:18px;padding:9px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;box-shadow:0 24px 60px -20px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.05);touch-action:manipulation}
+.board.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.col{display:grid;grid-template-rows:repeat(6,auto);gap:5px;border-radius:10px;padding:2px;background:none;border:0;margin:0;min-width:0;cursor:pointer}
+.col:hover:not(:disabled),.col:focus-visible{background:rgba(255,255,255,.06)}
 .col:disabled{cursor:default}
-.cell{aspect-ratio:1;border-radius:50%;position:relative;max-width:100%}
-.cell.fog,.cell.fogfill{background:var(--fog);box-shadow:inset 0 2px 6px rgba(0,0,0,.6)}
-.cell.fogfill::after{content:"";position:absolute;inset:22%;border-radius:50%;border:1.5px dashed #3A4476}
-.cell.lit{background:radial-gradient(circle at 50% 38%,#34417A 0%,var(--hole) 70%);box-shadow:inset 0 2px 5px rgba(0,0,0,.45)}
+.cell{aspect-ratio:1;border-radius:50%;position:relative;background:var(--hole);box-shadow:inset 0 2px 5px rgba(0,0,0,.55)}
 .disc{position:absolute;inset:6%;border-radius:50%}
-.disc.p1{background:radial-gradient(circle at 35% 30%,#FFE2A0 0%,var(--amber) 45%,#C9851A 100%);box-shadow:0 0 14px var(--amber-glow)}
-.disc.p2{background:radial-gradient(circle at 35% 30%,#FFC2C8 0%,var(--coral) 45%,#C63A52 100%);box-shadow:0 0 14px var(--coral-glow)}
-.disc.drop{animation:fall .38s cubic-bezier(.55,0,.8,.4)}
+.disc.p1{background:radial-gradient(circle at 35% 30%,#FFE2A0,var(--amber) 45%,#C9851A);box-shadow:0 0 12px var(--amber-glow)}
+.disc.p2{background:radial-gradient(circle at 35% 30%,#FFC2C8,var(--coral) 45%,#C63A52);box-shadow:0 0 10px var(--coral-glow)}
+.disc.drop{animation:fall .36s cubic-bezier(.55,0,.8,.4)}
 @keyframes fall{from{transform:translateY(var(--fall))}}
-.disc.revealed{animation:reveal .6s ease-out both}
-@keyframes reveal{from{opacity:0;transform:scale(.6)}}
 .disc.win{outline:3px solid #fff;outline-offset:2px;animation:winp 1s ease-in-out infinite}
 @keyframes winp{50%{outline-color:transparent}}
 
 .actions{display:flex;gap:10px;flex-wrap:wrap}
-.btn{font:600 15px var(--body);border-radius:12px;padding:12px 16px;cursor:pointer;border:1px solid var(--line);background:var(--ink-2);color:var(--text);flex:1 1 auto;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn{font:600 15px var(--body);border-radius:12px;padding:12px 16px;cursor:pointer;border:1px solid var(--line);background:var(--ink-2);color:var(--text);flex:1 1 auto;display:inline-flex;align-items:center;justify-content:center;gap:8px}
 .btn.primary{background:var(--amber);color:#2A1A00;border-color:transparent}
-.btn.small{padding:9px 12px;font-size:14px}
-.btn:disabled{opacity:.4;cursor:default}
-
+.btn.small{padding:9px 12px;font-size:14px;flex:none}
 .panel{border:1px solid var(--line);border-radius:16px;background:var(--ink-2);padding:16px;display:flex;flex-direction:column;gap:12px}
-.verdict{font-family:var(--display);font-weight:800;font-size:28px;line-height:1.05}
-.verdict.good{color:var(--good)}
-.verdict.bad{color:var(--coral)}
-.seq{font-size:22px;letter-spacing:2px;overflow-x:auto;white-space:nowrap}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center}
-.stats b{display:block;font-family:var(--display);font-weight:500;font-size:20px;font-variant-numeric:tabular-nums}
-.stats span{font-size:12px;color:var(--muted)}
-.next{font-variant-numeric:tabular-nums;color:var(--muted);font-size:14px}
+.verdict{font-family:var(--display);font-weight:800;font-size:26px;line-height:1.05;color:var(--good)}
+.resline{font-size:17px;font-weight:600}
+.seq{font-size:22px;letter-spacing:2px}
+.next{color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
 .next b{color:var(--text);font-family:var(--display);font-weight:500}
-textarea,input[type=text]{width:100%;background:var(--ink);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;font:14px var(--body)}
-textarea{min-height:110px;font:13px ui-monospace,monospace}
-.note{font-size:13px;color:var(--muted);border:1px dashed var(--line);border-radius:10px;padding:8px 12px}
-
-.course{display:flex;flex-direction:column;gap:10px}
-.course .row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-.pips{display:flex;gap:3px;flex-wrap:wrap}
-.pips i{width:10px;height:10px;border-radius:3px;background:var(--amber)}
-.pips i.M{background:#9AA8FF}
-.pips i.L{background:var(--coral)}
-
-.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
-table.card{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:13px;min-width:100%}
-table.card th,table.card td{padding:5px 2px;text-align:center;border-bottom:1px solid var(--line);min-width:26px}
-table.card th:first-child,table.card td:first-child{text-align:left;padding-right:8px;color:var(--muted);font-weight:600;white-space:nowrap;max-width:80px;overflow:hidden;text-overflow:ellipsis}
-table.card tr.hole th{color:var(--muted);font-weight:600}
-table.card td.cur{background:rgba(246,183,60,.12)}
-table.card td.tot,table.card th.tot{font-weight:700;color:var(--text)}
-.sc{display:inline-flex;width:22px;height:22px;align-items:center;justify-content:center}
-.sc.u{border:1.5px solid var(--good);border-radius:50%;color:var(--good)}
-.sc.o1{border:1.5px solid var(--muted)}
-.sc.o2{border:3px double var(--muted)}
-.sc.x{color:var(--coral)}
-
-.big{font-family:var(--display);font-weight:800;font-size:40px;line-height:1;font-variant-numeric:tabular-nums}
-.hist{display:flex;flex-direction:column}
-.hist div{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px;font-variant-numeric:tabular-nums}
-.hist div:last-child{border-bottom:0}
-
-.rules{border-top:1px solid var(--line);padding-top:16px;display:flex;flex-direction:column;gap:10px}
+label.k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+input[type=text]{width:100%;box-sizing:border-box;background:var(--ink);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;font:14px var(--body)}
+.card{border:1px dashed var(--line);border-radius:14px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:rgba(18,25,54,.6)}
+.card b{display:block}.card p{font-size:13px;color:var(--muted)}
+.card .grow{flex:1 1 180px}
+.card.hi{border-style:solid;border-color:var(--amber)}
+.x{background:none;border:0;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 6px}
+.rules{border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:8px}
 .rules h3{font-family:var(--display);font-weight:500;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0}
-.rules ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;max-width:62ch}
+.rules ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px;color:var(--muted)}
 .rules b{color:var(--text)}
-.golf{display:grid;grid-template-columns:auto 1fr;gap:2px 14px;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
-.golf b{color:var(--text);font-weight:600}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--text);color:var(--ink);font-weight:600;padding:10px 16px;border-radius:999px;z-index:20}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-.toprow{display:flex;justify-content:space-between;align-items:center;gap:12px}
-#app-name{font-size:clamp(34px,10vw,44px);letter-spacing:-.02em;text-shadow:0 0 28px rgba(246,183,60,.35)}
-.langpick select{font:600 13px var(--body);color:var(--text);background:var(--ink-2);border:1px solid var(--line);border-radius:10px;padding:7px 8px;cursor:pointer;max-width:120px}
-.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.toprow{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.toprow h1{margin-right:auto}
-#app-name{font-size:clamp(30px,9vw,44px);letter-spacing:-.02em;text-shadow:0 0 28px rgba(246,183,60,.35)}
-.langpick select{font:600 13px var(--body);color:var(--text);background:var(--ink-2);border:1px solid var(--line);border-radius:10px;padding:7px 8px;cursor:pointer;max-width:110px}
-.iconbtn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;border:1px solid var(--line);background:var(--ink-2);color:var(--text);cursor:pointer;flex:none}
-.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.lengths{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.lengths .btn{padding:12px 6px;font-size:14px}
-.pts{color:var(--amber);font-weight:700;margin:0}
-.points .lvl{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
-.points .lvl b{font-family:var(--display);font-weight:500;font-size:16px;color:var(--amber)}
-.bar{height:8px;border-radius:999px;background:var(--ink);border:1px solid var(--line);overflow:hidden}
-.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#C9851A,var(--amber));border-radius:999px;transition:width .6s ease}
-.small{font-size:13px}
-.ad-slot{border:1px dashed var(--line);border-radius:14px;padding:14px;background:rgba(18,25,54,.5)}
-.ad-slot .house{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.ad-slot .house b{display:block}
-.ad-slot .house p{margin:2px 0 0;font-size:13px}
-.ad-slot .house .btn{flex:none}
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--text);color:var(--ink);font-weight:600;padding:10px 16px;border-radius:999px;z-index:20;box-shadow:0 10px 30px rgba(0,0,0,.4)}
-.tabs{grid-template-columns:repeat(5,1fr)}
-.tabs button{font-size:12.5px;padding:9px 2px}
-.hud.hud4{grid-template-columns:1.15fr 1fr 1fr 1.1fr}
-.hud.hud4>div{padding:9px 10px}
-.hud .goal{background:rgba(246,183,60,.10)}
-.hud .goal .k{color:var(--amber)}
-.hud .goal .v{display:flex;align-items:center;gap:6px;color:var(--amber)}
-.hud .goal .v b{font-weight:800}
-.hud .goal .pips{display:flex;gap:3px}
-.hud .goal .v{font-size:24px}
-.hud .goal .pips i{width:9px;height:9px;border-radius:50%;background:var(--amber);box-shadow:0 0 6px var(--amber-glow)}
-.hud .goal.k5{background:rgba(255,107,122,.12)}
-.hud .goal.k5 .k,.hud .goal.k5 .v{color:var(--coral)}
-.hud .goal.k5 .pips i{background:var(--coral);box-shadow:0 0 6px var(--coral-glow)}
-.myrank .rankrow{display:flex;align-items:baseline;gap:12px}
-table.board-t{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:14px}
-table.board-t th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:6px 6px;border-bottom:1px solid var(--line)}
-table.board-t td{padding:9px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
-table.board-t .num{text-align:right;white-space:nowrap}
-table.board-t tr.me td{background:rgba(246,183,60,.10)}
-table.board-t tr.me .pn{color:var(--amber)}
-table.board-t .pn{display:block;font-weight:600}
-table.board-t .pl{display:block;font-size:12px;color:var(--muted)}
-.markers span.threat{visibility:visible;color:#fff;background:var(--coral);border-radius:6px;font-weight:800;font-size:13px;line-height:18px;max-width:22px;margin:0 auto;width:100%;justify-content:center;align-items:center;animation:pulse 1s ease-in-out infinite}
-.seg3{display:grid;grid-template-columns:repeat(3,1fr);background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
-.seg3 button{font:600 13px var(--body);color:var(--muted);background:none;border:0;border-radius:9px;padding:9px 4px;cursor:pointer}
-.seg3 button[aria-pressed="true"]{background:var(--board-edge);color:var(--text)}
-.ranks{display:flex;flex-direction:column}
-.ranks>div{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
-.ranks>div:last-child{border-bottom:0}
-.ranks b{font-family:var(--display);font-weight:500;font-size:16px;font-variant-numeric:tabular-nums}
-details.more{display:block}
-details.more summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center}
-details.more summary::-webkit-details-marker{display:none}
-details.more summary::after{content:"+";font-family:var(--display);color:var(--muted)}
-details.more[open] summary::after{content:"–"}
-.morebody{display:flex;flex-direction:column;gap:14px;margin-top:14px}
-.morebody .hcp{display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:baseline}
-.morebody .hcp b{font-family:var(--display);font-weight:500;font-size:20px}
-.morebody .hcp p{grid-column:1/-1;margin:0}
-.overlay{position:absolute;inset:0;border-radius:18px;background:rgba(8,12,26,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px;z-index:3}
-.overlay h2{font-family:var(--display);font-weight:800;font-size:22px;margin:0;text-wrap:balance}
-.overlay p{margin:0;color:var(--muted);max-width:30ch}
-.overlay .btn{flex:none}
-.hud .turn{display:flex;align-items:center;gap:7px;font-size:16px}
-.hud .turn i{width:14px;height:14px;border-radius:50%;flex:none}
-.pdot1{background:var(--amber);box-shadow:0 0 8px var(--amber-glow)}
-.pdot2{background:var(--coral);box-shadow:0 0 8px var(--coral-glow)}
-.pvp-score{display:flex;align-items:center;justify-content:center;gap:10px;font-family:var(--display);font-weight:500;font-size:16px;font-variant-numeric:tabular-nums}
-.pvp-score i{width:12px;height:12px;border-radius:50%;display:inline-block}
-.invite{border-color:var(--amber)}
-.markers span.on.m1{color:var(--amber)}
-.rules h3+.golf{margin-top:-4px}
 </style>
+
 </head>
 <body>
-
 <div class="wrap">
   <header>
     <div class="toprow">
-      <h1 id="app-name">Quadlume</h1>
-      <label class="langpick"><span class="sr" data-t="language">Språk</span>
-        <select id="lang" aria-label="Språk"></select>
-      </label>
-      <button class="iconbtn js-share" type="button" data-ta="share_app"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3v12M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg></button>
+      <h1>Quadlume</h1>
+      <select id="lang" aria-label="Språk"></select>
     </div>
-    <p class="muted" data-t="tagline">Fire på rad i mørket, spilt som golf: færrest mulig trekk per hull.</p>
   </header>
+  <div class="statline"><span>🔥 <b id="s-streak">0</b> <span data-t="streak"></span></span><span>🧩 <b id="s-total">0</b> <span data-t="total"></span></span></div>
 
-  <nav class="tabs" role="tablist" data-ta="tabs_aria">
-    <button type="button" role="tab" id="t-daily" data-view="daily" aria-selected="true" data-t="tab_daily">Dagens</button>
-    <button type="button" role="tab" id="t-round" data-view="round" aria-selected="false" data-t="tab_round">Runde</button>
-    <button type="button" role="tab" id="t-duel" data-view="duel" aria-selected="false" data-t="tab_duel">Duell</button>
-    <button type="button" role="tab" id="t-board" data-view="board" aria-selected="false" data-t="tab_board">Tabell</button>
-    <button type="button" role="tab" id="t-profile" data-view="profile" aria-selected="false" data-t="tab_profile">Profil</button>
-  </nav>
+  <div class="card hi" id="install" hidden>
+    <div class="grow"><b data-t="inst_title"></b><p id="inst-text"></p></div>
+    <button class="btn primary small" id="inst-btn" type="button" data-t="inst_btn"></button>
+    <button class="x" id="inst-x" type="button" data-ta="close">×</button>
+  </div>
 
-  <!-- DAGENS -->
-  <section class="view" id="v-daily">
-    <div class="eyebrow">
-      <span id="d-num">#23</span>
-      <div class="nav">
-        <button id="d-prev" type="button" data-ta="prev_aria">‹</button>
-        <button id="d-next" type="button" data-ta="next_aria">›</button>
-      </div>
-    </div>
-    <p class="muted" id="d-date"></p>
-    <span class="chip" id="d-chip"><i></i></span>
-    <div class="note" id="d-practice" hidden data-t="practice_note"></div>
-    <div id="d-slot"></div>
-    <div class="panel" id="d-result" hidden>
-      <div class="verdict" id="d-verdict"></div>
-      <p class="muted" id="d-vsub"></p>
-      <div class="seq" id="d-seq"></div>
-      <p class="pts" id="d-pts"></p>
-      <div class="stats">
-        <div><b id="ds-played">0</b><span data-t="st_played"></span></div>
-        <div><b id="ds-under">0</b><span data-t="st_under"></span></div>
-        <div><b id="ds-streak">0</b><span data-t="st_streak"></span></div>
-        <div><b id="ds-avg">–</b><span data-t="st_avg"></span></div>
-      </div>
-      <div class="actions">
-        <button class="btn primary" id="d-share" type="button" data-t="copy_result"></button>
-        <button class="btn" id="d-again" type="button" data-t="practice_again"></button>
-      </div>
-      <textarea id="d-share-fb" hidden readonly data-ta="copy_result"></textarea>
-      <div class="next" id="d-countdown"><span data-t="next_board"></span> <b>00:00:00</b></div>
-    </div>
-    <aside class="ad-slot" data-ad-slot="daily-result">
-      <!-- REKLAMEPLASS «daily-result»: Når reklame skal på, limes annonsekoden inn her (se ADS_ENABLED i koden). Frem til da vises en egen invitasjon. -->
-      <div class="house"><div><b data-t="house_title"></b><p class="muted" data-t="house_text"></p></div><button class="btn small js-share" type="button"><span data-t="share_app"></span></button></div>
-    </aside>
-  </section>
+  <div class="banner" id="chal-banner" hidden></div>
 
-  <!-- RUNDE -->
-  <section class="view" id="v-round" hidden>
-    <div id="r-menu" class="view">
-      <div class="panel course">
-        <div class="row"><h2 id="r-week-title"></h2><span class="muted" id="r-week-par"></span></div>
-        <p class="muted" data-t="week_desc"></p>
-        <div class="pips" id="r-pips"></div>
-        <div class="actions">
-          <button class="btn primary" id="r-week9" type="button" data-t="play9"></button>
-          <button class="btn" id="r-week18" type="button" data-t="play18"></button>
-        </div>
-      </div>
-      <div class="panel course">
-        <div class="row"><h2 data-t="random"></h2><span class="muted" data-t="random_sub"></span></div>
-        <p class="muted" data-t="random_desc"></p>
-        <div class="actions">
-          <button class="btn" id="r-rand9" type="button" data-t="holes9"></button>
-          <button class="btn" id="r-rand18" type="button" data-t="holes18"></button>
-        </div>
-      </div>
-      <div class="golf" id="r-types"></div>
-    </div>
+  <div class="meta">
+    <span class="chip" id="chip"><i></i><span id="chip-text"></span></span>
+    <button class="linkbtn" id="back-daily" type="button" data-t="back_daily" hidden></button>
+  </div>
+  <div class="task">
+    <h2 id="task"></h2>
+    <div class="pips" id="pips"></div>
+  </div>
 
-    <div id="r-play" class="view" hidden>
-      <div class="eyebrow"><span id="r-label"></span><button class="btn small" id="r-quit" type="button" style="flex:none" data-t="quit"></button></div>
-      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap">
-        <h2 id="r-hole"></h2>
-        <span class="muted" id="r-total"></span>
-      </div>
-      <span class="chip" id="r-chip"><i></i></span>
-      <div class="note" id="r-duel" hidden></div>
-      <div class="note" id="r-confirm" hidden>
-        <p style="margin-bottom:8px" data-t="quit_q"></p>
-        <div class="actions"><button class="btn small" id="r-quit-yes" type="button" data-t="quit_yes"></button><button class="btn small" id="r-quit-no" type="button" data-t="quit_no"></button></div>
-      </div>
-      <div id="r-slot"></div>
-      <div class="panel" id="r-holedone" hidden>
-        <div class="verdict" id="r-verdict"></div>
-        <p class="muted" id="r-vsub"></p>
-        <button class="btn primary" id="r-next" type="button"></button>
-      </div>
-      <div class="scroll" id="r-card"></div>
-    </div>
+  <div>
+    <div class="markers" id="markers" aria-hidden="true"></div>
+    <div class="board" id="board"></div>
+  </div>
+  <div class="status" id="status" aria-live="polite"><div class="main" id="st-main"></div><div class="sub" id="st-sub"></div></div>
 
-    <div id="r-summary" class="view" hidden>
-      <div class="panel">
-        <span class="k" id="rs-label"></span>
-        <div class="big" id="rs-score">0</div>
-        <p class="muted" id="rs-sub"></p>
-        <div class="verdict" id="rs-duel" hidden></div>
-        <div class="seq" id="rs-seq"></div>
-        <p class="pts" id="rs-pts"></p>
-        <div class="scroll" id="rs-card"></div>
-        <div class="actions">
-          <button class="btn primary" id="rs-challenge" type="button" data-t="challenge"></button>
-          <button class="btn" id="rs-share" type="button" data-t="copy_result"></button>
-        </div>
-        <textarea id="rs-fb" hidden readonly data-ta="copy_result"></textarea>
-        <button class="btn" id="rs-new" type="button" data-t="new_round"></button>
-      </div>
-      <aside class="ad-slot" data-ad-slot="round-summary">
-      <!-- REKLAMEPLASS «round-summary»: Når reklame skal på, limes annonsekoden inn her (se ADS_ENABLED i koden). Frem til da vises en egen invitasjon. -->
-      <div class="house"><div><b data-t="house_title"></b><p class="muted" data-t="house_text"></p></div><button class="btn small js-share" type="button"><span data-t="share_app"></span></button></div>
-    </aside>
-    </div>
-  </section>
+  <div class="actions" id="wrong-actions" hidden>
+    <button class="btn primary" id="retry" type="button" data-t="retry"></button>
+    <button class="btn" id="hint" type="button" data-t="hint" hidden></button>
+  </div>
 
-  <!-- DUELL -->
-  <section class="view" id="v-duel" hidden>
-    <div id="du-menu" class="view">
-      <div class="panel invite" id="du-invite" hidden>
-        <h2 id="du-inv-title"></h2>
-        <p class="muted" id="du-inv-sub"></p>
-        <div class="actions">
-          <button class="btn primary" id="du-inv-go" type="button" data-t="duel_start"></button>
-          <button class="btn" id="du-inv-no" type="button" data-t="not_now"></button>
-        </div>
-      </div>
-      <div class="panel">
-        <h2 data-t="duel_new_title"></h2>
-        <p class="muted" data-t="duel_new_desc"></p>
-        <div class="lengths">
-          <button class="btn" type="button" data-holes="3" data-t="holes3"></button>
-          <button class="btn" type="button" data-holes="6" data-t="holes6"></button>
-          <button class="btn primary" type="button" data-holes="9" data-t="holes9"></button>
-          <button class="btn" type="button" data-holes="18" data-t="holes18"></button>
-        </div>
-      </div>
-      <div class="panel">
-        <h2 data-t="pvp_title"></h2>
-        <p class="muted" data-t="pvp_desc"></p>
-        <button class="btn" id="pvp-start" type="button" data-t="pvp_start"></button>
-      </div>
-      <div class="panel">
-        <h2 data-t="duel_in_title"></h2>
-        <p class="muted" data-t="duel_in_desc"></p>
-        <textarea id="du-input" data-tp="duel_ph"></textarea>
-        <p class="muted" id="du-msg" aria-live="polite"></p>
-        <button class="btn" id="du-start" type="button" data-t="duel_start"></button>
-      </div>
-      <aside class="ad-slot" data-ad-slot="duel">
-        <!-- REKLAMEPLASS «duel»: Når reklame skal på, limes annonsekoden inn her (se ADS_ENABLED i koden). Frem til da vises en egen invitasjon. -->
-        <div class="house"><div><b data-t="house_title"></b><p class="muted" data-t="house_text"></p></div><button class="btn small js-share" type="button"><span data-t="share_app"></span></button></div>
-      </aside>
+  <div class="panel" id="result" hidden>
+    <div class="verdict" data-t="solved"></div>
+    <div class="resline" id="res-line"></div>
+    <div class="seq" id="res-seq"></div>
+    <p id="res-cmp" hidden></p>
+    <div class="actions">
+      <button class="btn primary" id="next" type="button" data-t="next_nut"></button>
+      <button class="btn" id="challenge" type="button" data-t="challenge"></button>
     </div>
-    <div id="du-pvp" class="view" hidden>
-      <div class="eyebrow"><span data-t="pvp_title"></span><button class="btn small" id="pvp-quit" type="button" style="flex:none" data-t="pvp_quit"></button></div>
-      <div class="pvp-score" id="pvp-score"></div>
-      <div id="du-slot"></div>
-      <div class="panel" id="pvp-done" hidden>
-        <div class="verdict" id="pvp-verdict"></div>
-        <p class="muted" data-t="pvp_note"></p>
-        <button class="btn primary" id="pvp-again" type="button" data-t="pvp_again"></button>
-      </div>
-    </div>
-  </section>
+    <div><label class="k" for="name" data-t="name_label"></label>
+      <input type="text" id="name" maxlength="20" data-tp="name_ph" autocomplete="nickname"></div>
+    <div class="next" id="countdown" hidden><span data-t="next_in"></span> <b>00:00:00</b></div>
+  </div>
 
-  <!-- TABELL -->
-  <section class="view" id="v-board" hidden>
-    <div class="seg3" role="group" data-ta="rank_title">
-      <button type="button" data-scope="friends" aria-pressed="true" data-t="scope_friends"></button>
-      <button type="button" data-scope="country" aria-pressed="false" data-t="scope_country"></button>
-      <button type="button" data-scope="world" aria-pressed="false" data-t="scope_world"></button>
-    </div>
-    <div class="panel" id="b-soon" hidden>
-      <h2 id="b-soon-title"></h2>
-      <p class="muted" data-t="board_soon"></p>
-    </div>
-    <div id="b-friends" class="view">
-    <div class="panel myrank">
-      <span class="k" data-t="board_you"></span>
-      <div class="rankrow"><span class="big" id="b-rank">#1</span><span class="muted" id="b-of"></span></div>
-      <p id="b-me"></p>
-    </div>
-    <div class="panel">
-      <h2 data-t="board_title"></h2>
-      <div class="scroll" id="b-table"></div>
-      <p class="muted small" id="b-empty" data-t="board_empty"></p>
-    </div>
-    <p class="note" data-t="board_note"></p>
-    </div>
-  </section>
-
-  <!-- PROFIL -->
-  <section class="view" id="v-profile" hidden>
-    <div class="panel points">
-      <span class="k" data-t="points"></span>
-      <div class="big" id="p-pts">0</div>
-      <div class="lvl"><b id="p-lvl"></b><span class="muted" id="p-next"></span></div>
-      <div class="bar" aria-hidden="true"><i id="p-bar"></i></div>
-      <p class="muted small" data-t="pts_desc"></p>
-    </div>
-    <div class="panel">
-      <h2 data-t="rank_title"></h2>
-      <div class="ranks">
-        <div><span data-t="scope_friends"></span><b id="p-rank-f">–</b></div>
-        <div><span data-t="scope_country"></span><b class="muted">–</b></div>
-        <div><span data-t="scope_world"></span><b class="muted">–</b></div>
-      </div>
-      <p class="muted small" data-t="rank_note"></p>
-      <button class="btn small" id="p-toboard" type="button" data-t="see_board"></button>
-    </div>
-    <div class="panel">
-      <label for="p-name" class="k" data-t="name_label"></label>
-      <input type="text" id="p-name" maxlength="20" data-tp="name_ph" autocomplete="nickname">
-    </div>
-    <details class="panel more" id="p-more">
-      <summary data-t="more_stats"></summary>
-      <div class="morebody">
-        <div class="hcp"><span class="k" data-t="handicap"></span><b id="p-hcp">–</b><p class="muted small" id="p-hcp-sub"></p></div>
-        <div class="stats">
-          <div><b id="p-rounds">0</b><span data-t="p_rounds"></span></div>
-          <div><b id="p-best">–</b><span data-t="p_best"></span></div>
-          <div><b id="p-birdies">0</b><span data-t="p_birdies"></span></div>
-          <div><b id="p-holes">0</b><span data-t="p_holes"></span></div>
-        </div>
-        <p id="p-duels"></p>
-        <h2 data-t="recent"></h2>
-        <div class="hist" id="p-hist"></div>
-      </div>
-    </details>
-    <p class="note" data-t="local_note"></p>
-    <aside class="ad-slot" data-ad-slot="profile">
-      <!-- REKLAMEPLASS «profile»: Når reklame skal på, limes annonsekoden inn her (se ADS_ENABLED i koden). Frem til da vises en egen invitasjon. -->
-      <div class="house"><div><b data-t="house_title"></b><p class="muted" data-t="house_text"></p></div><button class="btn small js-share" type="button"><span data-t="share_app"></span></button></div>
-    </aside>
-  </section>
-
-  <!-- Spillflaten (flyttes inn i aktiv visning) -->
-  <div id="game">
-    <div class="hud hud4">
-      <div id="g-goal-cell" class="goal"><span class="k" data-t="hud_goal"></span><span class="v" id="g-goal">4</span></div>
-      <div id="g-par-cell"><span class="k" data-t="hud_par"></span><span class="v" id="g-par">4</span></div>
-      <div id="g-turn-cell" hidden><span class="k" data-t="hud_turn"></span><span class="v turn" id="g-turn"></span></div>
-      <div><span class="k" data-t="hud_moves"></span><span class="v" id="g-moves">0</span></div>
-      <div><span class="k" data-t="hud_matches"></span><span class="matches" id="g-flames"></span></div>
-    </div>
-    <div class="status" aria-live="polite">
-      <div class="main" id="g-main"></div>
-      <div class="sub" id="g-sub"></div>
-    </div>
-    <div class="stage">
-      <div class="markers" id="g-markers" aria-hidden="true"></div>
-      <div class="board" id="g-board"></div>
-      <div class="overlay" id="g-pass" hidden>
-        <h2 id="g-pass-title"></h2>
-        <p id="g-pass-sub"></p>
-        <button class="btn primary" id="g-pass-go" type="button"></button>
-      </div>
-    </div>
-    <div class="actions" style="margin-top:12px">
-      <button class="btn" id="g-match" type="button"><span class="flame"></span><span data-t="light_match"></span></button>
-    </div>
+  <div class="card" id="notif" hidden>
+    <div class="grow"><b data-t="notif_title"></b><p id="notif-text"></p></div>
+    <button class="btn small" id="notif-btn" type="button" data-t="notif_btn"></button>
   </div>
 
   <section class="rules">
-    <h3 data-t="rules_title"></h3>
-    <ul>
-      <li data-th="r1"></li>
-      <li data-th="r2"></li>
-      <li data-th="r3"></li>
-      <li data-th="r4"></li>
-      <li data-th="r5"></li>
-      <li data-th="r6"></li>
-    </ul>
-    <h3 data-t="points_title"></h3>
-    <div class="golf">
-      <b>3</b><span data-t="lg_s3"></span>
-      <b>2</b><span data-t="lg_s2"></span>
-      <b>1</b><span data-t="lg_s1"></span>
-      <b>0</b><span data-t="lg_s0"></span>
-      <b>+1</b><span data-t="lg_sduel"></span>
-    </div>
+    <h3 data-t="how_title"></h3>
+    <ul><li data-th="how1"></li><li data-th="how2"></li><li data-th="how3"></li></ul>
   </section>
 </div>
 
 <script>
 (function(){
-const LANGS=[['nb','Norsk'],['en','English'],['sv','Svenska'],['da','Dansk'],['de','Deutsch'],['es','Español']];
-const LOCALES={nb:'nb-NO',en:'en-GB',sv:'sv-SE',da:'da-DK',de:'de-DE',es:'es-ES'};
-const I18N={
-nb:{
-gm_threat:"⚠️ Du hører at boten kan få {k} på rad i neste trekk – i kolonne {c}. Blokker!",
-tab_board:"Tabell",
-points:"Stjerner",
-pts_desc:"⭐ for hvert hull du klarer, ⭐⭐ på par og ⭐⭐⭐ under par. I dueller får du +1 ⭐ for hvert hull du vinner. Stjernene samles og gir deg nivå.",
-pts_earned:"+{n} ⭐",
-hud_goal:"Mål",
-board_you:"Din plassering",
-board_rank_of:"av {n} spillere",
-board_title:"Vennetabell",
-board_empty:"Tabellen fylles når du tar imot utfordringer fra venner. Start en duell under «Duell».",
-board_note:"Vennetabellen bygges fra utfordringene dine. Når innlogging kommer, blir dette en toppliste for alle spillere.",
-col_player:"Spiller",
-col_h2h:"Mot deg",
-lg_s3:"under par (birdie eller bedre)",
-lg_s2:"på par",
-lg_s1:"klarte hullet",
-lg_sduel:"for hvert hull du vinner i en duell",
-share_app:"Del Quadlume",
-share_text:"Fire på rad i mørket, spilt som golf. Prøv Quadlume!",
-share_copied:"Lenken er kopiert. Lim den inn der du vil dele.",
-duel_new_title:"Start en ny utfordring",
-duel_new_desc:"Velg lengde. Du spiller først, og så sender du en kode til en venn som spiller de samme hullene.",
-holes3:"3 hull",
-holes6:"6 hull",
-
-
-
-next_level:"{n} poeng til {lvl}",
-max_level:"Høyeste nivå!",
-lvl0:"Nybegynner",
-lvl1:"Klubbspiller",
-lvl2:"Turneringsspiller",
-lvl3:"Scratch-spiller",
-lvl4:"Tour-proff",
-lvl5:"Legende",
-duel_record:"Dueller: {w} vunnet · {t} uavgjort · {l} tapt",
-house_title:"Liker du Quadlume?",
-house_text:"Del spillet med en venn og utfordre dem til en duell.",
-p_holes:"Hull spilt",
-language:'Språk',tagline:'Fire på rad i mørket, spilt som golf: færrest mulig trekk per hull.',
-tabs_aria:'Spillmodus',tab_daily:'Dagens',tab_round:'Runde',tab_duel:'Duell',tab_profile:'Profil',
-board_no:'Brett #{n}',today:' · i dag',prev_aria:'Forrige dags brett',next_aria:'Neste dags brett',
-practice_note:'Du har allerede spilt dette brettet. Dette er en øvingsrunde og teller ikke.',
-st_played:'Spilt',st_under:'På eller under par',st_streak:'Dager på rad',st_avg:'Snitt mot par',
-copy_result:'Kopier resultat',practice_again:'Øv på brettet igjen',next_board:'Neste brett om',
-week_n:'Ukens bane · uke {w}',par_n:'Par {n}',week_desc:'Samme 18 hull for alle hele uka. Sammenlign med venner, eller utfordre dem på samme bane.',
-play9:'Spill 9 hull',play18:'Spill 18 hull',random:'Tilfeldig bane',random_sub:'Ny bane hver gang',random_desc:'Til trening. Teller også på handicapet ditt.',
-holes9:'9 hull',holes18:'18 hull',
-type_K:'Kort hull',type_M:'Middels hull',type_L:'Langt hull',desc_K:'7×6 · fire på rad',desc_M:'8×7 · fire på rad',desc_L:'9×7 · fem på rad',
-quit:'Avslutt runden',hole_x:'Hull {i} av {n}',total:'Totalt: {s} ({d})',
-quit_q:'Avslutte runden? Den blir ikke lagret.',quit_yes:'Ja, avslutt',quit_no:'Fortsett å spille',
-next_hole:'Neste hull',see_result:'Se resultatet',challenge:'Utfordre en venn',new_round:'Ny runde',
-duel_in_title:'Ta imot en utfordring',duel_in_desc:'Lim inn meldingen du fikk fra en venn. Du spiller de samme hullene, og hvert hull avgjøres for seg: færrest trekk vinner hullet.',
-duel_ph:'Lim inn utfordringen her, f.eks. {code}',duel_start:'Start duellen',
-duel_out_title:'Utfordre noen selv',duel_out_desc:'Spill en runde under «Runde». Når du er ferdig, trykker du «Utfordre en venn» og sender meldingen sammen med lenken til spillet.',go_round:'Gå til Runde',
-handicap:'Handicap',hcp_need1:'Spill 1 runde til for å få handicap.',hcp_needN:'Spill {n} runder til for å få handicap.',hcp_desc:'Snittet ditt over par per 18 hull, siste 10 runder på 9 eller 18 hull. Lavere er bedre.',
-p_rounds:'Runder',p_best:'Beste runde',p_birdies:'Birdies',p_daily:'Dagens spilt',
-name_label:'Navnet ditt i utfordringer',name_ph:'F.eks. Alex',recent:'Siste runder',no_rounds:'Ingen runder ennå.',
-local_note:'Resultatene dine lagres bare på denne enheten. En felles toppliste og turneringer krever innlogging og en server, og er neste steg for appen.',
-hud_par:'Par',hud_moves:'Trekk',hud_matches:'Fyrstikker',light_match:'Tenn fyrstikk',rules_title:'Slik spiller du',
-r1:'Du er gul. Få <b>fire på rad</b> (fem på lange hull) på færrest mulig trekk.',
-r2:'Du ser bare rutene <b>rundt dine egne brikker</b>: to ruter rett bort og én på skrå. Stiplede ruter er opptatt, men du vet ikke av hvem.',
-r3:"Etter hvert trekk svarer <b>boten</b>, og den prøver å få fire på rad selv. Pilen viser hvilken kolonne den slapp i, men ikke hvor brikken landet. Boten ser bare én rute rundt sine egne brikker, men den hører deg: stabler du nesten nok brikker oppå hverandre, legger den lokk på. Kan boten vinne i neste trekk, hører du det, og kolonnen merkes med et rødt <b>!</b>.",
-r4:'<b>Par</b> er perfekt spill pluss ett trekk. Spiller du perfekt, blir det birdie.',
-r5:'Klarer du det ikke innen par + 5 trekk, eller boten vinner, får du par + 6 på hullet.',
-r6:'<b>Fyrstikker</b> viser hele brettet i to sekunder: to på Dagens, én per hull i runder.',
-lg_eagle:'2 under par',lg_birdie:'1 under par, perfekt spilt',lg_par:'ett trekk fra perfekt',lg_bogey:'1 over par',lg_hcp:'snittet ditt over par per 18 hull, siste 10 runder',
-g_albatross:'Albatross',g_eagle:'Ørn',g_birdie:'Birdie',g_par:'Par',g_bogey:'Bogey',g_dbogey:'Dobbel bogey',g_tbogey:'Trippel bogey',g_finished:'I mål',g_botwon:'Boten vant',g_darkwon:'Mørket vant',
-gm_win:'{k} på rad!',gm_botwin:'Boten fikk {k} på rad',gm_nomoves:'Tom for trekk',gm_lit:'Lyset er på. Nå ser du hele brettet.',
-gm_flash:'Fyrstikken brenner',gm_flash_sub:'Se fort. Mørket kommer tilbake om to sekunder.',gm_botturn:'Boten lytter …',gm_full:'Kolonnen var full. Trekket ble brukt opp.',gm_botsees:'Den ser like lite som deg.',
-gm_turn:'Din tur',gm_turn_left:'Din tur · {n} trekk igjen',gm_heard:'Du hørte boten slippe en brikke i kolonne {c}.',gm_intro:'Du er gul. Få {k} på rad.',gm_full_pre:'Kolonnen var full, så trekket ble brukt opp.',col_aria:'Slipp i kolonne {c}',
-res_win:'{s} trekk på par {p}, {m}.',match1:'1 fyrstikk',matchN:'{n} fyrstikker',res_loss:'Hullet teller {s} (par {p} + 6).',practice_suffix:' Øvingsrunde, teller ikke.',moves_par:'{s} trekk (par {p})',
-copied:'Kopiert!',select_copy:'Merk og kopier teksten under',challenge_copied:'Utfordring kopiert!',
-lbl_duel:'Duell',lbl_holes:' · {n} hull',
-rh_win:'{s} trekk på par {p}.',rh_loss:'Hullet teller {s} (par + 6).',opp_used:' {o} brukte {n}: ',you_won_hole:'du vant hullet.',opp_won_hole:'{o} vant hullet.',halved:'delt hull.',
-duel_status:'Duell mot {o} ({t} slag): ',lead:'du leder med {n} hull.',behind:'du ligger {n} hull under.',square:'helt likt.',
-par_diff:'Par {p} · {d}',duel_you:'Du slo {o}!',duel_opp:'{o} vant duellen',duel_tie:'Uavgjort duell',duel_line:' · Hull: {w} vunnet, {l} tapt, {h} delt · {o}: {t} slag',
-sc_hole:'Hull',sc_par:'Par',sc_out:'Ut',sc_in:'Inn',sc_tot:'Tot',sc_you:'Du',
-challenge_text:'Jeg spilte {n} hull i {name} på {s} slag ({d}). Klarer du å slå meg?\n\nÅpne spillet, gå til «Duell» og lim inn koden:\n{code}',
-share_round:'{name} 🌑\n{label}\n{s} slag (par {p}, {d})',share_duel:'\nDuell mot {o}: {w}–{l}',share_halved:' ({h} delt)',
-err_nocode:'Fant ingen gyldig kode. Den ser slik ut: {ex}',err_count:'Koden har {a} hullresultater, men skulle hatt {b}. Sjekk at hele koden ble kopiert.',
-opponent:'Motstander',friend:'En venn',duel_vs:'Duell mot {o}',
-/* v6 */
-points:"Poeng",
-pts_earned:"+{n} poeng",
-pts_desc:"Birdie eller bedre gir 3 poeng, par 2, og et klart hull 1. I dueller får du +1 for hvert hull du vinner.",
-points_title:"Poeng per hull",
-lg_s3:"birdie eller bedre",
-lg_s2:"par",
-lg_s1:"hullet klart (bogey eller mer)",
-lg_s0:"ikke klart (teller som dobbel bogey)",
-lg_sduel:"for hvert hull du vinner i en duell",
-rank_title:"Plassering",
-scope_friends:"Venner",
-scope_country:"Landet ditt",
-scope_world:"Verden",
-rank_of:"#{r} av {n}",
-rank_note:"Landet ditt og verden kommer når innlogging er på plass.",
-see_board:"Se tabellen",
-more_stats:"Mer statistikk",
-board_soon:"Denne listen kommer når innlogging er på plass. Da ser du hvordan du ligger an mot alle andre spillere.",
-board_note:"Vennetabellen bygges fra utfordringene du tar imot.",
-counts_as:"Teller som {s}.",
-r4:"<b>Par</b> er perfekt spill pluss ett trekk (to på lange hull). Spiller du perfekt, blir det birdie eller bedre.",
-r5:"Klarer du det ikke innen par + 5 trekk, eller boten vinner, får du dobbel bogey (par + 2). Et hull teller aldri mer enn det.",
-res_loss:"Hullet teller {s} (dobbel bogey).",
-rh_loss:"Hullet teller {s} (dobbel bogey).",
-pvp_title:"Duell på samme mobil",
-pvp_desc:"To spillere, tomt brett og ingen bot. Dere bytter på å slippe brikker, og hver ser bare lyset rundt sine egne. Første til fire på rad vinner.",
-pvp_start:"Start duellen",
-pvp_quit:"Avslutt",
-pvp_again:"Ny kamp",
-p_yellow:"Gul",
-p_red:"Rød",
-hud_turn:"Tur",
-pvp_pass:"Gi mobilen til {p}",
-pvp_dont_peek:"Ikke kikk! Bare {p} skal se brettet nå.",
-pvp_ready:"Jeg er {p} – vis brettet",
-pvp_turn:"{p} sin tur",
-pvp_intro:"Få {k} på rad før motstanderen. Du ser bare rundt dine egne brikker.",
-pvp_heard:"Du hørte {p} slippe en brikke i kolonne {c}.",
-pvp_opp_full:"{p} slapp i en full kolonne ({c}) og mistet turen.",
-pvp_won:"{p} vant!",
-pvp_draw:"Uavgjort",
-pvp_note:"Teller ikke på poengene dine.",
-inv_title:"Utfordring fra {o}",
-inv_sub:"{n} hull · {s} slag å slå.",
-inv_replace:" Runden du holder på med blir avbrutt.",
-not_now:"Ikke nå",
-challenge_msg:"Jeg spilte {n} hull i {name} på {s} slag ({d}). Klarer du å slå meg? Trykk på lenken for å ta utfordringen:",
-duel_in_desc:"Fikk du en lenke, er det bare å trykke på den. Du kan også lime inn lenken eller koden her.",
-duel_new_desc:"Velg lengde. Du spiller først, og så sender du en lenke til en venn som spiller de samme hullene mot den samme boten.",
-duel_ph:"Lim inn lenken eller koden her"
-},
-en:{
-gm_threat:"⚠️ You hear that the bot can get {k} in a row on its next move – in column {c}. Block it!",
-tab_board:"Ranking",
-points:"Stars",
-pts_desc:"⭐ for every hole you complete, ⭐⭐ on par and ⭐⭐⭐ under par. In duels you get +1 ⭐ for every hole you win. Stars add up and give you a level.",
-pts_earned:"+{n} ⭐",
-hud_goal:"Goal",
-board_you:"Your position",
-board_rank_of:"of {n} players",
-board_title:"Friends ranking",
-board_empty:"The table fills up when you accept challenges from friends. Start a duel under “Duel”.",
-board_note:"The friends ranking is built from your challenges. When sign-in arrives, this becomes a leaderboard for all players.",
-col_player:"Player",
-col_h2h:"Vs you",
-lg_s3:"under par (birdie or better)",
-lg_s2:"on par",
-lg_s1:"completed the hole",
-lg_sduel:"for every hole you win in a duel",
-share_app:"Share Quadlume",
-share_text:"Four in a row in the dark, played like golf. Try Quadlume!",
-share_copied:"Link copied. Paste it wherever you want to share it.",
-duel_new_title:"Start a new challenge",
-duel_new_desc:"Pick a length. You play first, then send a code to a friend who plays the same holes.",
-holes3:"3 holes",
-holes6:"6 holes",
-
-
-
-next_level:"{n} points to {lvl}",
-max_level:"Top level!",
-lvl0:"Beginner",
-lvl1:"Club player",
-lvl2:"Tournament player",
-lvl3:"Scratch player",
-lvl4:"Tour pro",
-lvl5:"Legend",
-duel_record:"Duels: {w} won · {t} tied · {l} lost",
-house_title:"Enjoying Quadlume?",
-house_text:"Share the game with a friend and challenge them to a duel.",
-p_holes:"Holes played",
-language:'Language',tagline:'Four in a row in the dark, played like golf: as few moves as possible per hole.',
-tabs_aria:'Game mode',tab_daily:'Daily',tab_round:'Round',tab_duel:'Duel',tab_profile:'Profile',
-board_no:'Board #{n}',today:' · today',prev_aria:"Previous day's board",next_aria:"Next day's board",
-practice_note:"You've already played this board. This is a practice round and won't count.",
-st_played:'Played',st_under:'At or under par',st_streak:'Day streak',st_avg:'Average vs par',
-copy_result:'Copy result',practice_again:'Practise this board again',next_board:'Next board in',
-week_n:"This week's course · week {w}",par_n:'Par {n}',week_desc:'The same 18 holes for everyone all week. Compare with friends, or challenge them on the same course.',
-play9:'Play 9 holes',play18:'Play 18 holes',random:'Random course',random_sub:'A new course every time',random_desc:'For practice. Also counts towards your handicap.',
-holes9:'9 holes',holes18:'18 holes',
-type_K:'Short hole',type_M:'Medium hole',type_L:'Long hole',desc_K:'7×6 · four in a row',desc_M:'8×7 · four in a row',desc_L:'9×7 · five in a row',
-quit:'End round',hole_x:'Hole {i} of {n}',total:'Total: {s} ({d})',
-quit_q:"End the round? It won't be saved.",quit_yes:'Yes, end it',quit_no:'Keep playing',
-next_hole:'Next hole',see_result:'See result',challenge:'Challenge a friend',new_round:'New round',
-duel_in_title:'Accept a challenge',duel_in_desc:'Paste the message you got from a friend. You play the same holes, and each hole is decided on its own: fewest moves wins the hole.',
-duel_ph:'Paste the challenge here, e.g. {code}',duel_start:'Start the duel',
-duel_out_title:'Challenge someone yourself',duel_out_desc:'Play a round under “Round”. When you’re done, tap “Challenge a friend” and send the message along with the link to the game.',go_round:'Go to Round',
-handicap:'Handicap',hcp_need1:'Play 1 more round to get a handicap.',hcp_needN:'Play {n} more rounds to get a handicap.',hcp_desc:'Your average over par per 18 holes, last 10 rounds of 9 or 18 holes. Lower is better.',
-p_rounds:'Rounds',p_best:'Best round',p_birdies:'Birdies',p_daily:'Dailies played',
-name_label:'Your name in challenges',name_ph:'E.g. Alex',recent:'Recent rounds',no_rounds:'No rounds yet.',
-local_note:'Your results are only saved on this device. A shared leaderboard and tournaments need sign-in and a server, and are the next step for the app.',
-hud_par:'Par',hud_moves:'Moves',hud_matches:'Matches',light_match:'Strike a match',rules_title:'How to play',
-r1:'You’re yellow. Get <b>four in a row</b> (five on long holes) in as few moves as possible.',
-r2:'You can only see the spaces <b>around your own pieces</b>: two spaces straight out and one diagonally. Dashed spaces are taken, but you don’t know by whom.',
-r3:"After each move the <b>bot</b> replies, and it tries to get four in a row itself. The arrow shows which column it dropped into, but not where the piece landed. The bot only sees one space around its own pieces, but it can hear you: stack almost enough pieces on top of each other and it will put a lid on it. If the bot can win on its next move, you hear it, and the column is marked with a red <b>!</b>.",
-r4:'<b>Par</b> is perfect play plus one move. Play perfectly and you get a birdie.',
-r5:'If you don’t make it within par + 5 moves, or the bot wins, you score par + 6 on the hole.',
-r6:'<b>Matches</b> show the whole board for two seconds: two on the Daily, one per hole in rounds.',
-lg_eagle:'2 under par',lg_birdie:'1 under par, played perfectly',lg_par:'one move from perfect',lg_bogey:'1 over par',lg_hcp:'your average over par per 18 holes, last 10 rounds',
-g_albatross:'Albatross',g_eagle:'Eagle',g_birdie:'Birdie',g_par:'Par',g_bogey:'Bogey',g_dbogey:'Double bogey',g_tbogey:'Triple bogey',g_finished:'Finished',g_botwon:'The bot won',g_darkwon:'The dark won',
-gm_win:'{k} in a row!',gm_botwin:'The bot got {k} in a row',gm_nomoves:'Out of moves',gm_lit:'The lights are on. Now you can see the whole board.',
-gm_flash:'The match is burning',gm_flash_sub:'Look fast. The dark returns in two seconds.',gm_botturn:'The bot is listening …',gm_full:'The column was full. The move was used up.',gm_botsees:'It sees as little as you do.',
-gm_turn:'Your turn',gm_turn_left:'Your turn · {n} moves left',gm_heard:'You heard the bot drop a piece in column {c}.',gm_intro:'You’re yellow. Get {k} in a row.',gm_full_pre:'The column was full, so the move was used up.',col_aria:'Drop in column {c}',
-res_win:'{s} moves on par {p}, {m}.',match1:'1 match',matchN:'{n} matches',res_loss:'The hole counts as {s} (par {p} + 6).',practice_suffix:' Practice round, doesn’t count.',moves_par:'{s} moves (par {p})',
-copied:'Copied!',select_copy:'Select and copy the text below',challenge_copied:'Challenge copied!',
-lbl_duel:'Duel',lbl_holes:' · {n} holes',
-rh_win:'{s} moves on par {p}.',rh_loss:'The hole counts as {s} (par + 6).',opp_used:' {o} used {n}: ',you_won_hole:'you won the hole.',opp_won_hole:'{o} won the hole.',halved:'hole halved.',
-duel_status:'Duel against {o} ({t} strokes): ',lead:'you’re {n} up.',behind:'you’re {n} down.',square:'all square.',
-par_diff:'Par {p} · {d}',duel_you:'You beat {o}!',duel_opp:'{o} won the duel',duel_tie:'Duel tied',duel_line:' · Holes: {w} won, {l} lost, {h} halved · {o}: {t} strokes',
-sc_hole:'Hole',sc_par:'Par',sc_out:'Out',sc_in:'In',sc_tot:'Tot',sc_you:'You',
-challenge_text:'I played {n} holes of {name} in {s} strokes ({d}). Can you beat me?\n\nOpen the game, go to “Duel” and paste the code:\n{code}',
-share_round:'{name} 🌑\n{label}\n{s} strokes (par {p}, {d})',share_duel:'\nDuel against {o}: {w}–{l}',share_halved:' ({h} halved)',
-err_nocode:'No valid code found. It looks like this: {ex}',err_count:'The code has {a} hole scores but should have {b}. Check that the whole code was copied.',
-opponent:'Opponent',friend:'A friend',duel_vs:'Duel against {o}',
-/* v6 */
-points:"Points",
-pts_earned:"+{n} points",
-pts_desc:"Birdie or better gives 3 points, par 2, and a completed hole 1. In duels you get +1 for every hole you win.",
-points_title:"Points per hole",
-lg_s3:"birdie or better",
-lg_s2:"par",
-lg_s1:"hole completed (bogey or more)",
-lg_s0:"not completed (counts as double bogey)",
-lg_sduel:"for every hole you win in a duel",
-rank_title:"Ranking",
-scope_friends:"Friends",
-scope_country:"Your country",
-scope_world:"World",
-rank_of:"#{r} of {n}",
-rank_note:"Your country and the world arrive when sign-in is ready.",
-see_board:"See the ranking",
-more_stats:"More stats",
-board_soon:"This list arrives when sign-in is ready. Then you can see how you compare with all other players.",
-board_note:"The friends ranking is built from the challenges you accept.",
-counts_as:"Counts as {s}.",
-r4:"<b>Par</b> is perfect play plus one move (two on long holes). Play perfectly and you get a birdie or better.",
-r5:"If you don’t make it within par + 5 moves, or the bot wins, you score a double bogey (par + 2). A hole never counts for more than that.",
-res_loss:"The hole counts as {s} (double bogey).",
-rh_loss:"The hole counts as {s} (double bogey).",
-pvp_title:"Duel on one phone",
-pvp_desc:"Two players, an empty board and no bot. Take turns dropping pieces; each of you only sees the light around your own. First to four in a row wins.",
-pvp_start:"Start the duel",
-pvp_quit:"Quit",
-pvp_again:"New game",
-p_yellow:"Yellow",
-p_red:"Red",
-hud_turn:"Turn",
-pvp_pass:"Hand the phone to {p}",
-pvp_dont_peek:"No peeking! Only {p} should see the board now.",
-pvp_ready:"I’m {p} – show the board",
-pvp_turn:"{p}’s turn",
-pvp_intro:"Get {k} in a row before your opponent. You only see around your own pieces.",
-pvp_heard:"You heard {p} drop a piece in column {c}.",
-pvp_opp_full:"{p} dropped into a full column ({c}) and lost the turn.",
-pvp_won:"{p} wins!",
-pvp_draw:"Draw",
-pvp_note:"Doesn’t count towards your points.",
-inv_title:"Challenge from {o}",
-inv_sub:"{n} holes · {s} strokes to beat.",
-inv_replace:" The round you’re playing will be abandoned.",
-not_now:"Not now",
-challenge_msg:"I played {n} holes of {name} in {s} strokes ({d}). Can you beat me? Tap the link to take the challenge:",
-duel_in_desc:"If you got a link, just tap it. You can also paste the link or the code here.",
-duel_new_desc:"Pick a length. You play first, then send a link to a friend who plays the same holes against the same bot.",
-duel_ph:"Paste the link or the code here"
-},
-sv:{
-gm_threat:"⚠️ Du hör att boten kan få {k} i rad i nästa drag – i kolumn {c}. Blockera!",
-tab_board:"Tabell",
-points:"Stjärnor",
-pts_desc:"⭐ för varje hål du klarar, ⭐⭐ på par och ⭐⭐⭐ under par. I dueller får du +1 ⭐ för varje hål du vinner. Stjärnorna samlas och ger dig nivå.",
-pts_earned:"+{n} ⭐",
-hud_goal:"Mål",
-board_you:"Din placering",
-board_rank_of:"av {n} spelare",
-board_title:"Vänlista",
-board_empty:"Tabellen fylls när du antar utmaningar från vänner. Starta en duell under ”Duell”.",
-board_note:"Vänlistan byggs från dina utmaningar. När inloggning kommer blir detta en topplista för alla spelare.",
-col_player:"Spelare",
-col_h2h:"Mot dig",
-lg_s3:"under par (birdie eller bättre)",
-lg_s2:"på par",
-lg_s1:"klarade hålet",
-lg_sduel:"för varje hål du vinner i en duell",
-share_app:"Dela Quadlume",
-share_text:"Fyra i rad i mörkret, spelat som golf. Testa Quadlume!",
-share_copied:"Länken är kopierad. Klistra in den där du vill dela.",
-duel_new_title:"Starta en ny utmaning",
-duel_new_desc:"Välj längd. Du spelar först och skickar sedan en kod till en vän som spelar samma hål.",
-holes3:"3 hål",
-holes6:"6 hål",
-
-
-
-next_level:"{n} poäng till {lvl}",
-max_level:"Högsta nivån!",
-lvl0:"Nybörjare",
-lvl1:"Klubbspelare",
-lvl2:"Tävlingsspelare",
-lvl3:"Scratchspelare",
-lvl4:"Tourproffs",
-lvl5:"Legend",
-duel_record:"Dueller: {w} vunna · {t} oavgjorda · {l} förlorade",
-house_title:"Gillar du Quadlume?",
-house_text:"Dela spelet med en vän och utmana dem till en duell.",
-p_holes:"Spelade hål",
-language:'Språk',tagline:'Fyra i rad i mörkret, spelat som golf: så få drag som möjligt per hål.',
-tabs_aria:'Spelläge',tab_daily:'Dagens',tab_round:'Runda',tab_duel:'Duell',tab_profile:'Profil',
-board_no:'Bräde #{n}',today:' · i dag',prev_aria:'Föregående dags bräde',next_aria:'Nästa dags bräde',
-practice_note:'Du har redan spelat det här brädet. Det här är en övningsrunda och räknas inte.',
-st_played:'Spelade',st_under:'På eller under par',st_streak:'Dagar i rad',st_avg:'Snitt mot par',
-copy_result:'Kopiera resultat',practice_again:'Öva på brädet igen',next_board:'Nästa bräde om',
-week_n:'Veckans bana · vecka {w}',par_n:'Par {n}',week_desc:'Samma 18 hål för alla hela veckan. Jämför med vänner eller utmana dem på samma bana.',
-play9:'Spela 9 hål',play18:'Spela 18 hål',random:'Slumpad bana',random_sub:'Ny bana varje gång',random_desc:'För träning. Räknas också till ditt handicap.',
-holes9:'9 hål',holes18:'18 hål',
-type_K:'Kort hål',type_M:'Medellångt hål',type_L:'Långt hål',desc_K:'7×6 · fyra i rad',desc_M:'8×7 · fyra i rad',desc_L:'9×7 · fem i rad',
-quit:'Avsluta rundan',hole_x:'Hål {i} av {n}',total:'Totalt: {s} ({d})',
-quit_q:'Avsluta rundan? Den sparas inte.',quit_yes:'Ja, avsluta',quit_no:'Fortsätt spela',
-next_hole:'Nästa hål',see_result:'Se resultatet',challenge:'Utmana en vän',new_round:'Ny runda',
-duel_in_title:'Anta en utmaning',duel_in_desc:'Klistra in meddelandet du fick från en vän. Du spelar samma hål, och varje hål avgörs för sig: färst drag vinner hålet.',
-duel_ph:'Klistra in utmaningen här, t.ex. {code}',duel_start:'Starta duellen',
-duel_out_title:'Utmana någon själv',duel_out_desc:'Spela en runda under ”Runda”. När du är klar trycker du på ”Utmana en vän” och skickar meddelandet tillsammans med länken till spelet.',go_round:'Gå till Runda',
-handicap:'Handicap',hcp_need1:'Spela 1 runda till för att få handicap.',hcp_needN:'Spela {n} rundor till för att få handicap.',hcp_desc:'Ditt snitt över par per 18 hål, senaste 10 rundorna på 9 eller 18 hål. Lägre är bättre.',
-p_rounds:'Rundor',p_best:'Bästa runda',p_birdies:'Birdies',p_daily:'Dagens spelade',
-name_label:'Ditt namn i utmaningar',name_ph:'T.ex. Alex',recent:'Senaste rundorna',no_rounds:'Inga rundor än.',
-local_note:'Dina resultat sparas bara på den här enheten. En gemensam topplista och turneringar kräver inloggning och en server, och är nästa steg för appen.',
-hud_par:'Par',hud_moves:'Drag',hud_matches:'Tändstickor',light_match:'Tänd en tändsticka',rules_title:'Så spelar du',
-r1:'Du är gul. Få <b>fyra i rad</b> (fem på långa hål) på så få drag som möjligt.',
-r2:'Du ser bara rutorna <b>runt dina egna pjäser</b>: två rutor rakt ut och en diagonalt. Streckade rutor är upptagna, men du vet inte av vem.',
-r3:"Efter varje drag svarar <b>boten</b>, och den försöker själv få fyra i rad. Pilen visar vilken kolumn den släppte i, men inte var pjäsen landade. Boten ser bara en ruta runt sina egna pjäser, men den hör dig: staplar du nästan tillräckligt många pjäser på varandra lägger den lock på. Kan boten vinna i nästa drag hör du det, och kolumnen markeras med ett rött <b>!</b>.",
-r4:'<b>Par</b> är perfekt spel plus ett drag. Spelar du perfekt blir det birdie.',
-r5:'Klarar du det inte inom par + 5 drag, eller om boten vinner, får du par + 6 på hålet.',
-r6:'<b>Tändstickor</b> visar hela brädet i två sekunder: två på Dagens, en per hål i rundor.',
-lg_eagle:'2 under par',lg_birdie:'1 under par, perfekt spelat',lg_par:'ett drag från perfekt',lg_bogey:'1 över par',lg_hcp:'ditt snitt över par per 18 hål, senaste 10 rundorna',
-g_albatross:'Albatross',g_eagle:'Eagle',g_birdie:'Birdie',g_par:'Par',g_bogey:'Bogey',g_dbogey:'Dubbelbogey',g_tbogey:'Trippelbogey',g_finished:'I mål',g_botwon:'Boten vann',g_darkwon:'Mörkret vann',
-gm_win:'{k} i rad!',gm_botwin:'Boten fick {k} i rad',gm_nomoves:'Slut på drag',gm_lit:'Ljuset är på. Nu ser du hela brädet.',
-gm_flash:'Tändstickan brinner',gm_flash_sub:'Titta snabbt. Mörkret kommer tillbaka om två sekunder.',gm_botturn:'Boten lyssnar …',gm_full:'Kolumnen var full. Draget gick förlorat.',gm_botsees:'Den ser lika lite som du.',
-gm_turn:'Din tur',gm_turn_left:'Din tur · {n} drag kvar',gm_heard:'Du hörde boten släppa en pjäs i kolumn {c}.',gm_intro:'Du är gul. Få {k} i rad.',gm_full_pre:'Kolumnen var full, så draget gick förlorat.',col_aria:'Släpp i kolumn {c}',
-res_win:'{s} drag på par {p}, {m}.',match1:'1 tändsticka',matchN:'{n} tändstickor',res_loss:'Hålet räknas som {s} (par {p} + 6).',practice_suffix:' Övningsrunda, räknas inte.',moves_par:'{s} drag (par {p})',
-copied:'Kopierat!',select_copy:'Markera och kopiera texten nedan',challenge_copied:'Utmaningen kopierad!',
-lbl_duel:'Duell',lbl_holes:' · {n} hål',
-rh_win:'{s} drag på par {p}.',rh_loss:'Hålet räknas som {s} (par + 6).',opp_used:' {o} använde {n}: ',you_won_hole:'du vann hålet.',opp_won_hole:'{o} vann hålet.',halved:'delat hål.',
-duel_status:'Duell mot {o} ({t} slag): ',lead:'du leder med {n} hål.',behind:'du ligger {n} hål under.',square:'helt lika.',
-par_diff:'Par {p} · {d}',duel_you:'Du slog {o}!',duel_opp:'{o} vann duellen',duel_tie:'Oavgjord duell',duel_line:' · Hål: {w} vunna, {l} förlorade, {h} delade · {o}: {t} slag',
-sc_hole:'Hål',sc_par:'Par',sc_out:'Ut',sc_in:'In',sc_tot:'Tot',sc_you:'Du',
-challenge_text:'Jag spelade {n} hål i {name} på {s} slag ({d}). Klarar du att slå mig?\n\nÖppna spelet, gå till ”Duell” och klistra in koden:\n{code}',
-share_round:'{name} 🌑\n{label}\n{s} slag (par {p}, {d})',share_duel:'\nDuell mot {o}: {w}–{l}',share_halved:' ({h} delade)',
-err_nocode:'Hittade ingen giltig kod. Den ser ut så här: {ex}',err_count:'Koden har {a} hålresultat men skulle ha {b}. Kontrollera att hela koden kopierades.',
-opponent:'Motståndare',friend:'En vän',duel_vs:'Duell mot {o}',
-/* v6 */
-points:"Poäng",
-pts_earned:"+{n} poäng",
-pts_desc:"Birdie eller bättre ger 3 poäng, par 2 och ett klarat hål 1. I dueller får du +1 för varje hål du vinner.",
-points_title:"Poäng per hål",
-lg_s3:"birdie eller bättre",
-lg_s2:"par",
-lg_s1:"hålet klarat (bogey eller mer)",
-lg_s0:"inte klarat (räknas som dubbelbogey)",
-lg_sduel:"för varje hål du vinner i en duell",
-rank_title:"Placering",
-scope_friends:"Vänner",
-scope_country:"Ditt land",
-scope_world:"Världen",
-rank_of:"#{r} av {n}",
-rank_note:"Ditt land och världen kommer när inloggningen är på plats.",
-see_board:"Se tabellen",
-more_stats:"Mer statistik",
-board_soon:"Den här listan kommer när inloggningen är på plats. Då ser du hur du ligger till mot alla andra spelare.",
-board_note:"Vänlistan byggs av utmaningarna du antar.",
-counts_as:"Räknas som {s}.",
-r4:"<b>Par</b> är perfekt spel plus ett drag (två på långa hål). Spelar du perfekt blir det birdie eller bättre.",
-r5:"Klarar du det inte inom par + 5 drag, eller om boten vinner, får du dubbelbogey (par + 2). Ett hål räknas aldrig som mer än så.",
-res_loss:"Hålet räknas som {s} (dubbelbogey).",
-rh_loss:"Hålet räknas som {s} (dubbelbogey).",
-pvp_title:"Duell på samma mobil",
-pvp_desc:"Två spelare, tomt bräde och ingen bot. Ni turas om att släppa pjäser, och var och en ser bara ljuset runt sina egna. Först till fyra i rad vinner.",
-pvp_start:"Starta duellen",
-pvp_quit:"Avsluta",
-pvp_again:"Ny match",
-p_yellow:"Gul",
-p_red:"Röd",
-hud_turn:"Tur",
-pvp_pass:"Ge mobilen till {p}",
-pvp_dont_peek:"Tjuvkika inte! Bara {p} ska se brädet nu.",
-pvp_ready:"Jag är {p} – visa brädet",
-pvp_turn:"{p}s tur",
-pvp_intro:"Få {k} i rad före motståndaren. Du ser bara runt dina egna pjäser.",
-pvp_heard:"Du hörde {p} släppa en pjäs i kolumn {c}.",
-pvp_opp_full:"{p} släppte i en full kolumn ({c}) och förlorade turen.",
-pvp_won:"{p} vann!",
-pvp_draw:"Oavgjort",
-pvp_note:"Räknas inte till dina poäng.",
-inv_title:"Utmaning från {o}",
-inv_sub:"{n} hål · {s} slag att slå.",
-inv_replace:" Rundan du spelar avbryts.",
-not_now:"Inte nu",
-challenge_msg:"Jag spelade {n} hål i {name} på {s} slag ({d}). Klarar du att slå mig? Tryck på länken för att anta utmaningen:",
-duel_in_desc:"Fick du en länk är det bara att trycka på den. Du kan också klistra in länken eller koden här.",
-duel_new_desc:"Välj längd. Du spelar först och skickar sedan en länk till en vän som spelar samma hål mot samma bot.",
-duel_ph:"Klistra in länken eller koden här"
-},
-da:{
-gm_threat:"⚠️ Du hører, at botten kan få {k} på stribe i næste træk – i kolonne {c}. Bloker!",
-tab_board:"Rangliste",
-points:"Stjerner",
-pts_desc:"⭐ for hvert hul, du klarer, ⭐⭐ på par og ⭐⭐⭐ under par. I dueller får du +1 ⭐ for hvert hul, du vinder. Stjernerne lægges sammen og giver dig niveau.",
-pts_earned:"+{n} ⭐",
-hud_goal:"Mål",
-board_you:"Din placering",
-board_rank_of:"af {n} spillere",
-board_title:"Venneliste",
-board_empty:"Listen fyldes, når du tager imod udfordringer fra venner. Start en duel under »Duel«.",
-board_note:"Vennelisten bygges ud fra dine udfordringer. Når login kommer, bliver dette en rangliste for alle spillere.",
-col_player:"Spiller",
-col_h2h:"Mod dig",
-lg_s3:"under par (birdie eller bedre)",
-lg_s2:"på par",
-lg_s1:"klarede hullet",
-lg_sduel:"for hvert hul, du vinder i en duel",
-share_app:"Del Quadlume",
-share_text:"Fire på stribe i mørket, spillet som golf. Prøv Quadlume!",
-share_copied:"Linket er kopieret. Indsæt det, hvor du vil dele det.",
-duel_new_title:"Start en ny udfordring",
-duel_new_desc:"Vælg længde. Du spiller først og sender derefter en kode til en ven, der spiller de samme huller.",
-holes3:"3 huller",
-holes6:"6 huller",
-
-
-
-next_level:"{n} point til {lvl}",
-max_level:"Højeste niveau!",
-lvl0:"Nybegynder",
-lvl1:"Klubspiller",
-lvl2:"Turneringsspiller",
-lvl3:"Scratchspiller",
-lvl4:"Tourprofessionel",
-lvl5:"Legende",
-duel_record:"Dueller: {w} vundet · {t} uafgjort · {l} tabt",
-house_title:"Kan du lide Quadlume?",
-house_text:"Del spillet med en ven, og udfordr dem til en duel.",
-p_holes:"Spillede huller",
-language:'Sprog',tagline:'Fire på stribe i mørket, spillet som golf: så få træk som muligt pr. hul.',
-tabs_aria:'Spiltilstand',tab_daily:'Dagens',tab_round:'Runde',tab_duel:'Duel',tab_profile:'Profil',
-board_no:'Bræt #{n}',today:' · i dag',prev_aria:'Forrige dags bræt',next_aria:'Næste dags bræt',
-practice_note:'Du har allerede spillet dette bræt. Det her er en øverunde, og den tæller ikke.',
-st_played:'Spillet',st_under:'På eller under par',st_streak:'Dage i træk',st_avg:'Snit mod par',
-copy_result:'Kopiér resultat',practice_again:'Øv på brættet igen',next_board:'Næste bræt om',
-week_n:'Ugens bane · uge {w}',par_n:'Par {n}',week_desc:'De samme 18 huller for alle hele ugen. Sammenlign med venner, eller udfordr dem på samme bane.',
-play9:'Spil 9 huller',play18:'Spil 18 huller',random:'Tilfældig bane',random_sub:'Ny bane hver gang',random_desc:'Til træning. Tæller også med i dit handicap.',
-holes9:'9 huller',holes18:'18 huller',
-type_K:'Kort hul',type_M:'Mellemlangt hul',type_L:'Langt hul',desc_K:'7×6 · fire på stribe',desc_M:'8×7 · fire på stribe',desc_L:'9×7 · fem på stribe',
-quit:'Afslut runden',hole_x:'Hul {i} af {n}',total:'I alt: {s} ({d})',
-quit_q:'Afslut runden? Den bliver ikke gemt.',quit_yes:'Ja, afslut',quit_no:'Spil videre',
-next_hole:'Næste hul',see_result:'Se resultatet',challenge:'Udfordr en ven',new_round:'Ny runde',
-duel_in_title:'Tag imod en udfordring',duel_in_desc:'Indsæt beskeden, du fik fra en ven. I spiller de samme huller, og hvert hul afgøres for sig: færrest træk vinder hullet.',
-duel_ph:'Indsæt udfordringen her, fx {code}',duel_start:'Start duellen',
-duel_out_title:'Udfordr selv nogen',duel_out_desc:'Spil en runde under »Runde«. Når du er færdig, trykker du på »Udfordr en ven« og sender beskeden sammen med linket til spillet.',go_round:'Gå til Runde',
-handicap:'Handicap',hcp_need1:'Spil 1 runde mere for at få handicap.',hcp_needN:'Spil {n} runder mere for at få handicap.',hcp_desc:'Dit snit over par pr. 18 huller, seneste 10 runder på 9 eller 18 huller. Lavere er bedre.',
-p_rounds:'Runder',p_best:'Bedste runde',p_birdies:'Birdies',p_daily:'Dagens spillet',
-name_label:'Dit navn i udfordringer',name_ph:'Fx Alex',recent:'Seneste runder',no_rounds:'Ingen runder endnu.',
-local_note:'Dine resultater gemmes kun på denne enhed. En fælles rangliste og turneringer kræver login og en server og er næste skridt for appen.',
-hud_par:'Par',hud_moves:'Træk',hud_matches:'Tændstikker',light_match:'Tænd en tændstik',rules_title:'Sådan spiller du',
-r1:'Du er gul. Få <b>fire på stribe</b> (fem på lange huller) på så få træk som muligt.',
-r2:'Du kan kun se felterne <b>omkring dine egne brikker</b>: to felter lige ud og ét på skrå. Stiplede felter er optaget, men du ved ikke af hvem.',
-r3:"Efter hvert træk svarer <b>botten</b>, og den prøver selv at få fire på stribe. Pilen viser, hvilken kolonne den slap i, men ikke hvor brikken landede. Botten ser kun ét felt omkring sine egne brikker, men den kan høre dig: stabler du næsten nok brikker oven på hinanden, lægger den låg på. Kan botten vinde i næste træk, hører du det, og kolonnen markeres med et rødt <b>!</b>.",
-r4:'<b>Par</b> er perfekt spil plus ét træk. Spiller du perfekt, bliver det birdie.',
-r5:'Klarer du det ikke inden for par + 5 træk, eller vinder botten, får du par + 6 på hullet.',
-r6:'<b>Tændstikker</b> viser hele brættet i to sekunder: to på Dagens, én pr. hul i runder.',
-lg_eagle:'2 under par',lg_birdie:'1 under par, perfekt spillet',lg_par:'ét træk fra perfekt',lg_bogey:'1 over par',lg_hcp:'dit snit over par pr. 18 huller, seneste 10 runder',
-g_albatross:'Albatros',g_eagle:'Eagle',g_birdie:'Birdie',g_par:'Par',g_bogey:'Bogey',g_dbogey:'Dobbeltbogey',g_tbogey:'Tripelbogey',g_finished:'I mål',g_botwon:'Botten vandt',g_darkwon:'Mørket vandt',
-gm_win:'{k} på stribe!',gm_botwin:'Botten fik {k} på stribe',gm_nomoves:'Ikke flere træk',gm_lit:'Lyset er tændt. Nu kan du se hele brættet.',
-gm_flash:'Tændstikken brænder',gm_flash_sub:'Kig hurtigt. Mørket vender tilbage om to sekunder.',gm_botturn:'Botten lytter …',gm_full:'Kolonnen var fuld. Trækket blev brugt.',gm_botsees:'Den ser lige så lidt som dig.',
-gm_turn:'Din tur',gm_turn_left:'Din tur · {n} træk tilbage',gm_heard:'Du hørte botten slippe en brik i kolonne {c}.',gm_intro:'Du er gul. Få {k} på stribe.',gm_full_pre:'Kolonnen var fuld, så trækket blev brugt.',col_aria:'Slip i kolonne {c}',
-res_win:'{s} træk på par {p}, {m}.',match1:'1 tændstik',matchN:'{n} tændstikker',res_loss:'Hullet tæller {s} (par {p} + 6).',practice_suffix:' Øverunde, tæller ikke.',moves_par:'{s} træk (par {p})',
-copied:'Kopieret!',select_copy:'Markér og kopiér teksten nedenfor',challenge_copied:'Udfordring kopieret!',
-lbl_duel:'Duel',lbl_holes:' · {n} huller',
-rh_win:'{s} træk på par {p}.',rh_loss:'Hullet tæller {s} (par + 6).',opp_used:' {o} brugte {n}: ',you_won_hole:'du vandt hullet.',opp_won_hole:'{o} vandt hullet.',halved:'delt hul.',
-duel_status:'Duel mod {o} ({t} slag): ',lead:'du fører med {n} huller.',behind:'du ligger {n} huller under.',square:'helt lige.',
-par_diff:'Par {p} · {d}',duel_you:'Du slog {o}!',duel_opp:'{o} vandt duellen',duel_tie:'Uafgjort duel',duel_line:' · Huller: {w} vundet, {l} tabt, {h} delt · {o}: {t} slag',
-sc_hole:'Hul',sc_par:'Par',sc_out:'Ud',sc_in:'Ind',sc_tot:'I alt',sc_you:'Du',
-challenge_text:'Jeg spillede {n} huller i {name} på {s} slag ({d}). Kan du slå mig?\n\nÅbn spillet, gå til »Duel«, og indsæt koden:\n{code}',
-share_round:'{name} 🌑\n{label}\n{s} slag (par {p}, {d})',share_duel:'\nDuel mod {o}: {w}–{l}',share_halved:' ({h} delt)',
-err_nocode:'Fandt ingen gyldig kode. Den ser sådan ud: {ex}',err_count:'Koden har {a} hulresultater, men skulle have haft {b}. Tjek, at hele koden blev kopieret.',
-opponent:'Modstander',friend:'En ven',duel_vs:'Duel mod {o}',
-/* v6 */
-points:"Point",
-pts_earned:"+{n} point",
-pts_desc:"Birdie eller bedre giver 3 point, par 2 og et klaret hul 1. I dueller får du +1 for hvert hul, du vinder.",
-points_title:"Point pr. hul",
-lg_s3:"birdie eller bedre",
-lg_s2:"par",
-lg_s1:"hullet klaret (bogey eller mere)",
-lg_s0:"ikke klaret (tæller som dobbeltbogey)",
-lg_sduel:"for hvert hul, du vinder i en duel",
-rank_title:"Placering",
-scope_friends:"Venner",
-scope_country:"Dit land",
-scope_world:"Verden",
-rank_of:"#{r} af {n}",
-rank_note:"Dit land og verden kommer, når login er på plads.",
-see_board:"Se ranglisten",
-more_stats:"Mere statistik",
-board_soon:"Denne liste kommer, når login er på plads. Så kan du se, hvordan du ligger i forhold til alle andre spillere.",
-board_note:"Vennelisten bygges ud fra de udfordringer, du tager imod.",
-counts_as:"Tæller som {s}.",
-r4:"<b>Par</b> er perfekt spil plus ét træk (to på lange huller). Spiller du perfekt, bliver det birdie eller bedre.",
-r5:"Klarer du det ikke inden for par + 5 træk, eller vinder botten, får du dobbeltbogey (par + 2). Et hul tæller aldrig mere end det.",
-res_loss:"Hullet tæller {s} (dobbeltbogey).",
-rh_loss:"Hullet tæller {s} (dobbeltbogey).",
-pvp_title:"Duel på samme mobil",
-pvp_desc:"To spillere, tomt bræt og ingen bot. I skiftes til at slippe brikker, og hver ser kun lyset omkring sine egne. Første til fire på stribe vinder.",
-pvp_start:"Start duellen",
-pvp_quit:"Afslut",
-pvp_again:"Ny kamp",
-p_yellow:"Gul",
-p_red:"Rød",
-hud_turn:"Tur",
-pvp_pass:"Giv mobilen til {p}",
-pvp_dont_peek:"Ikke kigge! Kun {p} skal se brættet nu.",
-pvp_ready:"Jeg er {p} – vis brættet",
-pvp_turn:"{p}s tur",
-pvp_intro:"Få {k} på stribe før modstanderen. Du ser kun omkring dine egne brikker.",
-pvp_heard:"Du hørte {p} slippe en brik i kolonne {c}.",
-pvp_opp_full:"{p} slap i en fuld kolonne ({c}) og mistede turen.",
-pvp_won:"{p} vandt!",
-pvp_draw:"Uafgjort",
-pvp_note:"Tæller ikke med i dine point.",
-inv_title:"Udfordring fra {o}",
-inv_sub:"{n} huller · {s} slag at slå.",
-inv_replace:" Runden, du er i gang med, bliver afbrudt.",
-not_now:"Ikke nu",
-challenge_msg:"Jeg spillede {n} huller i {name} på {s} slag ({d}). Kan du slå mig? Tryk på linket for at tage udfordringen:",
-duel_in_desc:"Har du fået et link, skal du bare trykke på det. Du kan også indsætte linket eller koden her.",
-duel_new_desc:"Vælg længde. Du spiller først og sender derefter et link til en ven, der spiller de samme huller mod den samme bot.",
-duel_ph:"Indsæt linket eller koden her"
-},
-de:{
-gm_threat:"⚠️ Du hörst, dass der Bot im nächsten Zug {k} in einer Reihe bekommen kann – in Spalte {c}. Blocken!",
-tab_board:"Rangliste",
-points:"Sterne",
-pts_desc:"⭐ für jedes geschaffte Loch, ⭐⭐ bei Par und ⭐⭐⭐ unter Par. In Duellen gibt es +1 ⭐ für jedes gewonnene Loch. Die Sterne summieren sich und bestimmen deine Stufe.",
-pts_earned:"+{n} ⭐",
-hud_goal:"Ziel",
-board_you:"Deine Platzierung",
-board_rank_of:"von {n} Spielern",
-board_title:"Freundesliste",
-board_empty:"Die Liste füllt sich, wenn du Herausforderungen von Freunden annimmst. Starte ein Duell unter „Duell“.",
-board_note:"Die Freundesliste entsteht aus deinen Herausforderungen. Sobald es eine Anmeldung gibt, wird daraus eine Bestenliste für alle Spieler.",
-col_player:"Spieler",
-col_h2h:"Gegen dich",
-lg_s3:"unter Par (Birdie oder besser)",
-lg_s2:"bei Par",
-lg_s1:"Loch geschafft",
-lg_sduel:"für jedes Loch, das du im Duell gewinnst",
-share_app:"Quadlume teilen",
-share_text:"Vier in einer Reihe im Dunkeln, gespielt wie Golf. Probier Quadlume!",
-share_copied:"Link kopiert. Füge ihn dort ein, wo du ihn teilen willst.",
-duel_new_title:"Neue Herausforderung starten",
-duel_new_desc:"Wähle die Länge. Du spielst zuerst und schickst dann einen Code an einen Freund, der dieselben Löcher spielt.",
-holes3:"3 Löcher",
-holes6:"6 Löcher",
-
-
-
-next_level:"Noch {n} Punkte bis {lvl}",
-max_level:"Höchste Stufe!",
-lvl0:"Anfänger",
-lvl1:"Clubspieler",
-lvl2:"Turnierspieler",
-lvl3:"Scratch-Spieler",
-lvl4:"Tour-Profi",
-lvl5:"Legende",
-duel_record:"Duelle: {w} gewonnen · {t} unentschieden · {l} verloren",
-house_title:"Gefällt dir Quadlume?",
-house_text:"Teile das Spiel mit einem Freund und fordere ihn zum Duell heraus.",
-p_holes:"Gespielte Löcher",
-language:'Sprache',tagline:'Vier in einer Reihe im Dunkeln, gespielt wie Golf: so wenige Züge wie möglich pro Loch.',
-tabs_aria:'Spielmodus',tab_daily:'Heute',tab_round:'Runde',tab_duel:'Duell',tab_profile:'Profil',
-board_no:'Brett #{n}',today:' · heute',prev_aria:'Brett vom Vortag',next_aria:'Brett vom nächsten Tag',
-practice_note:'Du hast dieses Brett schon gespielt. Das ist eine Übungsrunde und zählt nicht.',
-st_played:'Gespielt',st_under:'Par oder besser',st_streak:'Tage in Folge',st_avg:'Schnitt zu Par',
-copy_result:'Ergebnis kopieren',practice_again:'Brett nochmal üben',next_board:'Nächstes Brett in',
-week_n:'Platz der Woche · KW {w}',par_n:'Par {n}',week_desc:'Die ganze Woche dieselben 18 Löcher für alle. Vergleich dich mit Freunden oder fordere sie auf demselben Platz heraus.',
-play9:'9 Löcher spielen',play18:'18 Löcher spielen',random:'Zufälliger Platz',random_sub:'Jedes Mal ein neuer Platz',random_desc:'Zum Üben. Zählt auch für dein Handicap.',
-holes9:'9 Löcher',holes18:'18 Löcher',
-type_K:'Kurzes Loch',type_M:'Mittleres Loch',type_L:'Langes Loch',desc_K:'7×6 · vier in einer Reihe',desc_M:'8×7 · vier in einer Reihe',desc_L:'9×7 · fünf in einer Reihe',
-quit:'Runde beenden',hole_x:'Loch {i} von {n}',total:'Gesamt: {s} ({d})',
-quit_q:'Runde beenden? Sie wird nicht gespeichert.',quit_yes:'Ja, beenden',quit_no:'Weiterspielen',
-next_hole:'Nächstes Loch',see_result:'Ergebnis ansehen',challenge:'Freund herausfordern',new_round:'Neue Runde',
-duel_in_title:'Herausforderung annehmen',duel_in_desc:'Füge die Nachricht ein, die du von einem Freund bekommen hast. Du spielst dieselben Löcher, und jedes Loch wird einzeln entschieden: Wer weniger Züge braucht, gewinnt das Loch.',
-duel_ph:'Herausforderung hier einfügen, z. B. {code}',duel_start:'Duell starten',
-duel_out_title:'Selbst jemanden herausfordern',duel_out_desc:'Spiel eine Runde unter „Runde“. Wenn du fertig bist, tippst du auf „Freund herausfordern“ und schickst die Nachricht zusammen mit dem Link zum Spiel.',go_round:'Zu Runde',
-handicap:'Handicap',hcp_need1:'Spiel noch 1 Runde, um ein Handicap zu bekommen.',hcp_needN:'Spiel noch {n} Runden, um ein Handicap zu bekommen.',hcp_desc:'Dein Schnitt über Par pro 18 Löcher, letzte 10 Runden über 9 oder 18 Löcher. Niedriger ist besser.',
-p_rounds:'Runden',p_best:'Beste Runde',p_birdies:'Birdies',p_daily:'Tagesbretter',
-name_label:'Dein Name in Herausforderungen',name_ph:'Z. B. Alex',recent:'Letzte Runden',no_rounds:'Noch keine Runden.',
-local_note:'Deine Ergebnisse werden nur auf diesem Gerät gespeichert. Eine gemeinsame Bestenliste und Turniere brauchen Anmeldung und einen Server und sind der nächste Schritt für die App.',
-hud_par:'Par',hud_moves:'Züge',hud_matches:'Streichhölzer',light_match:'Streichholz anzünden',rules_title:'So wird gespielt',
-r1:'Du bist Gelb. Bring <b>vier in eine Reihe</b> (fünf auf langen Löchern), mit so wenigen Zügen wie möglich.',
-r2:'Du siehst nur die Felder <b>rund um deine eigenen Steine</b>: zwei Felder geradeaus und eins schräg. Gestrichelte Felder sind belegt, aber du weißt nicht, von wem.',
-r3:"Nach jedem Zug antwortet der <b>Bot</b>, und er versucht selbst, vier in eine Reihe zu bringen. Der Pfeil zeigt, in welche Spalte er geworfen hat, aber nicht, wo der Stein gelandet ist. Der Bot sieht nur ein Feld um seine eigenen Steine, aber er hört dich: Stapelst du fast genug Steine übereinander, macht er den Deckel drauf. Kann der Bot im nächsten Zug gewinnen, hörst du es, und die Spalte wird mit einem roten <b>!</b> markiert.",
-r4:'<b>Par</b> ist perfektes Spiel plus ein Zug. Spielst du perfekt, gibt es ein Birdie.',
-r5:'Schaffst du es nicht innerhalb von Par + 5 Zügen oder gewinnt der Bot, bekommst du Par + 6 auf dem Loch.',
-r6:'<b>Streichhölzer</b> zeigen zwei Sekunden lang das ganze Brett: zwei bei „Heute“, eins pro Loch in Runden.',
-lg_eagle:'2 unter Par',lg_birdie:'1 unter Par, perfekt gespielt',lg_par:'einen Zug von perfekt entfernt',lg_bogey:'1 über Par',lg_hcp:'dein Schnitt über Par pro 18 Löcher, letzte 10 Runden',
-g_albatross:'Albatros',g_eagle:'Eagle',g_birdie:'Birdie',g_par:'Par',g_bogey:'Bogey',g_dbogey:'Doppelbogey',g_tbogey:'Triplebogey',g_finished:'Im Ziel',g_botwon:'Der Bot hat gewonnen',g_darkwon:'Die Dunkelheit hat gewonnen',
-gm_win:'{k} in einer Reihe!',gm_botwin:'Der Bot hat {k} in einer Reihe',gm_nomoves:'Keine Züge mehr',gm_lit:'Das Licht ist an. Jetzt siehst du das ganze Brett.',
-gm_flash:'Das Streichholz brennt',gm_flash_sub:'Schnell schauen. In zwei Sekunden wird es wieder dunkel.',gm_botturn:'Der Bot lauscht …',gm_full:'Die Spalte war voll. Der Zug ist verbraucht.',gm_botsees:'Er sieht genauso wenig wie du.',
-gm_turn:'Du bist dran',gm_turn_left:'Du bist dran · noch {n} Züge',gm_heard:'Du hast gehört, wie der Bot einen Stein in Spalte {c} geworfen hat.',gm_intro:'Du bist Gelb. Bring {k} in eine Reihe.',gm_full_pre:'Die Spalte war voll, also ist der Zug verbraucht.',col_aria:'In Spalte {c} werfen',
-res_win:'{s} Züge bei Par {p}, {m}.',match1:'1 Streichholz',matchN:'{n} Streichhölzer',res_loss:'Das Loch zählt {s} (Par {p} + 6).',practice_suffix:' Übungsrunde, zählt nicht.',moves_par:'{s} Züge (Par {p})',
-copied:'Kopiert!',select_copy:'Text unten markieren und kopieren',challenge_copied:'Herausforderung kopiert!',
-lbl_duel:'Duell',lbl_holes:' · {n} Löcher',
-rh_win:'{s} Züge bei Par {p}.',rh_loss:'Das Loch zählt {s} (Par + 6).',opp_used:' {o} brauchte {n}: ',you_won_hole:'du hast das Loch gewonnen.',opp_won_hole:'{o} hat das Loch gewonnen.',halved:'Loch geteilt.',
-duel_status:'Duell gegen {o} ({t} Schläge): ',lead:'du liegst {n} auf.',behind:'du liegst {n} zurück.',square:'alles gleich.',
-par_diff:'Par {p} · {d}',duel_you:'Du hast {o} geschlagen!',duel_opp:'{o} hat das Duell gewonnen',duel_tie:'Duell unentschieden',duel_line:' · Löcher: {w} gewonnen, {l} verloren, {h} geteilt · {o}: {t} Schläge',
-sc_hole:'Loch',sc_par:'Par',sc_out:'Out',sc_in:'In',sc_tot:'Ges.',sc_you:'Du',
-challenge_text:'Ich habe {n} Löcher in {name} mit {s} Schlägen ({d}) gespielt. Schaffst du es, mich zu schlagen?\n\nÖffne das Spiel, geh zu „Duell“ und füge den Code ein:\n{code}',
-share_round:'{name} 🌑\n{label}\n{s} Schläge (Par {p}, {d})',share_duel:'\nDuell gegen {o}: {w}–{l}',share_halved:' ({h} geteilt)',
-err_nocode:'Kein gültiger Code gefunden. So sieht er aus: {ex}',err_count:'Der Code hat {a} Lochergebnisse, sollte aber {b} haben. Prüfe, ob der ganze Code kopiert wurde.',
-opponent:'Gegner',friend:'Ein Freund',duel_vs:'Duell gegen {o}',
-/* v6 */
-points:"Punkte",
-pts_earned:"+{n} Punkte",
-pts_desc:"Birdie oder besser bringt 3 Punkte, Par 2 und ein geschafftes Loch 1. In Duellen gibt es +1 für jedes gewonnene Loch.",
-points_title:"Punkte pro Loch",
-lg_s3:"Birdie oder besser",
-lg_s2:"Par",
-lg_s1:"Loch geschafft (Bogey oder mehr)",
-lg_s0:"nicht geschafft (zählt als Doppelbogey)",
-lg_sduel:"für jedes Loch, das du im Duell gewinnst",
-rank_title:"Platzierung",
-scope_friends:"Freunde",
-scope_country:"Dein Land",
-scope_world:"Welt",
-rank_of:"#{r} von {n}",
-rank_note:"Dein Land und die Welt kommen, sobald es eine Anmeldung gibt.",
-see_board:"Zur Rangliste",
-more_stats:"Mehr Statistik",
-board_soon:"Diese Liste kommt, sobald es eine Anmeldung gibt. Dann siehst du, wie du im Vergleich zu allen anderen Spielern stehst.",
-board_note:"Die Freundesliste entsteht aus den Herausforderungen, die du annimmst.",
-counts_as:"Zählt als {s}.",
-r4:"<b>Par</b> ist perfektes Spiel plus ein Zug (zwei auf langen Löchern). Spielst du perfekt, gibt es ein Birdie oder besser.",
-r5:"Schaffst du es nicht innerhalb von Par + 5 Zügen oder gewinnt der Bot, bekommst du ein Doppelbogey (Par + 2). Mehr zählt ein Loch nie.",
-res_loss:"Das Loch zählt {s} (Doppelbogey).",
-rh_loss:"Das Loch zählt {s} (Doppelbogey).",
-pvp_title:"Duell auf einem Handy",
-pvp_desc:"Zwei Spieler, ein leeres Brett und kein Bot. Ihr werft abwechselnd Steine ein, und jeder sieht nur das Licht um die eigenen. Wer zuerst vier in einer Reihe hat, gewinnt.",
-pvp_start:"Duell starten",
-pvp_quit:"Beenden",
-pvp_again:"Neues Spiel",
-p_yellow:"Gelb",
-p_red:"Rot",
-hud_turn:"Am Zug",
-pvp_pass:"Gib das Handy an {p}",
-pvp_dont_peek:"Nicht gucken! Nur {p} darf jetzt das Brett sehen.",
-pvp_ready:"Ich bin {p} – Brett zeigen",
-pvp_turn:"{p} ist dran",
-pvp_intro:"Bring {k} in eine Reihe, bevor es dein Gegner schafft. Du siehst nur rund um deine eigenen Steine.",
-pvp_heard:"Du hast gehört, wie {p} einen Stein in Spalte {c} geworfen hat.",
-pvp_opp_full:"{p} hat in eine volle Spalte ({c}) geworfen und den Zug verloren.",
-pvp_won:"{p} gewinnt!",
-pvp_draw:"Unentschieden",
-pvp_note:"Zählt nicht für deine Punkte.",
-inv_title:"Herausforderung von {o}",
-inv_sub:"{n} Löcher · {s} Schläge zu schlagen.",
-inv_replace:" Deine laufende Runde wird abgebrochen.",
-not_now:"Nicht jetzt",
-challenge_msg:"Ich habe {n} Löcher in {name} mit {s} Schlägen ({d}) gespielt. Schaffst du es, mich zu schlagen? Tipp auf den Link, um die Herausforderung anzunehmen:",
-duel_in_desc:"Hast du einen Link bekommen, tipp einfach darauf. Du kannst den Link oder den Code auch hier einfügen.",
-duel_new_desc:"Wähle die Länge. Du spielst zuerst und schickst dann einen Link an einen Freund, der dieselben Löcher gegen denselben Bot spielt.",
-duel_ph:"Link oder Code hier einfügen"
-},
-es:{
-gm_threat:"⚠️ Oyes que el bot puede hacer {k} en raya en su próxima jugada, en la columna {c}. ¡Bloquéalo!",
-tab_board:"Ranking",
-points:"Estrellas",
-pts_desc:"⭐ por cada hoyo que completas, ⭐⭐ en par y ⭐⭐⭐ bajo par. En los duelos ganas +1 ⭐ por cada hoyo que ganes. Las estrellas se suman y te dan un nivel.",
-pts_earned:"+{n} ⭐",
-hud_goal:"Objetivo",
-board_you:"Tu posición",
-board_rank_of:"de {n} jugadores",
-board_title:"Ranking de amigos",
-board_empty:"La tabla se llena cuando aceptas retos de tus amigos. Empieza un duelo en «Duelo».",
-board_note:"El ranking de amigos se crea a partir de tus retos. Cuando llegue el inicio de sesión, será una clasificación para todos los jugadores.",
-col_player:"Jugador",
-col_h2h:"Contra ti",
-lg_s3:"bajo par (birdie o mejor)",
-lg_s2:"en par",
-lg_s1:"hoyo completado",
-lg_sduel:"por cada hoyo que ganes en un duelo",
-share_app:"Compartir Quadlume",
-share_text:"Cuatro en raya a oscuras, jugado como el golf. ¡Prueba Quadlume!",
-share_copied:"Enlace copiado. Pégalo donde quieras compartirlo.",
-duel_new_title:"Empezar un nuevo reto",
-duel_new_desc:"Elige la duración. Juegas tú primero y luego envías un código a un amigo que juega los mismos hoyos.",
-holes3:"3 hoyos",
-holes6:"6 hoyos",
-
-
-
-next_level:"{n} puntos para {lvl}",
-max_level:"¡Nivel máximo!",
-lvl0:"Principiante",
-lvl1:"Jugador de club",
-lvl2:"Jugador de torneo",
-lvl3:"Jugador scratch",
-lvl4:"Profesional del tour",
-lvl5:"Leyenda",
-duel_record:"Duelos: {w} ganados · {t} empatados · {l} perdidos",
-house_title:"¿Te gusta Quadlume?",
-house_text:"Comparte el juego con un amigo y rétalo a un duelo.",
-p_holes:"Hoyos jugados",
-language:'Idioma',tagline:'Cuatro en raya a oscuras, jugado como el golf: el menor número de jugadas posible por hoyo.',
-tabs_aria:'Modo de juego',tab_daily:'Hoy',tab_round:'Ronda',tab_duel:'Duelo',tab_profile:'Perfil',
-board_no:'Tablero n.º {n}',today:' · hoy',prev_aria:'Tablero del día anterior',next_aria:'Tablero del día siguiente',
-practice_note:'Ya has jugado este tablero. Esta es una ronda de práctica y no cuenta.',
-st_played:'Jugados',st_under:'En par o mejor',st_streak:'Días seguidos',st_avg:'Media frente al par',
-copy_result:'Copiar resultado',practice_again:'Practicar este tablero otra vez',next_board:'Siguiente tablero en',
-week_n:'Campo de la semana · semana {w}',par_n:'Par {n}',week_desc:'Los mismos 18 hoyos para todos durante toda la semana. Compárate con tus amigos o rétalos en el mismo campo.',
-play9:'Jugar 9 hoyos',play18:'Jugar 18 hoyos',random:'Campo aleatorio',random_sub:'Un campo nuevo cada vez',random_desc:'Para practicar. También cuenta para tu hándicap.',
-holes9:'9 hoyos',holes18:'18 hoyos',
-type_K:'Hoyo corto',type_M:'Hoyo medio',type_L:'Hoyo largo',desc_K:'7×6 · cuatro en raya',desc_M:'8×7 · cuatro en raya',desc_L:'9×7 · cinco en raya',
-quit:'Terminar la ronda',hole_x:'Hoyo {i} de {n}',total:'Total: {s} ({d})',
-quit_q:'¿Terminar la ronda? No se guardará.',quit_yes:'Sí, terminar',quit_no:'Seguir jugando',
-next_hole:'Siguiente hoyo',see_result:'Ver el resultado',challenge:'Retar a un amigo',new_round:'Nueva ronda',
-duel_in_title:'Aceptar un reto',duel_in_desc:'Pega el mensaje que te ha enviado un amigo. Jugáis los mismos hoyos y cada hoyo se decide por separado: gana el hoyo quien use menos jugadas.',
-duel_ph:'Pega el reto aquí, p. ej. {code}',duel_start:'Empezar el duelo',
-duel_out_title:'Reta tú a alguien',duel_out_desc:'Juega una ronda en «Ronda». Cuando termines, pulsa «Retar a un amigo» y envía el mensaje junto con el enlace al juego.',go_round:'Ir a Ronda',
-handicap:'Hándicap',hcp_need1:'Juega 1 ronda más para tener hándicap.',hcp_needN:'Juega {n} rondas más para tener hándicap.',hcp_desc:'Tu media sobre el par cada 18 hoyos, últimas 10 rondas de 9 o 18 hoyos. Cuanto más bajo, mejor.',
-p_rounds:'Rondas',p_best:'Mejor ronda',p_birdies:'Birdies',p_daily:'Diarios jugados',
-name_label:'Tu nombre en los retos',name_ph:'P. ej. Alex',recent:'Últimas rondas',no_rounds:'Todavía no hay rondas.',
-local_note:'Tus resultados solo se guardan en este dispositivo. Una clasificación común y los torneos necesitan inicio de sesión y un servidor, y son el siguiente paso de la app.',
-hud_par:'Par',hud_moves:'Jugadas',hud_matches:'Cerillas',light_match:'Encender una cerilla',rules_title:'Cómo se juega',
-r1:'Eres el amarillo. Consigue <b>cuatro en raya</b> (cinco en los hoyos largos) con el menor número de jugadas posible.',
-r2:'Solo ves las casillas <b>alrededor de tus propias fichas</b>: dos casillas en línea recta y una en diagonal. Las casillas punteadas están ocupadas, pero no sabes por quién.',
-r3:"Después de cada jugada responde el <b>bot</b>, que también intenta hacer cuatro en raya. La flecha muestra en qué columna ha soltado su ficha, pero no dónde ha caído. El bot solo ve una casilla alrededor de sus propias fichas, pero te oye: si apilas casi suficientes fichas una sobre otra, te tapa la columna. Si el bot puede ganar en su próxima jugada, lo oyes y la columna se marca con un <b>!</b> rojo.",
-r4:'El <b>par</b> es el juego perfecto más una jugada. Si juegas perfecto, haces birdie.',
-r5:'Si no lo consigues en par + 5 jugadas, o si gana el bot, te apuntas par + 6 en el hoyo.',
-r6:'Las <b>cerillas</b> muestran todo el tablero durante dos segundos: dos en «Hoy», una por hoyo en las rondas.',
-lg_eagle:'2 bajo par',lg_birdie:'1 bajo par, jugado perfecto',lg_par:'a una jugada de la perfección',lg_bogey:'1 sobre par',lg_hcp:'tu media sobre el par cada 18 hoyos, últimas 10 rondas',
-g_albatross:'Albatros',g_eagle:'Eagle',g_birdie:'Birdie',g_par:'Par',g_bogey:'Bogey',g_dbogey:'Doble bogey',g_tbogey:'Triple bogey',g_finished:'Terminado',g_botwon:'Ganó el bot',g_darkwon:'Ganó la oscuridad',
-gm_win:'¡{k} en raya!',gm_botwin:'El bot hizo {k} en raya',gm_nomoves:'Sin jugadas',gm_lit:'Se ha encendido la luz. Ahora ves todo el tablero.',
-gm_flash:'La cerilla está ardiendo',gm_flash_sub:'Mira rápido. La oscuridad vuelve en dos segundos.',gm_botturn:'El bot está escuchando…',gm_full:'La columna estaba llena. Has perdido la jugada.',gm_botsees:'Ve tan poco como tú.',
-gm_turn:'Tu turno',gm_turn_left:'Tu turno · quedan {n} jugadas',gm_heard:'Has oído al bot soltar una ficha en la columna {c}.',gm_intro:'Eres el amarillo. Consigue {k} en raya.',gm_full_pre:'La columna estaba llena, así que has perdido la jugada.',col_aria:'Soltar en la columna {c}',
-res_win:'{s} jugadas en un par {p}, {m}.',match1:'1 cerilla',matchN:'{n} cerillas',res_loss:'El hoyo cuenta {s} (par {p} + 6).',practice_suffix:' Ronda de práctica, no cuenta.',moves_par:'{s} jugadas (par {p})',
-copied:'¡Copiado!',select_copy:'Selecciona y copia el texto de abajo',challenge_copied:'¡Reto copiado!',
-lbl_duel:'Duelo',lbl_holes:' · {n} hoyos',
-rh_win:'{s} jugadas en un par {p}.',rh_loss:'El hoyo cuenta {s} (par + 6).',opp_used:' {o} usó {n}: ',you_won_hole:'ganaste el hoyo.',opp_won_hole:'{o} ganó el hoyo.',halved:'hoyo empatado.',
-duel_status:'Duelo contra {o} ({t} golpes): ',lead:'vas {n} arriba.',behind:'vas {n} abajo.',square:'empatados.',
-par_diff:'Par {p} · {d}',duel_you:'¡Has ganado a {o}!',duel_opp:'{o} ganó el duelo',duel_tie:'Duelo empatado',duel_line:' · Hoyos: {w} ganados, {l} perdidos, {h} empatados · {o}: {t} golpes',
-sc_hole:'Hoyo',sc_par:'Par',sc_out:'Ida',sc_in:'Vuelta',sc_tot:'Total',sc_you:'Tú',
-challenge_text:'He jugado {n} hoyos de {name} en {s} golpes ({d}). ¿Puedes ganarme?\n\nAbre el juego, ve a «Duelo» y pega el código:\n{code}',
-share_round:'{name} 🌑\n{label}\n{s} golpes (par {p}, {d})',share_duel:'\nDuelo contra {o}: {w}–{l}',share_halved:' ({h} empatados)',
-err_nocode:'No se ha encontrado un código válido. Tiene este aspecto: {ex}',err_count:'El código tiene {a} resultados de hoyo, pero debería tener {b}. Comprueba que se ha copiado entero.',
-opponent:'Rival',friend:'Un amigo',duel_vs:'Duelo contra {o}',
-/* v6 */
-points:"Puntos",
-pts_earned:"+{n} puntos",
-pts_desc:"Birdie o mejor da 3 puntos, par 2 y un hoyo completado 1. En los duelos ganas +1 por cada hoyo que ganes.",
-points_title:"Puntos por hoyo",
-lg_s3:"birdie o mejor",
-lg_s2:"par",
-lg_s1:"hoyo completado (bogey o más)",
-lg_s0:"no completado (cuenta como doble bogey)",
-lg_sduel:"por cada hoyo que ganes en un duelo",
-rank_title:"Posición",
-scope_friends:"Amigos",
-scope_country:"Tu país",
-scope_world:"Mundo",
-rank_of:"#{r} de {n}",
-rank_note:"Tu país y el mundo llegarán cuando esté listo el inicio de sesión.",
-see_board:"Ver el ranking",
-more_stats:"Más estadísticas",
-board_soon:"Esta lista llegará cuando esté listo el inicio de sesión. Entonces verás cómo vas frente a todos los demás jugadores.",
-board_note:"El ranking de amigos se crea a partir de los retos que aceptas.",
-counts_as:"Cuenta como {s}.",
-r4:"El <b>par</b> es el juego perfecto más una jugada (dos en los hoyos largos). Si juegas perfecto, haces birdie o mejor.",
-r5:"Si no lo consigues en par + 5 jugadas, o si gana el bot, te apuntas doble bogey (par + 2). Un hoyo nunca cuenta más que eso.",
-res_loss:"El hoyo cuenta {s} (doble bogey).",
-rh_loss:"El hoyo cuenta {s} (doble bogey).",
-pvp_title:"Duelo en un mismo móvil",
-pvp_desc:"Dos jugadores, tablero vacío y sin bot. Os turnáis para soltar fichas y cada uno solo ve la luz alrededor de las suyas. Gana el primero que haga cuatro en raya.",
-pvp_start:"Empezar el duelo",
-pvp_quit:"Salir",
-pvp_again:"Nueva partida",
-p_yellow:"Amarillo",
-p_red:"Rojo",
-hud_turn:"Turno",
-pvp_pass:"Pásale el móvil a {p}",
-pvp_dont_peek:"¡Sin mirar! Ahora solo {p} debe ver el tablero.",
-pvp_ready:"Soy {p}: mostrar el tablero",
-pvp_turn:"Turno de {p}",
-pvp_intro:"Haz {k} en raya antes que tu rival. Solo ves alrededor de tus propias fichas.",
-pvp_heard:"Has oído a {p} soltar una ficha en la columna {c}.",
-pvp_opp_full:"{p} soltó en una columna llena ({c}) y perdió el turno.",
-pvp_won:"¡Gana {p}!",
-pvp_draw:"Empate",
-pvp_note:"No cuenta para tus puntos.",
-inv_title:"Reto de {o}",
-inv_sub:"{n} hoyos · {s} golpes que superar.",
-inv_replace:" Se abandonará la ronda que estás jugando.",
-not_now:"Ahora no",
-challenge_msg:"He jugado {n} hoyos de {name} en {s} golpes ({d}). ¿Puedes ganarme? Pulsa el enlace para aceptar el reto:",
-duel_in_desc:"Si te han enviado un enlace, solo tienes que pulsarlo. También puedes pegar aquí el enlace o el código.",
-duel_new_desc:"Elige la duración. Juegas tú primero y luego envías un enlace a un amigo que juega los mismos hoyos contra el mismo bot.",
-duel_ph:"Pega aquí el enlace o el código"
-}
-};
-
-const APP_NAME='Quadlume';
-const SITE='quadlume.com';
-/* Reklame: sett til true og lim inn annonsekode i elementene med class="ad-slot" når du har en annonseavtale.
-   Til da viser plassene en invitasjon til å dele spillet. */
-const ADS_ENABLED=false;
-const $=id=>document.getElementById(id);
-const LAUNCH=Date.UTC(2026,8,1);
-let R=6,C=7,K=4,B=[];
-const TYPES={
-  K:{key:'K',R:6,C:7,K:4,opt:2,pieces:[8,10,12]},
-  M:{key:'M',R:7,C:8,K:4,opt:3,pieces:[10,12,14]},
-  L:{key:'L',R:7,C:9,K:5,opt:3,slack:2,pieces:[16,18,20]}
-};
-const COURSE='MKLMMKMLMMKMLMKMLM';
-
-/* ---------- lagring ---------- */
-let store={daily:{},rounds:[],current:null,name:'',lang:null};
-try{const s=JSON.parse(localStorage.getItem('mb-v2')||'null');if(s&&typeof s==='object') store=Object.assign(store,s);}catch(e){}
-function save(){try{localStorage.setItem('mb-v2',JSON.stringify(store));}catch(e){}}
-function typePar(k){const tp=TYPES[k];return tp.opt+(tp.slack||1);}
-/* Et hull teller aldri mer enn dobbel bogey (par + 2), som i golfens handicapregler. */
-const MAX_OVER=2;
-(function migrate(){
-  if(store.v>=6) return;
-  (store.rounds||[]).forEach(r=>{
-    if(!r.scores||!r.pars) return;
-    if(!r.wins) r.wins=r.scores.map((x,i)=>x-r.pars[i]<4);
-    r.scores=r.scores.map((x,i)=>Math.min(x,r.pars[i]+MAX_OVER));
-    if(r.oppScores) r.oppScores=r.oppScores.map((x,i)=>x==null?x:Math.min(x,r.pars[i]+MAX_OVER));
-    r.strokes=r.scores.reduce((a,b)=>a+b,0);r.par=r.pars.reduce((a,b)=>a+b,0);
-  });
-  Object.values(store.daily||{}).forEach(r=>{if(r.moves==null&&r.win) r.moves=r.score;r.score=Math.min(r.score,r.par+MAX_OVER);});
-  if(store.current&&store.current.scores) store.current.scores=store.current.scores.map((x,i)=>x==null?x:Math.min(x,typePar(COURSE[i])+MAX_OVER));
-  store.v=6;save();
-})();
-
-/* ---------- språk ---------- */
-function detectLang(){
-  const list=(navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||'en']);
-  for(const l of list){const b=String(l).toLowerCase().split('-')[0];
-    if(b==='nb'||b==='nn'||b==='no') return 'nb';
-    if(I18N[b]) return b;}
-  return 'en';
-}
-let lang=store.lang&&I18N[store.lang]?store.lang:detectLang();
-function t(k,p){let s=(I18N[lang]&&I18N[lang][k]!=null)?I18N[lang][k]:(I18N.en[k]!=null?I18N.en[k]:k);
-  if(p) s=s.replace(/\{(\w+)\}/g,(m,x)=>p[x]!=null?p[x]:m);return s;}
-function applyStatic(){
-  document.documentElement.lang=lang==='nb'?'nb':lang;
-  document.title=APP_NAME;
-  $('app-name').textContent=APP_NAME;
-  document.querySelectorAll('[data-t]').forEach(el=>{el.textContent=t(el.dataset.t);});
-  document.querySelectorAll('[data-th]').forEach(el=>{el.innerHTML=t(el.dataset.th);});
-  document.querySelectorAll('[data-tp]').forEach(el=>{el.placeholder=t(el.dataset.tp,{code:'QL.9.k3j2h1.435443544.Alex'});});
-  document.querySelectorAll('[data-ta]').forEach(el=>{el.setAttribute('aria-label',t(el.dataset.ta));});
-  $('lang').setAttribute('aria-label',t('language'));
-}
-const sel=$('lang');
-LANGS.forEach(([code,name])=>{const o=document.createElement('option');o.value=code;o.textContent=name;sel.appendChild(o);});
-sel.value=lang;
-sel.addEventListener('change',()=>{lang=sel.value;store.lang=lang;save();applyStatic();setView(view);});
-function locale(){return LOCALES[lang]||'en-GB';}
-
-/* ---------- kjerne ---------- */
-function emptyB(){return Array.from({length:R},()=>Array(C).fill(0));}
-function copyB(b){return b.map(r=>r.slice());}
-function landRow(c){for(let r=R-1;r>=0;r--) if(!B[r][c]) return r; return -1;}
-function winAt(r,c){
-  const p=B[r][c]; if(!p) return null;
-  for(const [dr,dc] of [[0,1],[1,0],[1,1],[1,-1]]){
-    const line=[[r,c]];
-    for(const s of [1,-1]){let rr=r+dr*s,cc=c+dc*s;while(rr>=0&&rr<R&&cc>=0&&cc<C&&B[rr][cc]===p){line.push([rr,cc]);rr+=dr*s;cc+=dc*s;}}
-    if(line.length>=K) return line;
+const PUZZLES={"d3":["3401362324","133313334115","54312504424412223012","42312425323223553356","4232253321303355","2350323424","544130534221","3422233442","3223353433264044","336512544246","231335252462","233234524201224353","1224153324","120535352133533415","5233203525122152","3401233003362516411244","2445244542243256","344522554121","15636114343523","2344441530063233","115043315332","2345311432","354222333323","31323342634531","316221332233","3542123321324233","45216152422523","2335536162","2203453231552233","331642362550430315","332442313243","433532144423","334141441436","1434154342","4221242233342511","543346343363412414","542212264562411115","111106333245652553","42521325441113","2114243133","43335522523323","546536522142","3224343313306556","21352124125341","123435213315335622","5302361252232231","542223323343","123413262045","4344443254","334235213554123300251144","3633330412","5424533244","420410312413","4244232523323325","52422612233253","315445231240","414523445325245214","6334452332342322","313302513255","3233354211361440","33325434203344","40123334442234266423","344153323516","342234312353","65223532345343","422142560014","24542521024233","235234221431","0134331203321411","022425441132","2334322442","341545433436","045331312533150322","44133121310642232311","5456333263344531441045","4222354534","3335222234422331","146325352333","6243041115333414430360","25334420322262333441","553463422033","6230530121242364324525","33326251346323","3343423131","35512412233503334655","14521443025345","203234335124","3624635452322333","30525433353130","143025532654","551333114154254430","5443234435","134403434152343321","444043334453335111611126","2202542336355412","2054224521","0344310511","234261343443122405353422","5502261423310331","244231453433","3124223144","11533350134541","132120222654633233","1323234154314444","4243653446","231110123234334144","52245016622522","3113633312341425655141","5216312432","34554414403314","2154421644223151","4361132132035543","33353334424214","311213313525","2513522464244235414211","543634554346340223","34346223322220335544","31424331433314","651252334222535265","533334253154151443"],"d4":["31241151252212","433433334244","3116341232544442242253","33212522213354","4226353426543423413532","51142235213325","344223334435154304522251","334421222202455003","035325301353251141","434312554442","333533344251","433536434334","421356353041","2344323344","31033533234010","52150455362415","6336203334632602","14214122254412","5543115421333313","454544333243","1142416544341520","343344313543","22416554233625","51555611314354511234","223434444422","135525522521503361","3335316442","444423324433","54134433114555","3424443233","26332025353233","32251322342533","3225133155504531","3462033345223051234214","3523253422","334243465420503321314411","31135433404353","25641312452152","3350323334114144","3545424421","4543113262","3342344124","411212422630632426","456213322456","63321232225111","4552441040","53253432221245","56133333255602532541","6242244344423262","3334532345","634005202234232244","22233233440223","422545324334225331","323440623335","4412262233525532","210312444551","144255444223","4413422322","353243263243223521445144","6233042443343413","322143231115","236431243304335546","12444235354433","413334143225","420525441223","4334424432","23423233351653","44234344423556","6235315332","342245242322555031","322334162042343364","6245112334","4435435636","23433141223334","24343332304645","1132232233","3424454234330142061166","421406450324","54541345464234","1134414134143613","3453453321436301","401115144144522241","3541421604433442","5524411152401414","235422115345","5313545445234436","421333233512344624","333426423245","430511563513","3441543212412252","623132643340","1441353233","332521331313","33224541125131","02313424332162","5312125115243314","145223002442","32542321345413431143","302334043521","5125545542","430112502411113565","31153314453331","4343321532","25335120644255","14302530325363","422436544351304422","3436324313","532551353211","215315311364","43344543345632","345421313342","424362224432","1425244512","531134331213","4365123332322124","2442131122445111","34430032363443","31233525322323514512","3232254555223213","5444334345423120","2336433232532154","2031251314","343462544550222344","3121241013","223034453365","545121142303","3332332234664525","310234243333","5563332114","5314454544325346","544316333544","434125441432411033322131","43126533353452663226","215324224122","425133231230244036","2223423442","024433303313","1323154524","643315343211","3633605232243032","413530333651","313435125313","3122353122233442","33353445135153","133243244334134542266125","423330221133","42303532510333","5546322115244222","6333245111","2443661226221254","423113342410","41221320201322","45522632415223","224223233533423514","423534342343243152","313533132435","2234243233","33253444213223","3342222551123162","360631233433","23501542264411","1452622335325523","4333311551","22253121233462334435","2253263531","3125354426","21535423343201","63203322243433","3453225422","455413415043","2023223130","544515552140","5143322304555133","5121533553","42166332044334423524","23452254342242","3301212633","5133344521443336","424214402321442215","2351043542","5554333343","5231336224433341412415","2523431646353553","15333421355045331455","33413501324414144133","3221122332354251","0342354134523223","4442324433455555","134114463012","326441033433342115","22434345311114","3542321444334534","5324353354","44414235543315","352225445430444123","0324532232333422","442225432352","13125223553140","0240412313","344335311345"],"d5":["2132211415352243","4146253261","4521202242420465","4541425426422212","1235243333314212452551","51134121433535","4320413431643316","345144444333165023","23053243313355","3532403365121323","3423322114","0225244232","4312161331","342245434554","2221611332533224","322161433525133213","532533505232","32151326313334","34626432224233342314","31144265450210","34506140045441","343101324423","141331332353","1515215340","24443143343313","144401341342112232214336","146536332231304412","3345344225","411314212516524425","3015316332","0051113532","31242420322433452341","4243423454","3332362322623666","231115352031","2345303444433041231221","224362433431","42222430342331","3224535345335121322524","132434424120","35555223321221","50202253333615","422542332234","561323143533","0243255421","643332334124","113234400642","662553363551","35330253335214211544","3532333341","211331341224426340","533352423554","2134232233323401","353531634250","461435441253255223","334133122412154443342621","234524532033323025","24436212204344","4412333033","3433153533","5222241022","443335553303","3443244134003345","3334324351","644214222204","224246112334","331333451552312111","44343133322301","5254222124264133","036334145233","1554542122","443246242332","1335514531","303452433312311016","312411355232133322","5225234334","21454133131550344334","2422213111344445","2124131453","4442533235","5324513142","355322322531061150","0551633311","442343264054","1244554323","5333343314412202","24555546455400","3335434222450453","2224114353","5245114621421250241433","213534431532311311","6434450021224330","2233363321","1042313330","2234413145","353412614432254255132123","15322163323462","3352343324","323243362323224661","324123353113","4240134024","53435254454254","552314422544","2451323334342341","22344542564443","136422243342235144","23033444340265","333225212244","35143133453344","236412323323"],"l3":["434323413324","422313332213","301333262436132265","3144312542","4342251153216222","21335521355605143353","2351434112","324336223114251311","1241435312","15432143353332","03135542453333164464","142253312541","2535203233","440342135521","4353313143352265","3132235133","32345311351300262445","4532224435","22626544535322","534135202431","251422422445","054032325345","4424411344331535","5533133354322644542055","50323201533501","54355444511223","333442253115","034133214513","3103424333","323622635463","5334241212442344112352","246514234030","13133240403424","124113253203221231","63223430332243","431410312555","33215441455614","23241365223522","163012112331","421313152133","3633051432","1444124144","2163523222136236","1340053411","34332215306125103324","33323032032521425026","34414415443033","2455534143","222331403224","31436144464435252230","3235233350","423314343313","21242112502443","41044243236135","533554153441","453312346531346443242220","33343435532252","31632426433523623245","321331231143","45132551123123263110"],"l4":["331045426652","2133311423","145354221345","365403513243","4232346125","124541463435","2435244331","123046316440","1323354123","321224261223","531645133241","023131124126","22536142362234","222342153242","406234253555","1243133220","446244243135","652620333113","42213643344125","3422223145","44123643341330","1342455221","431351403233","52124224452524133330","4345211223","2334312354","525051332625","3223245254","054530533341","41311540232654","2234312446","3453334651","1354242135","4232253444","2351434135","4343123233","334532334635","302402342244","312234542662","5352146342","0243162413","40213325315533","4632312444","125350330533","3434335144443132251502","355534144223360004","2432433201343344","13233546422433","132051242231","24434342542211","5334532115","4452245305244123566432","31243233513423","51306314323143","4432413542","32242444646405203233","3512233213332114","3402332410334401","2145212352","3553244231353413","4343362401444212","353334543203244644","0453441225","3143440525363243","434304531634443312","01434443223533","3321253434","532112122444","4212211322","42135434414461","2003115222346142","434044364124","35341443323635510000","321540353443","31003236133641","6342241142152133004244","24236421315233","44214335314212","333532335424","412224455563","254413113444","35053412344333","326441234226","462326322035","1525142442","1336235415","41511345261544","5421032534","56024230513551","022343505032","4133421123","323533035451","33322251543334","4135524226","452353342234","1254431443","0643220534466213232245","35433441554255","2332343423","145530233641","25425424314422201361","222332334234","5163315322153112","453432423003","1512444543054451","243231342322","3332330424","314543443514","3345422442243122","3331423312","143253353343","114531420411","3314425125","3134463344","34134255615144","25545531621345","44133431001633","123341352522","42343044354302","4334334444353262","124442552335","2520325352353401125325","4034432122352544","41424633240414","424342253224","113215211333","3265353324222236","532335513314","42303642633433","56531355353524","32122455462205","14555535144224","34313403432655","00242443053261335322","333433443200202224","333424455542","02313334302521223215","2444104420","40213553363340234442","211212441141242324553433","43343554225513424433","444223352446","34313443234365","31533431404325","2334324122","124424234522","144354354311","125422054122532440","531115535334100345423644","2162242213343320413146","2154242416455213","5412425341","2224111323433133","22233121133254154332","345046322543535524","6325343625","334132462245143614","3662243346342224","5012542334","13351143344343"],"l5":["25135251553132","30614554523125","2323313344","210340144026","533133263523","222231244531","441625422314","453335411321","4623233433","2323155133","434123301162","6425413235","513521345645","363533250121","233142321521","34463335324652","5323214113324236","3452351440","042621415410","3120341332631324","31613433651334","1621262032016504532633","5345325545","0243353243","243443413424","43231420444455323222","33345535632346","424545552433","125134403203343324","0443122152","524552440543312362","0331452415","232334551531","3535345251155111421333","22256431151613402153","122343163332242361024415","332101343524","21342203442642","32532124134422","322133323540312555","42334534213403","5554632436","44450244452332","3524224552","30341530136123","2050234255","463412463542","244224422245563633","3001125445","22333115244155","355243413153","31541334334321","2143142435","3225241325635233","332334355541","1241422325","313322333445651116","202335423033","2624412232","232544523446","6466242232252445500164","42444531433225","420353345133","5454240226441333","333225553144","2533414232342055","20134543344244012532","3514415251","4224532345","112114232432","2134532525335512","324321223315223355","243332326543","433532350423","322335244022","05444632505243","2122220442","3533310453","13255332124133","3332345143","2042135024525555","23235135524534332145","2454232532","3224411334","314221430422454436","6143113336","355015532235340332","16531534263455","332342214524433252443551","24332335414224364530","62414544360440","2551334532331231","3321243320323144","424542144326","3355523420","31450442244111141225","44524423331641303532","43423503163234","6505422331553314311220","2233342114","104544412310","5414614102222244","5433304233","33253433423221","124342204445","531633213534634222","1140425251","4613333136041245","35533532544334","5604451243","25342553323620","35525432033314","15123314524444212116","31421523332214542323","5444423426435131223323","43341430451331","234224344533553643524112","436534325325225255","353445434414511535125306","430432320343","64533211212263355554","123126212433331254","452152344543114534533236","13233533423645","1264250125321212","1064333355535512","03433421404511","31031131330424134145","1145633436","5241242503","34433245313423154222","2452454433","3314413533","4346433235233445","115561344333","333133113522555541","215345352422","3214323342255135312204","433215415254335524","3433525134245532430554"]};
+/* Løser for fire på rad-nøtter. Gul = 1 (spilleren), rød = 2. Rad 0 er nederst. */
+const W=7,H=6;
+function mkState(){return {g:Array.from({length:W},()=>Array(H).fill(0)),h:Array(W).fill(0)};}
+function fromSeq(seq){const S=mkState();let p=1;for(const ch of seq){drop(S,+ch,p);p=3-p;}return S;}
+function drop(S,c,p){const r=S.h[c];S.g[c][r]=p;S.h[c]=r+1;return r;}
+function undo(S,c){S.h[c]--;S.g[c][S.h[c]]=0;}
+function lineAt(S,c,r){
+  const p=S.g[c][r];if(!p) return null;
+  for(const [dc,dr] of [[1,0],[0,1],[1,1],[1,-1]]){
+    const line=[[c,r]];
+    for(const s of [1,-1]){let cc=c+dc*s,rr=r+dr*s;while(cc>=0&&cc<W&&rr>=0&&rr<H&&S.g[cc][rr]===p){line.push([cc,rr]);cc+=dc*s;rr+=dr*s;}}
+    if(line.length>=4) return line;
   }
   return null;
 }
-/* Spilleren ser lenger enn boten: alle ruter innen to steg (ett steg på skrå). Boten ser bare én rute rundt seg. */
-const PLAYER_VIEW=2;
-function playerSees(r,c,p){p=p||1;for(let dr=-PLAYER_VIEW;dr<=PLAYER_VIEW;dr++)for(let dc=-PLAYER_VIEW;dc<=PLAYER_VIEW;dc++){if(Math.abs(dr)+Math.abs(dc)>PLAYER_VIEW) continue;const rr=r+dr,cc=c+dc;if(rr>=0&&rr<R&&cc>=0&&cc<C&&B[rr][cc]===p) return true;}return false;}
-function seesCell(p,r,c){for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){const rr=r+dr,cc=c+dc;if(rr>=0&&rr<R&&cc>=0&&cc<C&&B[rr][cc]===p) return true;}return false;}
-function knownFilled(p){const k=emptyB().map(r=>r.map(()=>false));for(let c=0;c<C;c++){let top=-1;for(let r=0;r<R;r++) if(B[r][c]===p){top=r;break;}if(top>=0) for(let r=top+1;r<R;r++) k[r][c]=true;}return k;}
-function hash(n){n=n|0;n=Math.imul(n^(n>>>16),0x45d9f3b);n=Math.imul(n^(n>>>16),0x45d9f3b);return (n^(n>>>16))>>>0;}
-function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
-
-/* Boten er deterministisk: samme brett og samme trekk gir samme svar for alle. */
-/* Boten prøver å vinne selv: den bygger egne rekker, blokkerer trusler den ser eller hører,
-   og unngår trekk som gir deg vinnerruten rett over. Den er deterministisk: samme brett og samme trekk gir samme svar. */
-const WEIGHT=[0,1,4,12,40,120];
-/* Lange hull (fem på rad): boten er litt mindre pågående, ellers blir de for vanskelige. */
-const BOT5={w:[0,1,4,12,40,120],noiseDiv:400,lid:true,lazy:50};
-let BOT_IMPL=null;
-function lineScore(r,c,p,W){
-  W=W||WEIGHT;const o=3-p;let s=0;
-  for(const [dr,dc] of [[0,1],[1,0],[1,1],[1,-1]]){
-    for(let k=0;k<K;k++){
-      const r0=r-dr*k,c0=c-dc*k,r1=r0+dr*(K-1),c1=c0+dc*(K-1);
-      if(r0<0||r0>=R||c0<0||c0>=C||r1<0||r1>=R||c1<0||c1>=C) continue;
-      let mine=0,bad=false;
-      for(let i=0;i<K;i++){const v=B[r0+dr*i][c0+dc*i];if(v===o){bad=true;break;}if(v===p) mine++;}
-      if(!bad) s+=W[mine];
-    }
+function immWins(S,p){const out=[];for(let c=0;c<W;c++){if(S.h[c]>=H) continue;const r=drop(S,c,p);if(lineAt(S,c,r)) out.push(c);undo(S,c);}return out;}
+/* Gul er i trekket: kan gul tvinge frem seier innen n egne trekk? */
+function canWin(S,n){
+  if(immWins(S,1).length) return true;
+  if(n<=1) return false;
+  const rw=immWins(S,2);
+  if(rw.length>1) return false;
+  for(let c=0;c<W;c++){
+    if(S.h[c]>=H) continue;
+    if(rw.length&&c!==rw[0]) continue;
+    drop(S,c,1);const ok=redAllLose(S,n-1);undo(S,c);
+    if(ok) return true;
   }
-  return s;
+  return false;
 }
-function botThreats(){
-  const out=[];for(let c=0;c<C;c++){const r=landRow(c);if(r<0) continue;B[r][c]=2;if(winAt(r,c)) out.push(c);B[r][c]=0;}
+/* Rød er i trekket: vinner gul innen n egne trekk uansett hva rød gjør? */
+function redAllLose(S,n){
+  if(immWins(S,2).length) return false;
+  const yt=immWins(S,1);
+  if(yt.length>=2) return n>=1;
+  let any=false;
+  for(let c=0;c<W;c++){
+    if(S.h[c]>=H) continue;
+    if(yt.length===1&&c!==yt[0]) continue;
+    any=true;
+    drop(S,c,2);const ok=canWin(S,n);undo(S,c);
+    if(!ok) return false;
+  }
+  return any;
+}
+/* Hvilke trekk for gul holder seieren innen n trekk? */
+function winningMoves(S,n){
+  const out=[];
+  for(let c=0;c<W;c++){
+    if(S.h[c]>=H) continue;
+    const r=drop(S,c,1);
+    const ok=!!lineAt(S,c,r)||(n>1&&redAllLose(S,n-1));
+    undo(S,c);
+    if(ok) out.push(c);
+  }
   return out;
 }
-function botChoose(seed,mv,hist){
-  if(BOT_IMPL) return BOT_IMPL(seed,mv,hist);
-  const valid=[];for(let c=0;c<C;c++) if(!B[0][c]) valid.push(c);
-  if(!valid.length) return -1;
-  /* 1. Vinn hvis det går. */
-  for(const c of valid){const r=landRow(c);B[r][c]=2;const w=winAt(r,c);B[r][c]=0;if(w) return c;}
-  /* 2. Blokker en vinnertrussel den ser (én rute rundt egne brikker). */
-  for(const c of valid){const r=landRow(c);B[r][c]=1;const w=winAt(r,c);B[r][c]=0;if(w&&seesCell(2,r,c)) return c;}
-  /* 3. Den hører deg: har du stablet K−1 brikker i samme kolonne, legger den lokk på. */
-  const long=K===5;
-  if(!long||BOT5.lid) for(const c of valid){const r=landRow(c);if(r+K-1<R){let all=true;for(let i=1;i<K;i++) if(B[r+i][c]!==1){all=false;break;}if(all) return c;}}
-  /* 4. Ellers: bygg egne rekker. */
-  const mid=(C-1)/2;let best=valid[0],bs=-1e9;
-  for(const c of valid){
-    const r=landRow(c);
-    B[r][c]=2;
-    const lazy=long&&BOT5.lazy>0&&(hash(seed*131+mv*17)%100)<BOT5.lazy;
-    let s=lazy?0:lineScore(r,c,2,long?BOT5.w:WEIGHT);
-    if(r>0){B[r-1][c]=1;if(winAt(r-1,c)) s-=500;B[r-1][c]=0;}
-    B[r][c]=0;
-    s+=(2-Math.abs(c-mid)*0.5);
-    s+=(hash(seed*977+mv*31+c)%1000)/(long?BOT5.noiseDiv:400);
+function minWin(S,max){for(let n=1;n<=max;n++) if(canWin(S,n)) return n;return 0;}
+/* Rødts beste forsvar: vinn selv, ellers avverg, ellers hold ut lengst mulig. n = trekk gul har igjen. */
+function redReply(S,n){
+  let best=-1,bs=-1e9;
+  for(let c=0;c<W;c++){
+    if(S.h[c]>=H) continue;
+    const r=drop(S,c,2);let s;
+    if(lineAt(S,c,r)) s=1000;
+    else{const m=n>0?minWin(S,n):0;s=m===0?500:m*10;}
+    undo(S,c);
+    s-=Math.abs(c-3)*0.1;
     if(s>bs){bs=s;best=c;}
   }
   return best;
 }
-function dfs(seed,depth,mv,hist){
-  for(let c=0;c<C;c++){
-    const r=landRow(c);if(r<0) continue;
-    B[r][c]=1;
-    if(winAt(r,c)){B[r][c]=0;return true;}
-    if(depth>1){
-      hist.push(c);
-      const bc=botChoose(seed,mv,hist);
-      let ok=false;
-      if(bc>=0){const br=landRow(bc);B[br][bc]=2;ok=!winAt(br,bc)&&dfs(seed,depth-1,mv+1,hist);B[br][bc]=0;}
-      hist.pop();
-      if(ok){B[r][c]=0;return true;}
-    }
-    B[r][c]=0;
-  }
-  return false;
-}
-function optFor(board,seed,maxD){for(let d=1;d<=maxD;d++){B=copyB(board);if(dfs(seed,d,0,[])) return d;}return 0;}
-const cache={};
-function genHole(type,base){
-  const key=type+':'+base; if(cache[key]) return cache[key];
-  const tp=TYPES[type]; R=tp.R;C=tp.C;K=tp.K;
-  let fb=null;
-  for(let a=0;a<200;a++){
-    const seed=hash(base+a*104729);
-    const rng=mulberry32(seed);
-    B=emptyB();
-    const n=tp.pieces[Math.floor(rng()*tp.pieces.length)];
-    let p=1,placed=0,tries=0;
-    while(placed<n&&tries<400){
-      tries++;
-      const c=Math.min(C-1,Math.floor((rng()+rng()+rng())/3*C));
-      const r=landRow(c);if(r<0) continue;
-      B[r][c]=p;
-      if(winAt(r,c)){B[r][c]=0;continue;}
-      placed++;p=3-p;
-    }
-    if(placed<n) continue;
-    const board=copyB(B);
-    const opt=optFor(board,seed,tp.opt);
-    if(opt===tp.opt) return cache[key]={type,R:tp.R,C:tp.C,K:tp.K,board,seed,opt,par:opt+(tp.slack||1)};
-    if(opt>=2&&!fb) fb={type,R:tp.R,C:tp.C,K:tp.K,board,seed,opt,par:opt+(tp.slack||1)};
-  }
-  return cache[key]=fb;
-}
-function typeName(k){return t('type_'+k);}
-function typeDesc(k){return t('desc_'+k);}
+const LANGS=[['nb','Norsk'],['en','English'],['sv','Svenska'],['da','Dansk'],['de','Deutsch'],['es','Español']];
+const LOCALES={nb:'nb-NO',en:'en-GB',sv:'sv-SE',da:'da-DK',de:'de-DE',es:'es-ES'};
+const I18N={
+nb:{language:'Språk',tagline:'Fire på rad-nøtter. Finn trekkene som vinner.',
+daily_no:'Dagens nøtt #{n}',extra_no:'Nøtt {n}',chal_no:'Utfordring',diff_3:'Lett',diff_4:'Middels',diff_5:'Vanskelig',
+task:'Gul vinner på {n} trekk',moves:'Trekk {a} av {n}',
+st_start:'Du er gul. Trykk på en kolonne.',st_good:'Riktig! Rød svarer …',st_next:'Riktig. Finn neste trekk.',
+st_wrong:'Rød slapp unna',st_wrong_sub:'Det trekket vinner ikke på {n} trekk.',st_hint:'Pilen viser riktig trekk.',
+st_done:'Fire på rad!',st_solved_before:'Du har løst denne nøtten.',
+retry:'Prøv igjen',hint:'Vis et trekk',
+solved:'Løst!',res_1:'På første forsøk',res_n:'På {n} forsøk',res_hint:'Med hint',
+challenge:'Utfordre en venn',next_nut:'En nøtt til',back_daily:'‹ Dagens nøtt',
+streak:'dager på rad',total:'nøtter løst',next_in:'Ny nøtt om',
+chal_from:'{o} løste denne nøtten: {r}. Klarer du det bedre?',cmp_win:'Du slo {o}!',cmp_tie:'Likt med {o}.',cmp_loss:'{o} var bedre denne gangen.',
+share_msg:'Jeg løste denne Quadlume-nøtten: {r}. Klarer du det bedre?',
+name_label:'Navnet ditt i utfordringer',name_ph:'F.eks. Alex',friend:'En venn',
+inst_title:'Legg Quadlume på hjemskjermen',inst_text:'Da er dagens nøtt ett trykk unna.',inst_btn:'Installer',
+inst_ios:'Trykk Del-knappen nederst i Safari og velg «Legg til på Hjem-skjerm».',inst_other:'Åpne menyen i nettleseren (⋮) og velg «Installer app» eller «Legg til på startskjermen».',close:'Lukk',
+notif_title:'Varsel når dagens nøtt er klar',notif_text:'Du får et varsel og et merke på app-ikonet.',notif_btn:'Slå på varsel',notif_on:'Varsel er slått på.',
+notif_denied:'Varsler er blokkert. Du kan slå dem på i innstillingene for nettstedet.',notif_unsup:'Nettleseren støtter ikke varsler her. Installer appen først og prøv igjen.',
+push_title:'Dagens nøtt er klar',push_body:'Finner du trekkene som vinner?',
+how_title:'Slik spiller du',how1:'Du er gul. Finn trekkene som gir <b>fire på rad</b> innen antall trekk som står over brettet.',
+how2:'Rød forsvarer seg så godt det går. Bare trekk som fortsatt vinner i tide, godtas.',how3:'Alle får samme nøtt hver dag. Den er lettest på mandag og vanskeligst i helgen.',
+copied:'Kopiert!',col_aria:'Slipp i kolonne {c}'},
+en:{language:'Language',tagline:'Four-in-a-row puzzles. Find the winning moves.',
+daily_no:'Daily puzzle #{n}',extra_no:'Puzzle {n}',chal_no:'Challenge',diff_3:'Easy',diff_4:'Medium',diff_5:'Hard',
+task:'Yellow wins in {n} moves',moves:'Move {a} of {n}',
+st_start:'You’re yellow. Tap a column.',st_good:'Correct! Red replies …',st_next:'Correct. Find the next move.',
+st_wrong:'Red got away',st_wrong_sub:'That move doesn’t win in {n} moves.',st_hint:'The arrow shows the right move.',
+st_done:'Four in a row!',st_solved_before:'You’ve solved this puzzle.',
+retry:'Try again',hint:'Show a move',
+solved:'Solved!',res_1:'On the first try',res_n:'In {n} tries',res_hint:'With a hint',
+challenge:'Challenge a friend',next_nut:'One more puzzle',back_daily:'‹ Daily puzzle',
+streak:'day streak',total:'puzzles solved',next_in:'New puzzle in',
+chal_from:'{o} solved this puzzle: {r}. Can you do better?',cmp_win:'You beat {o}!',cmp_tie:'Level with {o}.',cmp_loss:'{o} did better this time.',
+share_msg:'I solved this Quadlume puzzle: {r}. Can you do better?',
+name_label:'Your name in challenges',name_ph:'E.g. Alex',friend:'A friend',
+inst_title:'Add Quadlume to your home screen',inst_text:'Then the daily puzzle is one tap away.',inst_btn:'Install',
+inst_ios:'Tap the Share button at the bottom of Safari and choose “Add to Home Screen”.',inst_other:'Open the browser menu (⋮) and choose “Install app” or “Add to Home screen”.',close:'Close',
+notif_title:'Get notified when the daily puzzle is ready',notif_text:'You get a notification and a badge on the app icon.',notif_btn:'Turn on notifications',notif_on:'Notifications are on.',
+notif_denied:'Notifications are blocked. You can turn them on in the site settings.',notif_unsup:'This browser doesn’t support notifications here. Install the app first and try again.',
+push_title:'The daily puzzle is ready',push_body:'Can you find the winning moves?',
+how_title:'How to play',how1:'You’re yellow. Find the moves that give <b>four in a row</b> within the number of moves shown above the board.',
+how2:'Red defends as well as it can. Only moves that still win in time are accepted.',how3:'Everyone gets the same puzzle each day. It’s easiest on Monday and hardest at the weekend.',
+copied:'Copied!',col_aria:'Drop in column {c}'},
+sv:{language:'Språk',tagline:'Fyra i rad-nötter. Hitta dragen som vinner.',
+daily_no:'Dagens nöt #{n}',extra_no:'Nöt {n}',chal_no:'Utmaning',diff_3:'Lätt',diff_4:'Medel',diff_5:'Svår',
+task:'Gul vinner på {n} drag',moves:'Drag {a} av {n}',
+st_start:'Du är gul. Tryck på en kolumn.',st_good:'Rätt! Röd svarar …',st_next:'Rätt. Hitta nästa drag.',
+st_wrong:'Röd kom undan',st_wrong_sub:'Det draget vinner inte på {n} drag.',st_hint:'Pilen visar rätt drag.',
+st_done:'Fyra i rad!',st_solved_before:'Du har löst den här nöten.',
+retry:'Försök igen',hint:'Visa ett drag',
+solved:'Löst!',res_1:'På första försöket',res_n:'På {n} försök',res_hint:'Med ledtråd',
+challenge:'Utmana en vän',next_nut:'En nöt till',back_daily:'‹ Dagens nöt',
+streak:'dagar i rad',total:'lösta nötter',next_in:'Ny nöt om',
+chal_from:'{o} löste den här nöten: {r}. Klarar du det bättre?',cmp_win:'Du slog {o}!',cmp_tie:'Lika med {o}.',cmp_loss:'{o} var bättre den här gången.',
+share_msg:'Jag löste den här Quadlume-nöten: {r}. Klarar du det bättre?',
+name_label:'Ditt namn i utmaningar',name_ph:'T.ex. Alex',friend:'En vän',
+inst_title:'Lägg Quadlume på hemskärmen',inst_text:'Då är dagens nöt ett tryck bort.',inst_btn:'Installera',
+inst_ios:'Tryck på Dela-knappen längst ned i Safari och välj ”Lägg till på hemskärmen”.',inst_other:'Öppna webbläsarens meny (⋮) och välj ”Installera app” eller ”Lägg till på startskärmen”.',close:'Stäng',
+notif_title:'Avisering när dagens nöt är klar',notif_text:'Du får en avisering och en bricka på appikonen.',notif_btn:'Slå på aviseringar',notif_on:'Aviseringar är på.',
+notif_denied:'Aviseringar är blockerade. Du kan slå på dem i webbplatsens inställningar.',notif_unsup:'Webbläsaren stöder inte aviseringar här. Installera appen först och försök igen.',
+push_title:'Dagens nöt är klar',push_body:'Hittar du dragen som vinner?',
+how_title:'Så spelar du',how1:'Du är gul. Hitta dragen som ger <b>fyra i rad</b> inom det antal drag som står ovanför brädet.',
+how2:'Röd försvarar sig så gott det går. Bara drag som fortfarande vinner i tid godkänns.',how3:'Alla får samma nöt varje dag. Den är lättast på måndag och svårast på helgen.',
+copied:'Kopierat!',col_aria:'Släpp i kolumn {c}'},
+da:{language:'Sprog',tagline:'Fire på stribe-nødder. Find de træk, der vinder.',
+daily_no:'Dagens nød #{n}',extra_no:'Nød {n}',chal_no:'Udfordring',diff_3:'Let',diff_4:'Mellem',diff_5:'Svær',
+task:'Gul vinder på {n} træk',moves:'Træk {a} af {n}',
+st_start:'Du er gul. Tryk på en kolonne.',st_good:'Rigtigt! Rød svarer …',st_next:'Rigtigt. Find det næste træk.',
+st_wrong:'Rød slap væk',st_wrong_sub:'Det træk vinder ikke på {n} træk.',st_hint:'Pilen viser det rigtige træk.',
+st_done:'Fire på stribe!',st_solved_before:'Du har løst denne nød.',
+retry:'Prøv igen',hint:'Vis et træk',
+solved:'Løst!',res_1:'I første forsøg',res_n:'På {n} forsøg',res_hint:'Med hint',
+challenge:'Udfordr en ven',next_nut:'En nød til',back_daily:'‹ Dagens nød',
+streak:'dage i træk',total:'nødder løst',next_in:'Ny nød om',
+chal_from:'{o} løste denne nød: {r}. Kan du gøre det bedre?',cmp_win:'Du slog {o}!',cmp_tie:'Lige med {o}.',cmp_loss:'{o} var bedre denne gang.',
+share_msg:'Jeg løste denne Quadlume-nød: {r}. Kan du gøre det bedre?',
+name_label:'Dit navn i udfordringer',name_ph:'Fx Alex',friend:'En ven',
+inst_title:'Læg Quadlume på hjemmeskærmen',inst_text:'Så er dagens nød ét tryk væk.',inst_btn:'Installer',
+inst_ios:'Tryk på Del-knappen nederst i Safari, og vælg »Føj til hjemmeskærm«.',inst_other:'Åbn browserens menu (⋮), og vælg »Installer app« eller »Føj til startskærm«.',close:'Luk',
+notif_title:'Notifikation, når dagens nød er klar',notif_text:'Du får en notifikation og et mærke på appikonet.',notif_btn:'Slå notifikationer til',notif_on:'Notifikationer er slået til.',
+notif_denied:'Notifikationer er blokeret. Du kan slå dem til i indstillingerne for webstedet.',notif_unsup:'Browseren understøtter ikke notifikationer her. Installer appen først, og prøv igen.',
+push_title:'Dagens nød er klar',push_body:'Kan du finde de træk, der vinder?',
+how_title:'Sådan spiller du',how1:'Du er gul. Find de træk, der giver <b>fire på stribe</b> inden for det antal træk, der står over brættet.',
+how2:'Rød forsvarer sig så godt, den kan. Kun træk, der stadig vinder i tide, godkendes.',how3:'Alle får den samme nød hver dag. Den er lettest om mandagen og sværest i weekenden.',
+copied:'Kopieret!',col_aria:'Slip i kolonne {c}'},
+de:{language:'Sprache',tagline:'Vier-gewinnt-Rätsel. Finde die Gewinnzüge.',
+daily_no:'Tagesrätsel #{n}',extra_no:'Rätsel {n}',chal_no:'Herausforderung',diff_3:'Leicht',diff_4:'Mittel',diff_5:'Schwer',
+task:'Gelb gewinnt in {n} Zügen',moves:'Zug {a} von {n}',
+st_start:'Du bist Gelb. Tipp auf eine Spalte.',st_good:'Richtig! Rot antwortet …',st_next:'Richtig. Finde den nächsten Zug.',
+st_wrong:'Rot ist entkommen',st_wrong_sub:'Dieser Zug gewinnt nicht in {n} Zügen.',st_hint:'Der Pfeil zeigt den richtigen Zug.',
+st_done:'Vier in einer Reihe!',st_solved_before:'Du hast dieses Rätsel gelöst.',
+retry:'Nochmal versuchen',hint:'Einen Zug zeigen',
+solved:'Gelöst!',res_1:'Beim ersten Versuch',res_n:'In {n} Versuchen',res_hint:'Mit Hinweis',
+challenge:'Freund herausfordern',next_nut:'Noch ein Rätsel',back_daily:'‹ Tagesrätsel',
+streak:'Tage in Folge',total:'Rätsel gelöst',next_in:'Neues Rätsel in',
+chal_from:'{o} hat dieses Rätsel gelöst: {r}. Schaffst du es besser?',cmp_win:'Du hast {o} geschlagen!',cmp_tie:'Gleichauf mit {o}.',cmp_loss:'{o} war diesmal besser.',
+share_msg:'Ich habe dieses Quadlume-Rätsel gelöst: {r}. Schaffst du es besser?',
+name_label:'Dein Name in Herausforderungen',name_ph:'Z. B. Alex',friend:'Ein Freund',
+inst_title:'Quadlume zum Startbildschirm hinzufügen',inst_text:'Dann ist das Tagesrätsel nur einen Tipp entfernt.',inst_btn:'Installieren',
+inst_ios:'Tipp unten in Safari auf „Teilen“ und wähle „Zum Home-Bildschirm“.',inst_other:'Öffne das Browsermenü (⋮) und wähle „App installieren“ oder „Zum Startbildschirm hinzufügen“.',close:'Schließen',
+notif_title:'Benachrichtigung, wenn das Tagesrätsel bereit ist',notif_text:'Du bekommst eine Benachrichtigung und ein Kennzeichen am App-Symbol.',notif_btn:'Benachrichtigungen einschalten',notif_on:'Benachrichtigungen sind eingeschaltet.',
+notif_denied:'Benachrichtigungen sind blockiert. Du kannst sie in den Website-Einstellungen einschalten.',notif_unsup:'Der Browser unterstützt hier keine Benachrichtigungen. Installiere zuerst die App und versuch es noch einmal.',
+push_title:'Das Tagesrätsel ist bereit',push_body:'Findest du die Gewinnzüge?',
+how_title:'So wird gespielt',how1:'Du bist Gelb. Finde die Züge, die <b>vier in einer Reihe</b> bringen, innerhalb der Zugzahl über dem Brett.',
+how2:'Rot verteidigt sich, so gut es geht. Nur Züge, die noch rechtzeitig gewinnen, werden angenommen.',how3:'Alle bekommen jeden Tag dasselbe Rätsel. Montags ist es am leichtesten, am Wochenende am schwersten.',
+copied:'Kopiert!',col_aria:'In Spalte {c} werfen'},
+es:{language:'Idioma',tagline:'Acertijos de cuatro en raya. Encuentra las jugadas ganadoras.',
+daily_no:'Acertijo del día n.º {n}',extra_no:'Acertijo {n}',chal_no:'Reto',diff_3:'Fácil',diff_4:'Medio',diff_5:'Difícil',
+task:'El amarillo gana en {n} jugadas',moves:'Jugada {a} de {n}',
+st_start:'Eres el amarillo. Pulsa una columna.',st_good:'¡Correcto! El rojo responde…',st_next:'Correcto. Encuentra la siguiente jugada.',
+st_wrong:'El rojo se ha escapado',st_wrong_sub:'Esa jugada no gana en {n} jugadas.',st_hint:'La flecha muestra la jugada correcta.',
+st_done:'¡Cuatro en raya!',st_solved_before:'Ya has resuelto este acertijo.',
+retry:'Intentar de nuevo',hint:'Mostrar una jugada',
+solved:'¡Resuelto!',res_1:'Al primer intento',res_n:'En {n} intentos',res_hint:'Con pista',
+challenge:'Retar a un amigo',next_nut:'Otro acertijo',back_daily:'‹ Acertijo del día',
+streak:'días seguidos',total:'acertijos resueltos',next_in:'Nuevo acertijo en',
+chal_from:'{o} resolvió este acertijo: {r}. ¿Puedes hacerlo mejor?',cmp_win:'¡Has ganado a {o}!',cmp_tie:'Empate con {o}.',cmp_loss:'{o} lo hizo mejor esta vez.',
+share_msg:'He resuelto este acertijo de Quadlume: {r}. ¿Puedes hacerlo mejor?',
+name_label:'Tu nombre en los retos',name_ph:'P. ej. Alex',friend:'Un amigo',
+inst_title:'Añade Quadlume a tu pantalla de inicio',inst_text:'Así tendrás el acertijo del día a un toque.',inst_btn:'Instalar',
+inst_ios:'Pulsa el botón Compartir en la parte inferior de Safari y elige «Añadir a pantalla de inicio».',inst_other:'Abre el menú del navegador (⋮) y elige «Instalar aplicación» o «Añadir a pantalla de inicio».',close:'Cerrar',
+notif_title:'Aviso cuando el acertijo del día esté listo',notif_text:'Recibirás una notificación y una marca en el icono de la app.',notif_btn:'Activar notificaciones',notif_on:'Las notificaciones están activadas.',
+notif_denied:'Las notificaciones están bloqueadas. Puedes activarlas en los ajustes del sitio.',notif_unsup:'El navegador no admite notificaciones aquí. Instala primero la app e inténtalo de nuevo.',
+push_title:'El acertijo del día está listo',push_body:'¿Encuentras las jugadas ganadoras?',
+how_title:'Cómo se juega',how1:'Eres el amarillo. Encuentra las jugadas que dan <b>cuatro en raya</b> dentro del número de jugadas indicado sobre el tablero.',
+how2:'El rojo se defiende lo mejor que puede. Solo se aceptan las jugadas que siguen ganando a tiempo.',how3:'Todos reciben el mismo acertijo cada día. El lunes es el más fácil y el fin de semana, el más difícil.',
+copied:'¡Copiado!',col_aria:'Soltar en la columna {c}'}
+};
+const APP_NAME='Quadlume',BASE_URL='https://quadlume.com/nott/';
+const LAUNCH=Date.UTC(2026,8,1);
+const $=id=>document.getElementById(id);
+const EMBEDDED=(()=>{try{return window.top!==window.self;}catch(e){return true;}})();
 
-/* ---------- ett hull ---------- */
-function newHole(spec,cfg){return {spec,B:copyB(spec.board),hist:[],moves:0,matches:cfg.matches,maxMatches:cfg.matches,over:null,winLine:null,lastBot:null,seq:[],fullMsg:false,busy:false,flash:false,dropAnim:null,score:null,onDone:cfg.onDone};}
-function use(h){R=h.spec.R;C=h.spec.C;K=h.spec.K;B=h.B;}
-const EXTRA_MOVES=5;
-function maxMoves(h){return h.spec.par+EXTRA_MOVES;}
-function play(h,c){
-  if(h.busy||h.over) return; use(h);
-  h.busy=true;h.fullMsg=false;
-  const r=landRow(c);h.moves++;h.hist.push(c);
-  if(r<0){h.seq.push('⚫');h.fullMsg=true;}
-  else{B[r][c]=1;h.dropAnim={r,c};h.seq.push('🟡');const w=winAt(r,c);if(w){h.winLine=w;return endHole(h,true,'win');}}
-  h.lastBot=null;renderGame();
-  setTimeout(()=>{
-    use(h);
-    const bc=botChoose(h.spec.seed,h.moves-1,h.hist);
-    if(bc>=0){const br=landRow(bc);B[br][bc]=2;h.lastBot={c:bc};const w=winAt(br,bc);if(w){h.winLine=w;return endHole(h,false,'bot');}}
-    if(h.moves>=maxMoves(h)) return endHole(h,false,'moves');
-    if(B[0].every(x=>x)) return endHole(h,false,'full');
-    h.busy=false;renderGame();
-  },650);
+/* ---------- lagring og språk ---------- */
+let store={v:2,lang:null,name:'',daily:{},cur:null,extra:0,notif:false,instX:0};
+try{const s=JSON.parse(localStorage.getItem('qn-v1')||'null');if(s&&typeof s==='object'){const old=(s.v||1)<2;store=Object.assign(store,s);if(old){store.v=2;store.cur=null;store.base=(store.base||0)+(store.extra||0);store.extra=0;store.fresh=true;}}}catch(e){}
+function save(){try{localStorage.setItem('qn-v1',JSON.stringify(store));}catch(e){}}
+function detectLang(){
+  const list=(navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||'en']);
+  for(const l of list){const b=String(l).toLowerCase().split('-')[0];if(b==='nb'||b==='nn'||b==='no') return 'nb';if(I18N[b]) return b;}
+  return 'en';
 }
-function endHole(h,win,reason){
-  h.over={win,reason};h.busy=false;h.seq.push(win?'🏆':'💀');
-  h.score=win?Math.min(h.moves,h.spec.par+MAX_OVER):h.spec.par+MAX_OVER;
-  renderGame();
-  if(h.onDone) h.onDone(h);
+let lang=store.lang&&I18N[store.lang]?store.lang:detectLang();
+function t(k,p){let s=(I18N[lang]&&I18N[lang][k]!=null)?I18N[lang][k]:(I18N.en[k]!=null?I18N.en[k]:k);if(p) s=s.replace(/\{(\w+)\}/g,(m,x)=>p[x]!=null?p[x]:m);return s;}
+function locale(){return LOCALES[lang]||'en-GB';}
+function applyStatic(){
+  document.documentElement.lang=lang;
+  document.querySelectorAll('[data-t]').forEach(el=>{el.textContent=t(el.dataset.t);});
+  document.querySelectorAll('[data-th]').forEach(el=>{el.innerHTML=t(el.dataset.th);});
+  document.querySelectorAll('[data-tp]').forEach(el=>{el.placeholder=t(el.dataset.tp);});
+  document.querySelectorAll('[data-ta]').forEach(el=>{el.setAttribute('aria-label',t(el.dataset.ta));});
+  $('lang').setAttribute('aria-label',t('language'));
 }
-function golfName(diff,win,reason){
-  if(win===false) return reason==='bot'?t('g_botwon'):t('g_darkwon');
-  const m={'-3':'g_albatross','-2':'g_eagle','-1':'g_birdie','0':'g_par','1':'g_bogey','2':'g_dbogey','3':'g_tbogey'}[diff];
-  return m?t(m):(diff<0?t('g_albatross'):t('g_finished'));
-}
-function fmtDiff(d){return d===0?'E':(d>0?'+':'−')+Math.abs(d);}
-function fmtNum(x){return x.toLocaleString(locale(),{minimumFractionDigits:1,maximumFractionDigits:1});}
-function holeEmoji(d,win){return win===false?'🔴':d<=-1?'🟢':d===0?'⚪':d===1?'🟡':'🟠';}
+const sel=$('lang');
+LANGS.forEach(([c,n])=>{const o=document.createElement('option');o.value=c;o.textContent=n;sel.appendChild(o);});
+sel.value=lang;
+sel.addEventListener('change',()=>{lang=sel.value;store.lang=lang;save();applyStatic();render();writeState();});
 
-/* ---------- visning av spillflaten ---------- */
-let view='daily';
-function activeHole(){
-  if(view==='daily') return daily.hole;
-  if(view==='round'&&round&&!round.done) return round.hole;
-  return null;
-}
-function renderGame(){
-  const g=$('game');
-  if(view==='duel'){if(pvp){g.hidden=false;return renderPvp();}g.hidden=true;return;}
-  const h=activeHole();
-  if(!h){g.hidden=true;return;}
-  g.hidden=false; use(h);
-  $('g-par-cell').hidden=false;$('g-turn-cell').hidden=true;$('g-pass').hidden=true;
-  $('g-par').textContent=h.spec.par;
-  $('g-goal').innerHTML=`<b>${K}</b><span class="pips">${'<i></i>'.repeat(K)}</span>`;
-  $('g-goal-cell').classList.toggle('k5',K===5);
-  $('g-moves').innerHTML=`${h.moves} <small>/ ${maxMoves(h)}</small>`;
-  const fl=$('g-flames');fl.innerHTML='';
-  for(let i=0;i<h.maxMatches;i++){const f=document.createElement('span');f.className='flame'+(i<h.matches?'':' used');fl.appendChild(f);}
-
-  const reveal=!!h.over||h.flash;
-  const kf=knownFilled(1);
-  const winSet=new Set((h.winLine||[]).map(([r,c])=>r+','+c));
-  const bd=$('g-board');bd.innerHTML='';bd.classList.toggle('flash',h.flash);
-  bd.style.gridTemplateColumns=`repeat(${C},minmax(0,1fr))`;
-  const canPlay=!h.over&&!h.busy;
-  for(let c=0;c<C;c++){
-    const col=document.createElement('button');
-    col.type='button';col.className='col';col.disabled=!canPlay;
-    col.style.gridTemplateRows=`repeat(${R},auto)`;
-    col.setAttribute('aria-label',t('col_aria',{c:c+1}));
-    col.addEventListener('click',()=>play(h,c));
-    for(let r=0;r<R;r++){
-      const cell=document.createElement('div');cell.className='cell';
-      const val=B[r][c],vis=playerSees(r,c);let show=false;
-      if(reveal||vis){cell.classList.add('lit');show=!!val;}
-      else cell.classList.add(kf[r][c]?'fogfill':'fog');
-      if(show){
-        const d=document.createElement('div');d.className='disc p'+val;
-        if(h.over&&val===2&&!vis) d.classList.add('revealed');
-        if(h.dropAnim&&h.dropAnim.r===r&&h.dropAnim.c===c){d.classList.add('drop');d.style.setProperty('--fall',`-${(r+1)*112}%`);}
-        if(winSet.has(r+','+c)) d.classList.add('win');
-        cell.appendChild(d);
-      }
-      col.appendChild(cell);
-    }
-    bd.appendChild(col);
-  }
-  h.dropAnim=null;
-  /* Varsel: kolonner der boten kan vinne i neste trekk. Du «hører» det, men ser ikke brikkene. */
-  const threats=(!h.over&&!h.busy&&!h.flash)?botThreats():[];
-  const mk=$('g-markers');mk.innerHTML='';mk.style.gridTemplateColumns=`repeat(${C},minmax(0,1fr))`;
-  for(let c=0;c<C;c++){const s=document.createElement('span');
-    if(threats.includes(c)){s.textContent='!';s.className='threat';}
-    else{s.textContent='▼';if(h.lastBot&&!h.over&&h.lastBot.c===c) s.className='on';}
-    mk.appendChild(s);}
-
-  const left=maxMoves(h)-h.moves;let main,sub;
-  if(h.over){main=h.over.win?t('gm_win',{k:K}):h.over.reason==='bot'?t('gm_botwin',{k:K}):t('gm_nomoves');sub=t('gm_lit');}
-  else if(h.flash){main=t('gm_flash');sub=t('gm_flash_sub');}
-  else if(h.busy){main=t('gm_botturn');sub=h.fullMsg?t('gm_full'):t('gm_botsees');}
-  else{
-    main=h.moves===0?t('gm_turn'):t('gm_turn_left',{n:left});
-    sub=h.lastBot?t('gm_heard',{c:h.lastBot.c+1}):t('gm_intro',{k:K});
-    if(h.fullMsg) sub=t('gm_full_pre')+' '+sub;
-    if(threats.length) sub=t('gm_threat',{k:K,c:threats.map(x=>x+1).join(', ')});
-  }
-  $('g-main').textContent=main;$('g-sub').textContent=sub;
-  $('g-match').disabled=!canPlay||h.matches<1||h.flash;
-}
-$('g-match').addEventListener('click',()=>{
-  if(view==='duel'&&pvp){
-    const v=pvp.turn;if(pvp.busy||pvp.over||pvp.pass||pvp.matches[v]<1) return;
-    pvp.matches[v]--;pvp.flash=true;pvp.busy=true;renderPvp();
-    const game=pvp;setTimeout(()=>{if(pvp!==game) return;pvp.flash=false;pvp.busy=false;renderPvp();},2000);
-    return;
-  }
-  const h=activeHole();if(!h||h.busy||h.over||h.matches<1) return;
-  h.matches--;h.flash=true;h.busy=true;h.seq.push('🔥');renderGame();
-  setTimeout(()=>{h.flash=false;h.busy=false;renderGame();},2000);
-});
-
-/* ---------- Dagens ---------- */
+/* ---------- hvilke nøtter ---------- */
 function todayIdx(){const d=new Date();return Math.floor((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())-LAUNCH)/864e5)+1;}
-function dateLabel(i){const s=new Date(LAUNCH+(i-1)*864e5).toLocaleDateString(locale(),{timeZone:'UTC',weekday:'long',day:'numeric',month:'long'});return s.charAt(0).toUpperCase()+s.slice(1);}
-function dailyType(d){return 'KML'[hash(d*131+7)%3];}
-const daily={day:todayIdx(),hole:null,practice:false,lastRes:null};
-function loadDaily(d){
-  daily.day=d;
-  const spec=genHole(dailyType(d),hash(d*7919+1));
-  daily.practice=!!store.daily[d];
-  daily.lastRes=daily.practice?store.daily[d]:null;
-  daily.hole=newHole(spec,{matches:2,onDone:onDailyDone});
-  $('d-share-fb').hidden=true;
-  renderDaily();
+function weekdayOf(d){return (new Date(LAUNCH+(d-1)*864e5).getUTCDay()+6)%7;} /* mandag = 0 */
+function dailySpec(d){
+  const m=weekdayOf(d),week=Math.floor((d-1+weekdayOf(1))/7);
+  let N,idx;
+  if(m<2){N=3;idx=week*2+m;}else if(m<5){N=4;idx=week*3+(m-2);}else{N=5;idx=week*2+(m-5);}
+  const pool=PUZZLES['d'+N];return {seq:pool[idx%pool.length],N};
 }
-function onDailyDone(h){
-  const res={score:h.score,moves:h.moves,par:h.spec.par,win:h.over.win,reason:h.over.reason,seq:h.seq.join(''),matches:h.maxMatches-h.matches,type:h.spec.type,K:h.spec.K};
-  if(!daily.practice){store.daily[daily.day]=res;save();}
-  daily.lastRes=res;daily.fresh=true;
-  renderDaily();
+function ladderSpec(i){
+  const cnt={3:0,4:0,5:0};let N=3;
+  for(let k=0;k<=i;k++){N=k<4?3:k<14?4:((k-14)%3===2?5:4);if(k<i) cnt[N]++;}
+  const pool=PUZZLES['l'+N];return {seq:pool[cnt[N]%pool.length],N};
 }
-function renderDaily(){
-  const d=daily.day,k=daily.hole.spec.type;
-  $('d-num').textContent=t('board_no',{n:d});
-  $('d-date').textContent=dateLabel(d)+(d===todayIdx()?t('today'):'');
-  $('d-prev').disabled=d<=1;$('d-next').disabled=d>=todayIdx();
-  $('d-chip').className='chip '+k;$('d-chip').innerHTML='<i></i>';$('d-chip').append(`${typeName(k)} · ${typeDesc(k)}`);
-  $('d-practice').hidden=!daily.practice;
-  if(daily.lastRes) showDailyResult(daily.lastRes); else $('d-result').hidden=true;
-  renderGame();
-}
-function showDailyResult(res){
-  const diff=res.score-res.par;
-  const v=$('d-verdict');v.textContent=golfName(diff,res.win,res.reason);v.className='verdict '+(res.win&&diff<=0?'good':res.win?'':'bad');
-  const fy=res.matches===1?t('match1'):t('matchN',{n:res.matches});
-  const mv=res.moves||res.score;
-  $('d-vsub').textContent=(res.win?t('res_win',{s:mv,p:res.par,m:fy})+(mv>res.score?' '+t('counts_as',{s:res.score}):''):t('res_loss',{s:res.score,p:res.par}))+(daily.practice&&daily.fresh?t('practice_suffix'):'');
-  $('d-seq').textContent=res.seq;
-  const sv=store.daily[daily.day];
-  $('d-pts').textContent=(!daily.practice||!daily.fresh)&&sv?t('pts_earned',{n:starsFor(sv.score-sv.par,sv.win)}):'';
-  const keys=Object.keys(store.daily).map(Number);
-  let under=0,sum=0;keys.forEach(k=>{const r=store.daily[k];sum+=r.score-r.par;if(r.win&&r.score<=r.par) under++;});
-  let streak=0;for(let x=todayIdx();store.daily[x];x--) streak++;
-  $('ds-played').textContent=keys.length;$('ds-under').textContent=under;$('ds-streak').textContent=streak;
-  const avg=keys.length?sum/keys.length:null;
-  $('ds-avg').textContent=avg==null?'–':(avg>0?'+':avg<0?'−':'')+fmtNum(Math.abs(avg));
-  const saved=store.daily[daily.day]||res, sd=saved.score-saved.par;
-  $('d-share').dataset.text=`${APP_NAME} #${daily.day} 🌑\n${TYPES[saved.type]?typeName(saved.type):''} · ${golfName(sd,saved.win,saved.reason)}${saved.win?' · '+t('moves_par',{s:saved.moves||saved.score,p:saved.par}):''}\n${saved.seq}\n${SITE}`;
-  $('d-share').textContent=t('copy_result');
-  $('d-countdown').hidden=daily.day!==todayIdx();
-  $('d-result').hidden=false;
-}
-$('d-prev').addEventListener('click',()=>{if(daily.day>1) loadDaily(daily.day-1);});
-$('d-next').addEventListener('click',()=>{if(daily.day<todayIdx()) loadDaily(daily.day+1);});
-$('d-again').addEventListener('click',()=>{const d=daily.day;loadDaily(d);daily.practice=true;daily.lastRes=null;daily.fresh=false;renderDaily();});
 
-/* ---------- Runder ---------- */
-let round=null;
-function isoWeek(){const d=new Date();const x=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=x.getUTCDay()||7;x.setUTCDate(x.getUTCDate()+4-day);const y=x.getUTCFullYear();const w=Math.ceil(((x-Date.UTC(y,0,1))/864e5+1)/7);return {y,w};}
-function weekSeed(){const {y,w}=isoWeek();return hash(y*100+w)%2176782336;}
-function holeBase(seed,i){return hash(seed*31+i*7717+5);}
-function courseLabel(kind,holes){const {w}=isoWeek();return (kind==='week'?t('week_n',{w}):kind==='duel'?t('lbl_duel'):t('random'))+t('lbl_holes',{n:holes});}
-function startRound(kind,holes,seed,opp){
-  round={kind,holes,seed,opp:opp||null,idx:0,scores:[],wins:[],pars:[],types:[],hole:null,done:false};
-  for(let i=0;i<holes;i++){round.types[i]=COURSE[i];round.pars[i]=typePar(COURSE[i]);}
-  store.current={kind,holes,seed,opp:round.opp,idx:0,scores:[]};save();
-  startRoundHole();
+/* ---------- spilltilstand ---------- */
+let mode=null,game=null;
+function modeKey(m){return m.kind==='daily'?'d'+m.day:m.kind==='extra'?'x'+m.idx:'c'+m.src.t+m.src.id;}
+function specFor(m){
+  if(m.kind==='daily') return dailySpec(m.day);
+  if(m.kind==='extra') return ladderSpec(m.idx);
+  return m.src.t==='d'?dailySpec(m.src.id):ladderSpec(m.src.id);
 }
-function startRoundHole(){
-  const spec=genHole(round.types[round.idx],holeBase(round.seed,round.idx));
-  round.pars[round.idx]=spec.par;
-  round.hole=newHole(spec,{matches:1,onDone:onRoundHoleDone});
-  $('r-holedone').hidden=true;$('r-confirm').hidden=true;
-  renderRound();
+function open(m){
+  mode=m;const spec=specFor(m),key=modeKey(m);
+  const cur=store.cur&&store.cur.key===key?store.cur:null;
+  game={spec,S:fromSeq(spec.seq),n:spec.N,used:0,fails:cur?cur.fails:0,hint:cur?(+cur.hint||0):0,hf:cur?(cur.hf||0):0,phase:'play',winLine:null,dropAnim:null,msg:'start'};
+  if(m.kind==='daily'&&store.daily[m.day]){const r=store.daily[m.day];game.fails=r.a-1;game.hint=r.h?1:0;game.phase='done';game.msg='before';}
+  render();
 }
-function onRoundHoleDone(h){
-  round.scores[round.idx]=h.score;round.wins[round.idx]=h.over.win;
-  store.current.idx=round.idx;store.current.scores=round.scores.slice();store.current.wins=round.wins.slice();save();
-  renderRound();
-}
-function renderHoleDone(){
-  const h=round.hole;if(!h||!h.over){$('r-holedone').hidden=true;return;}
-  const diff=h.score-h.spec.par;
-  const v=$('r-verdict');v.textContent=golfName(diff,h.over.win,h.over.reason);v.className='verdict '+(h.over.win&&diff<=0?'good':h.over.win?'':'bad');
-  let sub=(h.over.win?t('rh_win',{s:h.moves,p:h.spec.par})+(h.moves>h.score?' '+t('counts_as',{s:h.score}):''):t('rh_loss',{s:h.score}))+' '+t('pts_earned',{n:starsFor(diff,h.over.win)})+'.';
-  if(round.opp){const o=round.opp.scores[round.idx];if(o!=null) sub+=t('opp_used',{o:round.opp.name,n:o})+(h.score<o?t('you_won_hole'):h.score>o?t('opp_won_hole',{o:round.opp.name}):t('halved'));}
-  $('r-vsub').textContent=sub;
-  $('r-next').textContent=round.idx+1>=round.holes?t('see_result'):t('next_hole');
-  $('r-holedone').hidden=false;
-}
-$('r-next').addEventListener('click',()=>{
-  round.idx++;
-  if(round.idx>=round.holes) return finishRound();
-  store.current.idx=round.idx;save();
-  startRoundHole();
-});
-function sumArr(a){return a.reduce((s,x)=>s+(x||0),0);}
-function matchStatus(){
-  if(!round.opp) return null;
-  let w=0,l=0,hv=0;
-  round.scores.forEach((s,i)=>{const o=round.opp.scores[i];if(s==null||o==null) return;if(s<o) w++;else if(s>o) l++;else hv++;});
-  return {w,l,hv,up:w-l};
-}
-function finishRound(){
-  round.done=true;
-  const strokes=sumArr(round.scores),par=sumArr(round.pars.slice(0,round.holes));
-  const birdies=round.scores.filter((s,i)=>s<round.pars[i]).length;
-  const rec={t:Date.now(),kind:round.kind,holes:round.holes,strokes,par,birdies,opp:round.opp?round.opp.name:null,ms:matchStatus(),scores:round.scores.slice(0,round.holes),pars:round.pars.slice(0,round.holes),wins:round.wins.slice(0,round.holes),oppScores:round.opp?round.opp.scores.slice(0,round.holes):null};
-  store.rounds.push(rec);
-  if(round.opp) recordFriend(round.opp.name,null,rec.ms);
-  store.current=null;save();
-  renderRound();
-}
-function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-function renderCard(el,highlight){
-  const n=round.holes;const halves=n===18?[[0,9],[9,18]]:[[0,n]];
-  const me=(store.name||'').trim()||t('sc_you');
-  let html='';
-  halves.forEach(([a,b],hi)=>{
-    let h=`<table class="card"><tr class="hole"><th>${esc(t('sc_hole'))}</th>`;
-    for(let i=a;i<b;i++) h+=`<th>${i+1}</th>`;
-    h+=`<th class="tot">${esc(n===18?(hi?t('sc_in'):t('sc_out')):t('sc_tot'))}</th></tr>`;
-    h+=`<tr><td>${esc(t('sc_par'))}</td>`;for(let i=a;i<b;i++) h+=`<td>${round.pars[i]}</td>`;h+=`<td class="tot">${sumArr(round.pars.slice(a,b))}</td></tr>`;
-    const row=(name,scores,isMe)=>{let r=`<tr><td>${esc(name)}</td>`;for(let i=a;i<b;i++){const s=scores[i];const cur=isMe&&highlight&&i===round.idx&&!round.done;
-      if(s==null){r+=`<td class="${cur?'cur':''}">${cur?'•':''}</td>`;continue;}
-      const d=s-round.pars[i];const cls=(isMe&&round.wins[i]===false)?'x':d<0?'u':d===1?'o1':d>=2?'o2':'';
-      r+=`<td class="${cur?'cur':''}"><span class="sc ${cls}">${s}</span></td>`;}
-      const played=scores.slice(a,b).filter(x=>x!=null);r+=`<td class="tot">${played.length?sumArr(played):''}</td></tr>`;return r;};
-    h+=row(me,round.scores,true);
-    if(round.opp) h+=row(round.opp.name,round.opp.scores,false);
-    h+='</table>';html+=h;
-  });
-  el.innerHTML=html;
-}
-function renderRound(){
-  const {w}=isoWeek();
-  $('r-week-title').textContent=t('week_n',{w});
-  $('r-week-par').textContent=t('par_n',{n:sumArr(COURSE.split('').map(x=>typePar(x)))});
-  $('r-pips').innerHTML=COURSE.split('').map(x=>`<i class="${x}" title="${esc(typeName(x))}"></i>`).join('');
-  const colors={K:'var(--amber)',M:'#9AA8FF',L:'var(--coral)'};
-  $('r-types').innerHTML=['K','M','L'].map(x=>`<b style="color:${colors[x]}">${esc(typeName(x))}</b><span>${esc(typeDesc(x))} · ${esc(t('par_n',{n:typePar(x)}))}</span>`).join('');
-  $('r-menu').hidden=!!round;
-  $('r-play').hidden=!round||round.done;
-  $('r-summary').hidden=!round||!round.done;
-  if(!round){renderGame();return;}
-  if(!round.done){
-    $('r-label').textContent=courseLabel(round.kind,round.holes);
-    $('r-hole').textContent=t('hole_x',{i:round.idx+1,n:round.holes});
-    const played=round.scores.filter(x=>x!=null).length;
-    const tot=sumArr(round.scores),parSoFar=sumArr(round.pars.slice(0,played));
-    $('r-total').textContent=t('total',{s:tot,d:fmtDiff(played?tot-parSoFar:0)});
-    const k=round.types[round.idx];
-    $('r-chip').className='chip '+k;$('r-chip').innerHTML='<i></i>';$('r-chip').append(`${typeName(k)} · ${typeDesc(k)} · ${t('par_n',{n:round.pars[round.idx]})}`);
-    const ms=matchStatus();
-    if(ms){$('r-duel').hidden=false;$('r-duel').textContent=t('duel_status',{o:round.opp.name,t:round.opp.total})+(ms.up>0?t('lead',{n:ms.up}):ms.up<0?t('behind',{n:-ms.up}):t('square'));}
-    else $('r-duel').hidden=true;
-    renderHoleDone();
-    renderCard($('r-card'),true);
+function saveCur(){store.cur={key:modeKey(mode),fails:game.fails,hint:game.hint,hf:game.hf};save();}
+function reset(){const g=game;g.S=fromSeq(g.spec.seq);g.n=g.spec.N;g.used=0;g.winLine=null;g.dropAnim=null;g.phase='play';g.msg=g.hint?'hint':'start';render();}
+
+function tap(c){
+  const g=game;if(!g||g.phase!=='play'||g.S.h[c]>=H) return;
+  const good=winningMoves(g.S,g.n).includes(c);
+  const r=drop(g.S,c,1);g.dropAnim={c,r};g.used++;
+  if(good){
+    const line=lineAt(g.S,c,r);
+    if(line){g.winLine=line;return finish();}
+    g.n--;g.phase='busy';g.msg='good';render();
+    setTimeout(()=>{if(game!==g) return;const rc=redReply(g.S,g.n);const rr=drop(g.S,rc,2);g.dropAnim={c:rc,r:rr};g.phase='play';g.msg='next';render();},650);
   }else{
-    const strokes=sumArr(round.scores),par=sumArr(round.pars.slice(0,round.holes)),d=strokes-par;
-    $('rs-label').textContent=courseLabel(round.kind,round.holes);
-    $('rs-score').textContent=strokes;
-    let sub=t('par_diff',{p:par,d:fmtDiff(d)});
-    const ms=matchStatus();
-    if(ms){const el=$('rs-duel');el.hidden=false;
-      el.textContent=ms.up>0?t('duel_you',{o:round.opp.name}):ms.up<0?t('duel_opp',{o:round.opp.name}):t('duel_tie');
-      el.className='verdict '+(ms.up>0?'good':ms.up<0?'bad':'');
-      sub+=t('duel_line',{w:ms.w,l:ms.l,h:ms.hv,o:round.opp.name,t:round.opp.total});
-    }else $('rs-duel').hidden=true;
-    $('rs-sub').textContent=sub;
-    $('rs-seq').textContent=round.scores.map((s,i)=>holeEmoji(s-round.pars[i],round.wins[i])).join('');
-    $('rs-pts').textContent=t('pts_earned',{n:roundStars({scores:round.scores.slice(0,round.holes),pars:round.pars,wins:round.wins,oppScores:round.opp?round.opp.scores:null})});
-    renderCard($('rs-card'),false);
+    g.phase='busy';g.msg='wrong';render();
+    setTimeout(()=>{
+      if(game!==g) return;
+      const rc=redReply(g.S,Math.max(1,g.n-1));
+      if(rc>=0){const rr=drop(g.S,rc,2);g.dropAnim={c:rc,r:rr};const l=lineAt(g.S,rc,rr);if(l) g.winLine=l;}
+      g.fails++;saveCur();g.phase='wrong';render();
+      const b=$('board');b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake');
+    },650);
   }
-  renderGame();
 }
-function challengeCode(){
-  const name=((store.name||'').trim()||t('friend')).replace(/[.\s]+/g,'_').slice(0,20);
-  return `QL.${round.holes}.${round.seed.toString(36)}.${round.scores.map(s=>s.toString(36)).join('')}.${name}.${pointsSummary().total}`;
+function finish(){
+  const g=game;g.phase='done';g.msg='done';
+  const a=g.fails+1,h=g.hint?1:0,today=todayIdx();
+  if(mode.kind==='daily'){if(!store.daily[mode.day]) store.daily[mode.day]={a,h};}
+  else if(mode.kind==='extra'){store.extra=Math.max(store.extra,mode.idx+1);}
+  store.cur=null;save();render();updateBadge();writeState();
 }
-function challengeLink(){return 'https://'+SITE+'/#'+encodeURIComponent(challengeCode());}
-$('rs-challenge').addEventListener('click',async()=>{
-  const strokes=sumArr(round.scores),par=sumArr(round.pars.slice(0,round.holes));
-  const msg=t('challenge_msg',{n:round.holes,name:APP_NAME,s:strokes,d:fmtDiff(strokes-par)}),url=challengeLink();
-  if(navigator.share){
-    try{await navigator.share({title:APP_NAME,text:msg,url});return;}
-    catch(e){if(e&&e.name==='AbortError') return;}
-  }
-  copy(msg+'\n'+url,$('rs-challenge'),$('rs-fb'),t('challenge_copied'));
-});
-$('rs-share').addEventListener('click',()=>{
-  const strokes=sumArr(round.scores),par=sumArr(round.pars.slice(0,round.holes));
-  const ms=matchStatus();
-  let txt=t('share_round',{name:APP_NAME,label:courseLabel(round.kind,round.holes),s:strokes,p:par,d:fmtDiff(strokes-par)});
-  if(ms) txt+=t('share_duel',{o:round.opp.name,w:ms.w,l:ms.l})+(ms.hv?t('share_halved',{h:ms.hv}):'');
-  txt+='\n'+round.scores.map((s,i)=>holeEmoji(s-round.pars[i],round.wins[i])).join('');
-  txt+='\n'+SITE;
-  copy(txt,$('rs-share'),$('rs-fb'),t('copied'));
-});
-$('rs-new').addEventListener('click',()=>{round=null;renderRound();});
-$('r-quit').addEventListener('click',()=>{$('r-confirm').hidden=false;});
-$('r-quit-no').addEventListener('click',()=>{$('r-confirm').hidden=true;});
-$('r-quit-yes').addEventListener('click',()=>{round=null;store.current=null;save();renderRound();});
-$('r-week9').addEventListener('click',()=>startRound('week',9,weekSeed()));
-$('r-week18').addEventListener('click',()=>startRound('week',18,weekSeed()));
-$('r-rand9').addEventListener('click',()=>startRound('random',9,Math.floor(Math.random()*2176782335)));
-$('r-rand18').addEventListener('click',()=>startRound('random',18,Math.floor(Math.random()*2176782335)));
+$('retry').addEventListener('click',reset);
+$('hint').addEventListener('click',()=>{game.hint++;game.hf=game.fails;saveCur();reset();});
 
-/* ---------- Duell ---------- */
-function parseChallenge(txt){
-  /* Godtar nye (QL.) og eldre koder (QD., QX., GL., MB.). */
-  let src=txt||'';try{src=decodeURIComponent(src);}catch(e){}
-  const m=/(?:QL|QD|QX|GL|MB)\.(3|6|9|18)\.([0-9a-z]+)\.([0-9a-z]+)(?:\.([^\s.]+))?(?:\.(\d+))?/i.exec(src);
-  if(!m) return {err:t('err_nocode',{ex:'QL.9.k3j2h1.435443544.Alex'})};
-  const holes=+m[1],seed=parseInt(m[2],36);let sc=m[3].toLowerCase().split('').map(ch=>parseInt(ch,36));
-  if(sc.length!==holes||sc.some(isNaN)) return {err:t('err_count',{a:sc.length,b:holes})};
-  sc=sc.map((x,i)=>Math.min(x,typePar(COURSE[i])+MAX_OVER));
-  const name=(m[4]||t('opponent')).replace(/_/g,' ').slice(0,20);
-  return {holes,seed,opp:{name,scores:sc,total:sumArr(sc)},stars:m[5]!=null?+m[5]:null};
-}
-$('du-start').addEventListener('click',()=>{
-  const p=parseChallenge($('du-input').value);
-  if(p.err){$('du-msg').textContent=p.err;return;}
-  $('du-msg').textContent='';$('du-input').value='';
-  acceptChallenge(p);
-});
-function acceptChallenge(p){recordFriend(p.opp.name,p.stars,null);invite=null;startRound('duel',p.holes,p.seed,p.opp);setView('round');}
-/* Utfordring via lenke: quadlume.com/#QL.9.… */
-let invite=null;
-function checkHash(){
-  const raw=(location.hash||'').slice(1);if(!raw) return false;
-  const p=parseChallenge(raw);if(p.err) return false;
-  invite=p;
-  try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}
-  return true;
-}
-window.addEventListener('hashchange',()=>{if(checkHash()) setView('duel');});
-$('du-inv-go').addEventListener('click',()=>{if(invite) acceptChallenge(invite);});
-$('du-inv-no').addEventListener('click',()=>{invite=null;renderDuel();});
+/* ---------- resultat ---------- */
+function resText(a,h){return h?t('res_hint'):a===1?t('res_1'):t('res_n',{n:a});}
+function lcFirst(s){return s.charAt(0).toLowerCase()+s.slice(1);}
+function rankOf(a,h){return h?99:a;}
+function streak(){const td=todayIdx();let d=store.daily[td]?td:td-1,n=0;while(store.daily[d]){n++;d--;}return n;}
+function totalSolved(){return Object.keys(store.daily).length+store.extra+(store.base||0);}
 
-/* ---------- Ekte duell på samme mobil: tomt brett, ingen bot ---------- */
-let pvp=null,pvpStarter=1;const pvpScore={1:0,2:0};
-function pvpName(p){return t(p===1?'p_yellow':'p_red');}
-function startPvp(){
-  R=6;C=7;K=4;
-  pvp={R:6,C:7,K:4,B:emptyB(),turn:pvpStarter,matches:{1:1,2:1},moves:{1:0,2:0},over:null,winLine:null,last:null,pass:true,flash:false,busy:false,dropAnim:null};
-  pvpStarter=3-pvpStarter;renderDuel();
-}
-function usePvp(){R=pvp.R;C=pvp.C;K=pvp.K;B=pvp.B;}
-function pvpPlay(c){
-  if(!pvp||pvp.over||pvp.busy||pvp.pass) return;usePvp();
-  const p=pvp.turn;pvp.busy=true;pvp.moves[p]++;
-  const r=landRow(c);
-  if(r<0) pvp.last={p,c,full:true};
-  else{
-    B[r][c]=p;pvp.dropAnim={r,c};pvp.last={p,c,full:false};
-    const w=winAt(r,c);
-    if(w){pvp.winLine=w;pvp.over={winner:p};pvpScore[p]++;pvp.busy=false;return renderDuel();}
-    if(B[0].every(x=>x)){pvp.over={winner:0};pvp.busy=false;return renderDuel();}
-  }
-  renderPvp();
-  const game=pvp;
-  setTimeout(()=>{if(pvp!==game) return;pvp.turn=3-p;pvp.pass=true;pvp.busy=false;renderPvp();},r<0?1300:800);
-}
-function renderPvp(){
-  usePvp();const v=pvp.turn,o=3-v,hide=pvp.pass&&!pvp.over;
-  $('g-par-cell').hidden=true;$('g-turn-cell').hidden=false;
-  $('g-goal').innerHTML=`<b>${K}</b><span class="pips">${'<i></i>'.repeat(K)}</span>`;
-  $('g-goal-cell').classList.remove('k5');
-  $('g-turn').innerHTML=`<i class="pdot${v}"></i>`;$('g-turn').append(pvpName(v));
-  $('g-moves').textContent=pvp.moves[v];
-  const fl=$('g-flames');fl.innerHTML='';const f=document.createElement('span');f.className='flame'+(pvp.matches[v]>0?'':' used');fl.appendChild(f);
-  const reveal=!!pvp.over||pvp.flash,kf=knownFilled(v);
-  const winSet=new Set((pvp.winLine||[]).map(([r,c])=>r+','+c));
-  const bd=$('g-board');bd.innerHTML='';bd.classList.toggle('flash',pvp.flash);
-  bd.style.gridTemplateColumns=`repeat(${C},minmax(0,1fr))`;
-  const canPlay=!pvp.over&&!pvp.busy&&!pvp.pass;
-  for(let c=0;c<C;c++){
-    const col=document.createElement('button');
-    col.type='button';col.className='col';col.disabled=!canPlay;
-    col.style.gridTemplateRows=`repeat(${R},auto)`;
+/* ---------- visning ---------- */
+function render(){
+  const g=game,N=g.spec.N,S=g.S;
+  $('s-streak').textContent=streak();$('s-total').textContent=totalSolved();
+  const chip=$('chip');chip.className='chip n'+N;
+  $('chip-text').textContent=(mode.kind==='daily'?t('daily_no',{n:mode.day}):mode.kind==='extra'?t('extra_no',{n:mode.idx+1}):t('chal_no'))+' · '+t('diff_'+N);
+  $('back-daily').hidden=mode.kind==='daily';
+  $('task').textContent=t('task',{n:N});
+  const pips=$('pips');pips.innerHTML='';
+  for(let i=0;i<N;i++){const p=document.createElement('i');if(i<g.used) p.className='used';pips.appendChild(p);}
+  if(g.phase!=='done'){const sp=document.createElement('span');sp.textContent=t('moves',{a:Math.min(g.used+1,N),n:N});pips.appendChild(sp);}
+
+  const opp=mode.opp,bn=$('chal-banner');
+  bn.hidden=!opp||g.phase==='done';
+  if(opp) bn.textContent=t('chal_from',{o:opp.name,r:lcFirst(resText(opp.a,opp.h))});
+
+  const winSet=new Set((g.winLine||[]).map(([c,r])=>c+','+r));
+  const bd=$('board');bd.innerHTML='';
+  const can=g.phase==='play';
+  for(let c=0;c<W;c++){
+    const col=document.createElement('button');col.type='button';col.className='col';col.disabled=!can||S.h[c]>=H;
     col.setAttribute('aria-label',t('col_aria',{c:c+1}));
-    col.addEventListener('click',()=>pvpPlay(c));
-    for(let r=0;r<R;r++){
+    col.addEventListener('click',()=>tap(c));
+    for(let r=H-1;r>=0;r--){
       const cell=document.createElement('div');cell.className='cell';
-      const val=B[r][c],vis=!hide&&playerSees(r,c,v);let show=false;
-      if(!hide&&(reveal||vis)){cell.classList.add('lit');show=!!val;}
-      else cell.classList.add(!hide&&kf[r][c]?'fogfill':'fog');
-      if(show){
-        const d=document.createElement('div');d.className='disc p'+val;
-        if(pvp.over&&!playerSees(r,c,v)) d.classList.add('revealed');
-        if(pvp.dropAnim&&pvp.dropAnim.r===r&&pvp.dropAnim.c===c){d.classList.add('drop');d.style.setProperty('--fall',`-${(r+1)*112}%`);}
-        if(winSet.has(r+','+c)) d.classList.add('win');
-        cell.appendChild(d);
-      }
+      const v=S.g[c][r];
+      if(v){const d=document.createElement('div');d.className='disc p'+v;
+        if(g.dropAnim&&g.dropAnim.c===c&&g.dropAnim.r===r){d.classList.add('drop');d.style.setProperty('--fall',`-${(H-r)*110}%`);}
+        if(winSet.has(c+','+r)) d.classList.add('win');
+        cell.appendChild(d);}
       col.appendChild(cell);
     }
     bd.appendChild(col);
   }
-  pvp.dropAnim=null;
-  const last=pvp.last,heard=last&&last.p===o&&!pvp.over&&!hide;
-  const mk=$('g-markers');mk.innerHTML='';mk.style.gridTemplateColumns=`repeat(${C},minmax(0,1fr))`;
-  for(let c=0;c<C;c++){const sp=document.createElement('span');sp.textContent='▼';if(heard&&last.c===c) sp.className='on'+(o===1?' m1':'');mk.appendChild(sp);}
-  let main,sub;
-  if(pvp.over){main=pvp.over.winner?t('pvp_won',{p:pvpName(pvp.over.winner)}):t('pvp_draw');sub=t('gm_lit');}
-  else if(hide){main=t('pvp_turn',{p:pvpName(v)});sub='';}
-  else if(pvp.flash){main=t('gm_flash');sub=t('gm_flash_sub');}
-  else if(pvp.busy&&last&&last.p===v&&last.full){main=t('pvp_turn',{p:pvpName(v)});sub=t('gm_full');}
-  else{
-    main=t('pvp_turn',{p:pvpName(v)});
-    sub=heard?(last.full?t('pvp_opp_full',{p:pvpName(o),c:last.c+1}):t('pvp_heard',{p:pvpName(o),c:last.c+1})):t('pvp_intro',{k:K});
+  g.dropAnim=null;
+  const mk=$('markers');mk.innerHTML='';
+  const key=(g.hint>g.used&&g.phase==='play')?winningMoves(S,g.n)[0]:-1;
+  for(let c=0;c<W;c++){const s=document.createElement('span');s.textContent='▼';if(c===key) s.className='on';mk.appendChild(s);}
+
+  const st=$('status');let main='',sub='',cls='';
+  if(g.msg==='start'){main=t('st_start');}
+  else if(g.msg==='hint'){main=t('st_start');sub=t('st_hint');}
+  else if(g.msg==='good'){main=t('st_good');cls='ok';}
+  else if(g.msg==='next'){main=t('st_next');cls='ok';}
+  else if(g.msg==='wrong'){main=t('st_wrong');sub=t('st_wrong_sub',{n:N});cls='bad';}
+  else if(g.msg==='done'){main=t('st_done');cls='ok';}
+  else if(g.msg==='before'){main=t('st_solved_before');}
+  st.className='status '+cls;$('st-main').textContent=main;$('st-sub').textContent=sub;
+
+  $('wrong-actions').hidden=g.phase!=='wrong';
+  $('hint').hidden=!(g.fails-g.hf>=3&&g.hint<N-1);
+
+  const done=g.phase==='done';$('result').hidden=!done;
+  if(done){
+    const a=g.fails+1,h=g.hint;
+    $('res-line').textContent=resText(a,h);
+    $('res-seq').textContent='🟥'.repeat(Math.min(g.fails,8))+(h?'💡':'')+'🟩';
+    const cmp=$('res-cmp');cmp.hidden=!opp;
+    if(opp){const me=rankOf(a,h),ot=rankOf(opp.a,opp.h);cmp.textContent=t(me<ot?'cmp_win':me>ot?'cmp_loss':'cmp_tie',{o:opp.name})+' ('+opp.name+': '+lcFirst(resText(opp.a,opp.h))+')';}
+    $('name').value=store.name||'';
+    $('countdown').hidden=!(mode.kind==='daily'&&mode.day===todayIdx());
   }
-  $('g-main').textContent=main;$('g-sub').textContent=sub;
-  $('g-match').disabled=!canPlay||pvp.matches[v]<1||pvp.flash;
-  const ov=$('g-pass');ov.hidden=!hide;
-  if(hide){$('g-pass-title').textContent=t('pvp_pass',{p:pvpName(v)});$('g-pass-sub').textContent=t('pvp_dont_peek',{p:pvpName(v)});$('g-pass-go').textContent=t('pvp_ready',{p:pvpName(v)});}
+  renderCards();
 }
-$('g-pass-go').addEventListener('click',()=>{if(pvp){pvp.pass=false;renderPvp();}});
-$('pvp-start').addEventListener('click',startPvp);
-$('pvp-again').addEventListener('click',startPvp);
-$('pvp-quit').addEventListener('click',()=>{pvp=null;renderDuel();});
-function renderDuel(){
-  $('du-menu').hidden=!!pvp;$('du-pvp').hidden=!pvp;
-  $('du-invite').hidden=!invite;
-  if(invite){
-    $('du-inv-title').textContent=t('inv_title',{o:invite.opp.name});
-    $('du-inv-sub').textContent=t('inv_sub',{n:invite.holes,s:invite.opp.total})+(round&&!round.done?t('inv_replace'):'');
-  }
-  if(pvp){
-    $('pvp-score').innerHTML=`<i class="pdot1"></i>${esc(pvpName(1))} <b>${pvpScore[1]} – ${pvpScore[2]}</b> ${esc(pvpName(2))}<i class="pdot2"></i>`;
-    $('pvp-done').hidden=!pvp.over;
-    if(pvp.over){const el=$('pvp-verdict');el.textContent=pvp.over.winner?t('pvp_won',{p:pvpName(pvp.over.winner)}):t('pvp_draw');el.className='verdict good';}
-  }
-  renderGame();
-}
-document.querySelectorAll('.lengths [data-holes]').forEach(b=>b.addEventListener('click',()=>{
-  startRound('random',+b.dataset.holes,Math.floor(Math.random()*2176782335));setView('round');
-}));
+$('back-daily').addEventListener('click',()=>open({kind:'daily',day:todayIdx()}));
+$('next').addEventListener('click',()=>open({kind:'extra',idx:mode.kind==='extra'?mode.idx+1:store.extra}));
+$('name').addEventListener('input',e=>{store.name=e.target.value.slice(0,20);save();});
 
-/* ---------- Profil ---------- */
-function handicap(){
-  /* Som i golf teller bare runder på 9 eller 18 hull. */
-  const rs=store.rounds.filter(r=>r.holes>=9).slice(-10);if(rs.length<3) return null;
-  return rs.reduce((s,r)=>s+(r.strokes-r.par)*18/r.holes,0)/rs.length;
+/* ---------- utfordring ---------- */
+function toast(msg){const el=document.createElement('div');el.className='toast';el.setAttribute('role','status');el.textContent=msg;document.body.appendChild(el);setTimeout(()=>el.remove(),2600);}
+function challengeLink(){
+  const src=mode.kind==='daily'?['d',mode.day]:mode.kind==='extra'?['x',mode.idx]:[mode.src.t,mode.src.id];
+  const name=((store.name||'').trim()||t('friend')).replace(/[.\s]+/g,'_').slice(0,20);
+  return BASE_URL+'#c.'+src[0]+'.'+src[1]+'.'+(game.fails+1)+'.'+(game.hint?1:0)+'.'+encodeURIComponent(name);
 }
-/* ---------- Stjerner og nivåer ----------
-   ⭐ = hullet klart, ⭐⭐ = på par, ⭐⭐⭐ = under par. I dueller: +1 ⭐ for hvert hull du vinner. */
-function starsFor(d,win){if(!win) return 0;return d<0?3:d===0?2:1;}
-/* Eldre runder mangler «wins»; da regnes et hull som klart hvis det ikke fikk tapsscore. */
-function holeWon(r,i){if(r.wins&&r.wins[i]!=null) return r.wins[i];return r.scores[i]-r.pars[i]<4;}
-function duelHoleStars(scores,oppScores,n){let b=0;if(!oppScores) return 0;for(let i=0;i<n;i++) if(scores[i]!=null&&oppScores[i]!=null&&scores[i]<oppScores[i]) b++;return b;}
-function roundStars(r){let p=0;for(let i=0;i<r.scores.length;i++) if(r.scores[i]!=null) p+=starsFor(r.scores[i]-r.pars[i],holeWon(r,i));return p+duelHoleStars(r.scores,r.oppScores,r.scores.length);}
-const LEVELS=[0,50,150,400,1000,2500];
-function pointsSummary(){
-  let total=0,holes=0,dw=0,dl=0,dt=0;
-  Object.values(store.daily).forEach(r=>{holes++;total+=starsFor(r.score-r.par,r.win);});
-  store.rounds.forEach(r=>{
-    if(r.scores&&r.pars){holes+=r.scores.length;total+=roundStars(r);}
-    else holes+=r.holes;
-    if(r.ms){if(r.ms.up>0) dw++;else if(r.ms.up<0) dl++;else dt++;}
-  });
-  let lvl=0;for(let i=0;i<LEVELS.length;i++) if(total>=LEVELS[i]) lvl=i;
-  return {total,holes,dw,dl,dt,lvl};
+$('challenge').addEventListener('click',async()=>{
+  const msg=t('share_msg',{r:lcFirst(resText(game.fails+1,game.hint))}),url=challengeLink();
+  if(navigator.share){try{await navigator.share({title:APP_NAME,text:msg,url});return;}catch(e){if(e&&e.name==='AbortError') return;}}
+  try{await navigator.clipboard.writeText(msg+'\n'+url);toast(t('copied'));}catch(e){toast(url);}
+});
+let viaChallenge=false;
+function parseHash(){
+  let raw=(location.hash||'').slice(1);if(!raw) return null;
+  try{raw=decodeURIComponent(raw);}catch(e){}
+  const m=/^c\.(d|x)\.(\d+)\.(\d+)\.(0|1)\.(.+)$/.exec(raw);if(!m) return null;
+  try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}
+  const id=+m[2],opp={name:m[5].replace(/_/g,' ').slice(0,20),a:Math.max(1,+m[3]),h:+m[4]===1};
+  if(m[1]==='d'){const td=todayIdx();if(id>td||id<1) return null;if(id===td) return {kind:'daily',day:td,opp};}
+  return {kind:'chal',src:{t:m[1],id},opp};
 }
-function renderPoints(){
-  const p=pointsSummary();
-  $('p-pts').textContent=p.total.toLocaleString(locale());
-  $('p-lvl').textContent=t('lvl'+p.lvl);
-  const next=LEVELS[p.lvl+1];
-  if(next!=null){
-    $('p-next').textContent=t('next_level',{n:next-p.total,lvl:t('lvl'+(p.lvl+1))});
-    $('p-bar').style.width=Math.round((p.total-LEVELS[p.lvl])/(next-LEVELS[p.lvl])*100)+'%';
-  }else{$('p-next').textContent=t('max_level');$('p-bar').style.width='100%';}
-  $('p-duels').textContent=t('duel_record',{w:p.dw,t:p.dt,l:p.dl});
-  $('p-holes').textContent=p.holes;
+window.addEventListener('hashchange',()=>{const m=parseHash();if(m){viaChallenge=true;open(m);}});
+
+/* ---------- installering ---------- */
+let deferred=null;
+function standalone(){return (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;}
+const IOS=/iphone|ipad|ipod/i.test(navigator.userAgent||'');
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;renderCards();});
+window.addEventListener('appinstalled',()=>{deferred=null;renderCards();});
+$('inst-btn').addEventListener('click',async()=>{if(!deferred) return;deferred.prompt();try{await deferred.userChoice;}catch(e){}deferred=null;renderCards();});
+$('inst-x').addEventListener('click',()=>{store.instX=todayIdx();save();renderCards();});
+function renderCards(){
+  const td=todayIdx(),any=totalSolved()>0;
+  const showInst=!EMBEDDED&&!standalone()&&(viaChallenge||(store.instX!==td&&(any||deferred)));
+  $('install').hidden=!showInst;
+  if(showInst){$('inst-btn').hidden=!deferred;$('inst-text').textContent=deferred?t('inst_text'):IOS?t('inst_ios'):t('inst_other');}
+  const showNotif=!EMBEDDED&&any&&game&&game.phase==='done'&&!(store.notif&&('Notification' in window)&&Notification.permission==='granted');
+  $('notif').hidden=!showNotif&&!notifMsg;
+  if(showNotif||notifMsg){$('notif-text').textContent=notifMsg||t('notif_text');$('notif-btn').hidden=!!notifMsg&&store.notif;}
 }
 
-/* ---------- Vennetabell ----------
-   Fylles fra utfordringer du tar imot (koden inneholder vennens stjerner) og duellresultater.
-   Når innlogging og server kommer, erstattes dette av en global toppliste (se loadGlobalLeaderboard). */
-function recordFriend(name,stars,ms){
-  if(!name) return;
-  store.friends=store.friends||{};
-  const key=name.trim().toLowerCase();if(!key) return;
-  const f=store.friends[key]||{name:name.trim(),stars:null,w:0,l:0,t:0,seen:0};
-  f.name=name.trim();f.seen=Date.now();
-  if(stars!=null&&!isNaN(stars)) f.stars=stars;
-  if(ms){if(ms.up>0) f.w++;else if(ms.up<0) f.l++;else f.t++;}
-  store.friends[key]=f;save();
+/* ---------- varsel og merke på app-ikonet ----------
+   Uten egen server er dette «beste forsøk»: nettleseren vekker appen i bakgrunnen (periodic background sync)
+   og den viser varselet selv. Pålitelig levering hver dag krever en push-tjeneste. */
+let notifMsg='';
+async function writeState(){
+  if(!('caches' in window)) return;
+  try{
+    const c=await caches.open('qn-state');let old={};const r=await c.match('state');if(r) old=await r.json();
+    const days=Object.keys(store.daily).map(Number);
+    const s={notif:!!store.notif,lastSolved:days.length?Math.max(...days):0,launch:LAUNCH,title:t('push_title'),body:t('push_body'),lastNotified:old.lastNotified||0};
+    await c.put('state',new Response(JSON.stringify(s),{headers:{'Content-Type':'application/json'}}));
+  }catch(e){}
 }
-const loadGlobalLeaderboard=null; /* Plass for fremtidig server: async ()=>[{name,stars}] */
-function levelOf(stars){let l=0;for(let i=0;i<LEVELS.length;i++) if(stars>=LEVELS[i]) l=i;return l;}
-let boardScope='friends';
-document.querySelectorAll('.seg3 [data-scope]').forEach(b=>b.addEventListener('click',()=>{boardScope=b.dataset.scope;renderBoard();}));
-function friendRows(){
-  const me={name:(store.name||'').trim()||t('sc_you'),stars:pointsSummary().total,me:true};
-  const friends=Object.values(store.friends||{}).map(f=>({name:f.name,stars:f.stars,w:f.w,l:f.l,t:f.t}));
-  const rows=[me,...friends].sort((a,b)=>(b.stars==null?-1:b.stars)-(a.stars==null?-1:a.stars));
-  return {me,friends,rows,rank:rows.indexOf(me)+1};
+async function updateBadge(){
+  const unsolved=!store.daily[todayIdx()];
+  try{if(navigator.setAppBadge){if(unsolved) await navigator.setAppBadge(1);else await navigator.clearAppBadge();}}catch(e){}
+  if(!unsolved&&'serviceWorker' in navigator){try{const reg=await navigator.serviceWorker.getRegistration();if(reg&&reg.getNotifications){(await reg.getNotifications({tag:'daily'})).forEach(n=>n.close());}}catch(e){}}
 }
-function renderBoard(){
-  document.querySelectorAll('.seg3 [data-scope]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.scope===boardScope));
-  $('b-friends').hidden=boardScope!=='friends';$('b-soon').hidden=boardScope==='friends';
-  $('b-soon-title').textContent=t('scope_'+boardScope);
-  const {me,friends,rows,rank:myRank}=friendRows();
-  $('b-rank').textContent='#'+myRank;
-  $('b-of').textContent=t('board_rank_of',{n:rows.length});
-  $('b-me').textContent=me.stars.toLocaleString(locale())+' '+t('points').toLowerCase()+' · '+t('lvl'+levelOf(me.stars));
-  $('b-empty').hidden=friends.length>0;
-  let html=`<table class="board-t"><thead><tr><th>#</th><th>${esc(t('col_player'))}</th><th class="num">${esc(t('points'))}</th><th class="num">${esc(t('col_h2h'))}</th></tr></thead><tbody>`;
-  rows.forEach((r,i)=>{
-    const h2h=r.me?'':`${r.w}–${r.l}${r.t?'–'+r.t:''}`;
-    html+=`<tr class="${r.me?'me':''}"><td>${i+1}</td><td><span class="pn">${esc(r.name)}</span><span class="pl">${r.stars==null?'':esc(t('lvl'+levelOf(r.stars)))}</span></td><td class="num">${r.stars==null?'–':r.stars.toLocaleString(locale())}</td><td class="num">${h2h}</td></tr>`;
-  });
-  html+='</tbody></table>';
-  $('b-table').innerHTML=html;
-}
+$('notif-btn').addEventListener('click',async()=>{
+  if(!('Notification' in window)||!('serviceWorker' in navigator)){notifMsg=t('notif_unsup');return renderCards();}
+  let perm='denied';try{perm=await Notification.requestPermission();}catch(e){}
+  if(perm!=='granted'){notifMsg=t('notif_denied');return renderCards();}
+  store.notif=true;save();await writeState();
+  try{const reg=await navigator.serviceWorker.ready;if('periodicSync' in reg) await reg.periodicSync.register('daily-nut',{minInterval:6*60*60*1000});}catch(e){}
+  notifMsg=t('notif_on');renderCards();updateBadge();
+});
 
-$('p-toboard').addEventListener('click',()=>{boardScope='friends';setView('board');});
-function renderProfile(){
-  renderPoints();
-  const fr=friendRows();$('p-rank-f').textContent=t('rank_of',{r:fr.rank,n:fr.rows.length});
-  const h=handicap();
-  $('p-hcp').textContent=h==null?'–':fmtNum(Math.round(h*10)/10);
-  const need=3-store.rounds.filter(r=>r.holes>=9).length;
-  $('p-hcp-sub').textContent=h==null?(need===1?t('hcp_need1'):t('hcp_needN',{n:need})):t('hcp_desc');
-  $('p-rounds').textContent=store.rounds.length;
-  let best=null;store.rounds.forEach(r=>{if(!best||(r.strokes-r.par)/r.holes<(best.strokes-best.par)/best.holes) best=r;});
-  $('p-best').textContent=best?fmtDiff(best.strokes-best.par):'–';
-  $('p-birdies').textContent=store.rounds.reduce((s,r)=>s+(r.birdies||0),0)+Object.values(store.daily).filter(r=>r.win&&r.score<r.par).length;
-  $('p-name').value=store.name||'';
-  const hist=$('p-hist');
-  if(!store.rounds.length){hist.innerHTML=`<p class="muted">${esc(t('no_rounds'))}</p>`;return;}
-  hist.innerHTML=store.rounds.slice(-6).reverse().map(r=>{
-    const date=new Date(r.t).toLocaleDateString(locale(),{day:'numeric',month:'short'});
-    const what=(r.kind==='week'?t('week_n',{w:''}).replace(/\s*·[^·]*$/,''):r.kind==='duel'?t('duel_vs',{o:r.opp||''}):t('random'))+t('lbl_holes',{n:r.holes});
-    return `<div><span>${esc(date)} · ${esc(what)}</span><b>${r.strokes} (${fmtDiff(r.strokes-r.par)})</b></div>`;
-  }).join('');
-}
-$('p-name').addEventListener('input',e=>{store.name=e.target.value.slice(0,20);save();});
-
-/* ---------- felles ---------- */
-/* ---------- Deling ---------- */
-function toast(msg){
-  const el=document.createElement('div');el.className='toast';el.setAttribute('role','status');el.textContent=msg;
-  document.body.appendChild(el);setTimeout(()=>el.remove(),2600);
-}
-async function shareApp(){
-  const url='https://'+SITE, text=t('share_text');
-  if(navigator.share){
-    try{await navigator.share({title:APP_NAME,text,url});return;}
-    catch(e){if(e&&e.name==='AbortError') return;}
-  }
-  try{await navigator.clipboard.writeText(text+' '+url);toast(t('share_copied'));}
-  catch(e){toast(url);}
-}
-document.querySelectorAll('.js-share').forEach(b=>b.addEventListener('click',shareApp));
-if(ADS_ENABLED) document.querySelectorAll('.ad-slot .house').forEach(h=>h.hidden=true);
-
-function copy(txt,btn,fb,ok){
-  const fallback=()=>{fb.hidden=false;fb.value=txt;fb.focus();fb.select();btn.textContent=t('select_copy');};
-  try{navigator.clipboard.writeText(txt).then(()=>{btn.textContent=ok;fb.hidden=true;},fallback);}catch(e){fallback();}
-}
-$('d-share').addEventListener('click',()=>copy($('d-share').dataset.text||'',$('d-share'),$('d-share-fb'),t('copied')));
-
-function setView(v){
-  view=v;
-  for(const b of document.querySelectorAll('.tabs button')) b.setAttribute('aria-selected',b.dataset.view===v);
-  for(const id of ['daily','round','duel','board','profile']) $('v-'+id).hidden=id!==v;
-  const g=$('game');
-  if(v==='daily') $('d-slot').appendChild(g);
-  if(v==='round') $('r-slot').appendChild(g);
-  if(v==='daily') renderDaily();
-  if(v==='round') renderRound();
-  if(v==='profile') renderProfile();
-  if(v==='board') renderBoard();
-  if(v==='duel'){$('du-slot').appendChild(g);renderDuel();}
-  try{localStorage.setItem('mb-view',v);}catch(e){}
-}
-for(const b of document.querySelectorAll('.tabs button')) b.addEventListener('click',()=>setView(b.dataset.view));
-
+/* ---------- klokke ---------- */
+let shownDay=todayIdx();
 function tick(){
   const now=new Date(),mid=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1);
   const s=Math.max(0,Math.floor((mid-now)/1000));
-  const b=$('d-countdown').querySelector('b');
+  const b=$('countdown').querySelector('b');
   if(b) b.textContent=[Math.floor(s/3600),Math.floor(s%3600/60),s%60].map(x=>String(x).padStart(2,'0')).join(':');
+  const td=todayIdx();
+  if(td!==shownDay){shownDay=td;if(mode&&mode.kind==='daily') open({kind:'daily',day:td});updateBadge();}
 }
-setInterval(tick,1000);tick();
+setInterval(tick,1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){tick();updateBadge();}});
 
-/* start */
+/* ---------- start ---------- */
 applyStatic();
-loadDaily(todayIdx());
-if(store.current&&store.current.seed!=null){
-  const c=store.current;
-  round={kind:c.kind,holes:c.holes,seed:c.seed,opp:c.opp,idx:0,scores:(c.scores||[]).slice(),wins:(c.wins||[]).slice(),pars:[],types:[],hole:null,done:false};
-  for(let i=0;i<c.holes;i++){round.types[i]=COURSE[i];round.pars[i]=typePar(COURSE[i]);}
-  for(let i=0;i<round.scores.length;i++) if(round.scores[i]!=null) round.pars[i]=genHole(round.types[i],holeBase(round.seed,i)).par;
-  round.idx=round.scores.filter(x=>x!=null).length;
-  if(round.idx>=round.holes){finishRound();}else startRoundHole();
-}
-let startView='daily';try{startView=localStorage.getItem('mb-view')||'daily';}catch(e){}
-if(checkHash()) startView='duel';
-setView(['daily','round','duel','board','profile'].includes(startView)?startView:'daily');
+const first=parseHash();
+if(first) viaChallenge=true;
+if(store.fresh){delete store.daily[todayIdx()];delete store.fresh;save();}
+open(first||{kind:'daily',day:todayIdx()});
+tick();updateBadge();writeState();
 
 })();
 </script>
