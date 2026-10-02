@@ -217,6 +217,35 @@ table.board-t tr.me .pn{color:var(--amber)}
 table.board-t .pn{display:block;font-weight:600}
 table.board-t .pl{display:block;font-size:12px;color:var(--muted)}
 .markers span.threat{visibility:visible;color:#fff;background:var(--coral);border-radius:6px;font-weight:800;font-size:13px;line-height:18px;max-width:22px;margin:0 auto;width:100%;justify-content:center;align-items:center;animation:pulse 1s ease-in-out infinite}
+.seg3{display:grid;grid-template-columns:repeat(3,1fr);background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.seg3 button{font:600 13px var(--body);color:var(--muted);background:none;border:0;border-radius:9px;padding:9px 4px;cursor:pointer}
+.seg3 button[aria-pressed="true"]{background:var(--board-edge);color:var(--text)}
+.ranks{display:flex;flex-direction:column}
+.ranks>div{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+.ranks>div:last-child{border-bottom:0}
+.ranks b{font-family:var(--display);font-weight:500;font-size:16px;font-variant-numeric:tabular-nums}
+details.more{display:block}
+details.more summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::after{content:"+";font-family:var(--display);color:var(--muted)}
+details.more[open] summary::after{content:"–"}
+.morebody{display:flex;flex-direction:column;gap:14px;margin-top:14px}
+.morebody .hcp{display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:baseline}
+.morebody .hcp b{font-family:var(--display);font-weight:500;font-size:20px}
+.morebody .hcp p{grid-column:1/-1;margin:0}
+.overlay{position:absolute;inset:0;border-radius:18px;background:rgba(8,12,26,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px;z-index:3}
+.overlay h2{font-family:var(--display);font-weight:800;font-size:22px;margin:0;text-wrap:balance}
+.overlay p{margin:0;color:var(--muted);max-width:30ch}
+.overlay .btn{flex:none}
+.hud .turn{display:flex;align-items:center;gap:7px;font-size:16px}
+.hud .turn i{width:14px;height:14px;border-radius:50%;flex:none}
+.pdot1{background:var(--amber);box-shadow:0 0 8px var(--amber-glow)}
+.pdot2{background:var(--coral);box-shadow:0 0 8px var(--coral-glow)}
+.pvp-score{display:flex;align-items:center;justify-content:center;gap:10px;font-family:var(--display);font-weight:500;font-size:16px;font-variant-numeric:tabular-nums}
+.pvp-score i{width:12px;height:12px;border-radius:50%;display:inline-block}
+.invite{border-color:var(--amber)}
+.markers span.on.m1{color:var(--amber)}
+.rules h3+.golf{margin-top:-4px}
 </style>
 </head>
 <body>
@@ -347,31 +376,66 @@ table.board-t .pl{display:block;font-size:12px;color:var(--muted)}
 
   <!-- DUELL -->
   <section class="view" id="v-duel" hidden>
-    <div class="panel">
-      <h2 data-t="duel_new_title"></h2>
-      <p class="muted" data-t="duel_new_desc"></p>
-      <div class="lengths">
-        <button class="btn" type="button" data-holes="3" data-t="holes3"></button>
-        <button class="btn" type="button" data-holes="6" data-t="holes6"></button>
-        <button class="btn primary" type="button" data-holes="9" data-t="holes9"></button>
-        <button class="btn" type="button" data-holes="18" data-t="holes18"></button>
+    <div id="du-menu" class="view">
+      <div class="panel invite" id="du-invite" hidden>
+        <h2 id="du-inv-title"></h2>
+        <p class="muted" id="du-inv-sub"></p>
+        <div class="actions">
+          <button class="btn primary" id="du-inv-go" type="button" data-t="duel_start"></button>
+          <button class="btn" id="du-inv-no" type="button" data-t="not_now"></button>
+        </div>
+      </div>
+      <div class="panel">
+        <h2 data-t="duel_new_title"></h2>
+        <p class="muted" data-t="duel_new_desc"></p>
+        <div class="lengths">
+          <button class="btn" type="button" data-holes="3" data-t="holes3"></button>
+          <button class="btn" type="button" data-holes="6" data-t="holes6"></button>
+          <button class="btn primary" type="button" data-holes="9" data-t="holes9"></button>
+          <button class="btn" type="button" data-holes="18" data-t="holes18"></button>
+        </div>
+      </div>
+      <div class="panel">
+        <h2 data-t="pvp_title"></h2>
+        <p class="muted" data-t="pvp_desc"></p>
+        <button class="btn" id="pvp-start" type="button" data-t="pvp_start"></button>
+      </div>
+      <div class="panel">
+        <h2 data-t="duel_in_title"></h2>
+        <p class="muted" data-t="duel_in_desc"></p>
+        <textarea id="du-input" data-tp="duel_ph"></textarea>
+        <p class="muted" id="du-msg" aria-live="polite"></p>
+        <button class="btn" id="du-start" type="button" data-t="duel_start"></button>
+      </div>
+      <aside class="ad-slot" data-ad-slot="duel">
+        <!-- REKLAMEPLASS «duel»: Når reklame skal på, limes annonsekoden inn her (se ADS_ENABLED i koden). Frem til da vises en egen invitasjon. -->
+        <div class="house"><div><b data-t="house_title"></b><p class="muted" data-t="house_text"></p></div><button class="btn small js-share" type="button"><span data-t="share_app"></span></button></div>
+      </aside>
+    </div>
+    <div id="du-pvp" class="view" hidden>
+      <div class="eyebrow"><span data-t="pvp_title"></span><button class="btn small" id="pvp-quit" type="button" style="flex:none" data-t="pvp_quit"></button></div>
+      <div class="pvp-score" id="pvp-score"></div>
+      <div id="du-slot"></div>
+      <div class="panel" id="pvp-done" hidden>
+        <div class="verdict" id="pvp-verdict"></div>
+        <p class="muted" data-t="pvp_note"></p>
+        <button class="btn primary" id="pvp-again" type="button" data-t="pvp_again"></button>
       </div>
     </div>
-    <div class="panel">
-      <h2 data-t="duel_in_title"></h2>
-      <p class="muted" data-t="duel_in_desc"></p>
-      <textarea id="du-input" data-tp="duel_ph"></textarea>
-      <p class="muted" id="du-msg" aria-live="polite"></p>
-      <button class="btn primary" id="du-start" type="button" data-t="duel_start"></button>
-    </div>
-    <aside class="ad-slot" data-ad-slot="duel">
-      <!-- REKLAMEPLASS «duel»: Når reklame skal på, limes annonsekoden inn her (se ADS_ENABLED i koden). Frem til da vises en egen invitasjon. -->
-      <div class="house"><div><b data-t="house_title"></b><p class="muted" data-t="house_text"></p></div><button class="btn small js-share" type="button"><span data-t="share_app"></span></button></div>
-    </aside>
   </section>
 
   <!-- TABELL -->
   <section class="view" id="v-board" hidden>
+    <div class="seg3" role="group" data-ta="rank_title">
+      <button type="button" data-scope="friends" aria-pressed="true" data-t="scope_friends"></button>
+      <button type="button" data-scope="country" aria-pressed="false" data-t="scope_country"></button>
+      <button type="button" data-scope="world" aria-pressed="false" data-t="scope_world"></button>
+    </div>
+    <div class="panel" id="b-soon" hidden>
+      <h2 id="b-soon-title"></h2>
+      <p class="muted" data-t="board_soon"></p>
+    </div>
+    <div id="b-friends" class="view">
     <div class="panel myrank">
       <span class="k" data-t="board_you"></span>
       <div class="rankrow"><span class="big" id="b-rank">#1</span><span class="muted" id="b-of"></span></div>
@@ -383,6 +447,7 @@ table.board-t .pl{display:block;font-size:12px;color:var(--muted)}
       <p class="muted small" id="b-empty" data-t="board_empty"></p>
     </div>
     <p class="note" data-t="board_note"></p>
+    </div>
   </section>
 
   <!-- PROFIL -->
@@ -393,27 +458,36 @@ table.board-t .pl{display:block;font-size:12px;color:var(--muted)}
       <div class="lvl"><b id="p-lvl"></b><span class="muted" id="p-next"></span></div>
       <div class="bar" aria-hidden="true"><i id="p-bar"></i></div>
       <p class="muted small" data-t="pts_desc"></p>
-      <p id="p-duels"></p>
     </div>
     <div class="panel">
-      <span class="k" data-t="handicap"></span>
-      <div class="big" id="p-hcp">–</div>
-      <p class="muted" id="p-hcp-sub"></p>
-    </div>
-    <div class="stats panel" style="display:grid">
-      <div><b id="p-rounds">0</b><span data-t="p_rounds"></span></div>
-      <div><b id="p-best">–</b><span data-t="p_best"></span></div>
-      <div><b id="p-birdies">0</b><span data-t="p_birdies"></span></div>
-      <div><b id="p-holes">0</b><span data-t="p_holes"></span></div>
+      <h2 data-t="rank_title"></h2>
+      <div class="ranks">
+        <div><span data-t="scope_friends"></span><b id="p-rank-f">–</b></div>
+        <div><span data-t="scope_country"></span><b class="muted">–</b></div>
+        <div><span data-t="scope_world"></span><b class="muted">–</b></div>
+      </div>
+      <p class="muted small" data-t="rank_note"></p>
+      <button class="btn small" id="p-toboard" type="button" data-t="see_board"></button>
     </div>
     <div class="panel">
       <label for="p-name" class="k" data-t="name_label"></label>
       <input type="text" id="p-name" maxlength="20" data-tp="name_ph" autocomplete="nickname">
     </div>
-    <div class="panel">
-      <h2 data-t="recent"></h2>
-      <div class="hist" id="p-hist"></div>
-    </div>
+    <details class="panel more" id="p-more">
+      <summary data-t="more_stats"></summary>
+      <div class="morebody">
+        <div class="hcp"><span class="k" data-t="handicap"></span><b id="p-hcp">–</b><p class="muted small" id="p-hcp-sub"></p></div>
+        <div class="stats">
+          <div><b id="p-rounds">0</b><span data-t="p_rounds"></span></div>
+          <div><b id="p-best">–</b><span data-t="p_best"></span></div>
+          <div><b id="p-birdies">0</b><span data-t="p_birdies"></span></div>
+          <div><b id="p-holes">0</b><span data-t="p_holes"></span></div>
+        </div>
+        <p id="p-duels"></p>
+        <h2 data-t="recent"></h2>
+        <div class="hist" id="p-hist"></div>
+      </div>
+    </details>
     <p class="note" data-t="local_note"></p>
     <aside class="ad-slot" data-ad-slot="profile">
       <!-- REKLAMEPLASS «profile»: Når reklame skal på, limes annonsekoden inn her (se ADS_ENABLED i koden). Frem til da vises en egen invitasjon. -->
@@ -425,7 +499,8 @@ table.board-t .pl{display:block;font-size:12px;color:var(--muted)}
   <div id="game">
     <div class="hud hud4">
       <div id="g-goal-cell" class="goal"><span class="k" data-t="hud_goal"></span><span class="v" id="g-goal">4</span></div>
-      <div><span class="k" data-t="hud_par"></span><span class="v" id="g-par">4</span></div>
+      <div id="g-par-cell"><span class="k" data-t="hud_par"></span><span class="v" id="g-par">4</span></div>
+      <div id="g-turn-cell" hidden><span class="k" data-t="hud_turn"></span><span class="v turn" id="g-turn"></span></div>
       <div><span class="k" data-t="hud_moves"></span><span class="v" id="g-moves">0</span></div>
       <div><span class="k" data-t="hud_matches"></span><span class="matches" id="g-flames"></span></div>
     </div>
@@ -436,6 +511,11 @@ table.board-t .pl{display:block;font-size:12px;color:var(--muted)}
     <div class="stage">
       <div class="markers" id="g-markers" aria-hidden="true"></div>
       <div class="board" id="g-board"></div>
+      <div class="overlay" id="g-pass" hidden>
+        <h2 id="g-pass-title"></h2>
+        <p id="g-pass-sub"></p>
+        <button class="btn primary" id="g-pass-go" type="button"></button>
+      </div>
     </div>
     <div class="actions" style="margin-top:12px">
       <button class="btn" id="g-match" type="button"><span class="flame"></span><span data-t="light_match"></span></button>
@@ -452,12 +532,13 @@ table.board-t .pl{display:block;font-size:12px;color:var(--muted)}
       <li data-th="r5"></li>
       <li data-th="r6"></li>
     </ul>
+    <h3 data-t="points_title"></h3>
     <div class="golf">
-      <b>⭐⭐⭐</b><span data-t="lg_s3"></span>
-      <b>⭐⭐</b><span data-t="lg_s2"></span>
-      <b>⭐</b><span data-t="lg_s1"></span>
-      <b>+⭐</b><span data-t="lg_sduel"></span>
-      <b data-t="handicap"></b><span data-t="lg_hcp"></span>
+      <b>3</b><span data-t="lg_s3"></span>
+      <b>2</b><span data-t="lg_s2"></span>
+      <b>1</b><span data-t="lg_s1"></span>
+      <b>0</b><span data-t="lg_s0"></span>
+      <b>+1</b><span data-t="lg_sduel"></span>
     </div>
   </section>
 </div>
@@ -549,7 +630,58 @@ sc_hole:'Hull',sc_par:'Par',sc_out:'Ut',sc_in:'Inn',sc_tot:'Tot',sc_you:'Du',
 challenge_text:'Jeg spilte {n} hull i {name} på {s} slag ({d}). Klarer du å slå meg?\n\nÅpne spillet, gå til «Duell» og lim inn koden:\n{code}',
 share_round:'{name} 🌑\n{label}\n{s} slag (par {p}, {d})',share_duel:'\nDuell mot {o}: {w}–{l}',share_halved:' ({h} delt)',
 err_nocode:'Fant ingen gyldig kode. Den ser slik ut: {ex}',err_count:'Koden har {a} hullresultater, men skulle hatt {b}. Sjekk at hele koden ble kopiert.',
-opponent:'Motstander',friend:'En venn',duel_vs:'Duell mot {o}'
+opponent:'Motstander',friend:'En venn',duel_vs:'Duell mot {o}',
+/* v6 */
+points:"Poeng",
+pts_earned:"+{n} poeng",
+pts_desc:"Birdie eller bedre gir 3 poeng, par 2, og et klart hull 1. I dueller får du +1 for hvert hull du vinner.",
+points_title:"Poeng per hull",
+lg_s3:"birdie eller bedre",
+lg_s2:"par",
+lg_s1:"hullet klart (bogey eller mer)",
+lg_s0:"ikke klart (teller som dobbel bogey)",
+lg_sduel:"for hvert hull du vinner i en duell",
+rank_title:"Plassering",
+scope_friends:"Venner",
+scope_country:"Landet ditt",
+scope_world:"Verden",
+rank_of:"#{r} av {n}",
+rank_note:"Landet ditt og verden kommer når innlogging er på plass.",
+see_board:"Se tabellen",
+more_stats:"Mer statistikk",
+board_soon:"Denne listen kommer når innlogging er på plass. Da ser du hvordan du ligger an mot alle andre spillere.",
+board_note:"Vennetabellen bygges fra utfordringene du tar imot.",
+counts_as:"Teller som {s}.",
+r4:"<b>Par</b> er perfekt spill pluss ett trekk (to på lange hull). Spiller du perfekt, blir det birdie eller bedre.",
+r5:"Klarer du det ikke innen par + 5 trekk, eller boten vinner, får du dobbel bogey (par + 2). Et hull teller aldri mer enn det.",
+res_loss:"Hullet teller {s} (dobbel bogey).",
+rh_loss:"Hullet teller {s} (dobbel bogey).",
+pvp_title:"Duell på samme mobil",
+pvp_desc:"To spillere, tomt brett og ingen bot. Dere bytter på å slippe brikker, og hver ser bare lyset rundt sine egne. Første til fire på rad vinner.",
+pvp_start:"Start duellen",
+pvp_quit:"Avslutt",
+pvp_again:"Ny kamp",
+p_yellow:"Gul",
+p_red:"Rød",
+hud_turn:"Tur",
+pvp_pass:"Gi mobilen til {p}",
+pvp_dont_peek:"Ikke kikk! Bare {p} skal se brettet nå.",
+pvp_ready:"Jeg er {p} – vis brettet",
+pvp_turn:"{p} sin tur",
+pvp_intro:"Få {k} på rad før motstanderen. Du ser bare rundt dine egne brikker.",
+pvp_heard:"Du hørte {p} slippe en brikke i kolonne {c}.",
+pvp_opp_full:"{p} slapp i en full kolonne ({c}) og mistet turen.",
+pvp_won:"{p} vant!",
+pvp_draw:"Uavgjort",
+pvp_note:"Teller ikke på poengene dine.",
+inv_title:"Utfordring fra {o}",
+inv_sub:"{n} hull · {s} slag å slå.",
+inv_replace:" Runden du holder på med blir avbrutt.",
+not_now:"Ikke nå",
+challenge_msg:"Jeg spilte {n} hull i {name} på {s} slag ({d}). Klarer du å slå meg? Trykk på lenken for å ta utfordringen:",
+duel_in_desc:"Fikk du en lenke, er det bare å trykke på den. Du kan også lime inn lenken eller koden her.",
+duel_new_desc:"Velg lengde. Du spiller først, og så sender du en lenke til en venn som spiller de samme hullene mot den samme boten.",
+duel_ph:"Lim inn lenken eller koden her"
 },
 en:{
 gm_threat:"⚠️ You hear that the bot can get {k} in a row on its next move – in column {c}. Block it!",
@@ -633,7 +765,58 @@ sc_hole:'Hole',sc_par:'Par',sc_out:'Out',sc_in:'In',sc_tot:'Tot',sc_you:'You',
 challenge_text:'I played {n} holes of {name} in {s} strokes ({d}). Can you beat me?\n\nOpen the game, go to “Duel” and paste the code:\n{code}',
 share_round:'{name} 🌑\n{label}\n{s} strokes (par {p}, {d})',share_duel:'\nDuel against {o}: {w}–{l}',share_halved:' ({h} halved)',
 err_nocode:'No valid code found. It looks like this: {ex}',err_count:'The code has {a} hole scores but should have {b}. Check that the whole code was copied.',
-opponent:'Opponent',friend:'A friend',duel_vs:'Duel against {o}'
+opponent:'Opponent',friend:'A friend',duel_vs:'Duel against {o}',
+/* v6 */
+points:"Points",
+pts_earned:"+{n} points",
+pts_desc:"Birdie or better gives 3 points, par 2, and a completed hole 1. In duels you get +1 for every hole you win.",
+points_title:"Points per hole",
+lg_s3:"birdie or better",
+lg_s2:"par",
+lg_s1:"hole completed (bogey or more)",
+lg_s0:"not completed (counts as double bogey)",
+lg_sduel:"for every hole you win in a duel",
+rank_title:"Ranking",
+scope_friends:"Friends",
+scope_country:"Your country",
+scope_world:"World",
+rank_of:"#{r} of {n}",
+rank_note:"Your country and the world arrive when sign-in is ready.",
+see_board:"See the ranking",
+more_stats:"More stats",
+board_soon:"This list arrives when sign-in is ready. Then you can see how you compare with all other players.",
+board_note:"The friends ranking is built from the challenges you accept.",
+counts_as:"Counts as {s}.",
+r4:"<b>Par</b> is perfect play plus one move (two on long holes). Play perfectly and you get a birdie or better.",
+r5:"If you don’t make it within par + 5 moves, or the bot wins, you score a double bogey (par + 2). A hole never counts for more than that.",
+res_loss:"The hole counts as {s} (double bogey).",
+rh_loss:"The hole counts as {s} (double bogey).",
+pvp_title:"Duel on one phone",
+pvp_desc:"Two players, an empty board and no bot. Take turns dropping pieces; each of you only sees the light around your own. First to four in a row wins.",
+pvp_start:"Start the duel",
+pvp_quit:"Quit",
+pvp_again:"New game",
+p_yellow:"Yellow",
+p_red:"Red",
+hud_turn:"Turn",
+pvp_pass:"Hand the phone to {p}",
+pvp_dont_peek:"No peeking! Only {p} should see the board now.",
+pvp_ready:"I’m {p} – show the board",
+pvp_turn:"{p}’s turn",
+pvp_intro:"Get {k} in a row before your opponent. You only see around your own pieces.",
+pvp_heard:"You heard {p} drop a piece in column {c}.",
+pvp_opp_full:"{p} dropped into a full column ({c}) and lost the turn.",
+pvp_won:"{p} wins!",
+pvp_draw:"Draw",
+pvp_note:"Doesn’t count towards your points.",
+inv_title:"Challenge from {o}",
+inv_sub:"{n} holes · {s} strokes to beat.",
+inv_replace:" The round you’re playing will be abandoned.",
+not_now:"Not now",
+challenge_msg:"I played {n} holes of {name} in {s} strokes ({d}). Can you beat me? Tap the link to take the challenge:",
+duel_in_desc:"If you got a link, just tap it. You can also paste the link or the code here.",
+duel_new_desc:"Pick a length. You play first, then send a link to a friend who plays the same holes against the same bot.",
+duel_ph:"Paste the link or the code here"
 },
 sv:{
 gm_threat:"⚠️ Du hör att boten kan få {k} i rad i nästa drag – i kolumn {c}. Blockera!",
@@ -717,7 +900,58 @@ sc_hole:'Hål',sc_par:'Par',sc_out:'Ut',sc_in:'In',sc_tot:'Tot',sc_you:'Du',
 challenge_text:'Jag spelade {n} hål i {name} på {s} slag ({d}). Klarar du att slå mig?\n\nÖppna spelet, gå till ”Duell” och klistra in koden:\n{code}',
 share_round:'{name} 🌑\n{label}\n{s} slag (par {p}, {d})',share_duel:'\nDuell mot {o}: {w}–{l}',share_halved:' ({h} delade)',
 err_nocode:'Hittade ingen giltig kod. Den ser ut så här: {ex}',err_count:'Koden har {a} hålresultat men skulle ha {b}. Kontrollera att hela koden kopierades.',
-opponent:'Motståndare',friend:'En vän',duel_vs:'Duell mot {o}'
+opponent:'Motståndare',friend:'En vän',duel_vs:'Duell mot {o}',
+/* v6 */
+points:"Poäng",
+pts_earned:"+{n} poäng",
+pts_desc:"Birdie eller bättre ger 3 poäng, par 2 och ett klarat hål 1. I dueller får du +1 för varje hål du vinner.",
+points_title:"Poäng per hål",
+lg_s3:"birdie eller bättre",
+lg_s2:"par",
+lg_s1:"hålet klarat (bogey eller mer)",
+lg_s0:"inte klarat (räknas som dubbelbogey)",
+lg_sduel:"för varje hål du vinner i en duell",
+rank_title:"Placering",
+scope_friends:"Vänner",
+scope_country:"Ditt land",
+scope_world:"Världen",
+rank_of:"#{r} av {n}",
+rank_note:"Ditt land och världen kommer när inloggningen är på plats.",
+see_board:"Se tabellen",
+more_stats:"Mer statistik",
+board_soon:"Den här listan kommer när inloggningen är på plats. Då ser du hur du ligger till mot alla andra spelare.",
+board_note:"Vänlistan byggs av utmaningarna du antar.",
+counts_as:"Räknas som {s}.",
+r4:"<b>Par</b> är perfekt spel plus ett drag (två på långa hål). Spelar du perfekt blir det birdie eller bättre.",
+r5:"Klarar du det inte inom par + 5 drag, eller om boten vinner, får du dubbelbogey (par + 2). Ett hål räknas aldrig som mer än så.",
+res_loss:"Hålet räknas som {s} (dubbelbogey).",
+rh_loss:"Hålet räknas som {s} (dubbelbogey).",
+pvp_title:"Duell på samma mobil",
+pvp_desc:"Två spelare, tomt bräde och ingen bot. Ni turas om att släppa pjäser, och var och en ser bara ljuset runt sina egna. Först till fyra i rad vinner.",
+pvp_start:"Starta duellen",
+pvp_quit:"Avsluta",
+pvp_again:"Ny match",
+p_yellow:"Gul",
+p_red:"Röd",
+hud_turn:"Tur",
+pvp_pass:"Ge mobilen till {p}",
+pvp_dont_peek:"Tjuvkika inte! Bara {p} ska se brädet nu.",
+pvp_ready:"Jag är {p} – visa brädet",
+pvp_turn:"{p}s tur",
+pvp_intro:"Få {k} i rad före motståndaren. Du ser bara runt dina egna pjäser.",
+pvp_heard:"Du hörde {p} släppa en pjäs i kolumn {c}.",
+pvp_opp_full:"{p} släppte i en full kolumn ({c}) och förlorade turen.",
+pvp_won:"{p} vann!",
+pvp_draw:"Oavgjort",
+pvp_note:"Räknas inte till dina poäng.",
+inv_title:"Utmaning från {o}",
+inv_sub:"{n} hål · {s} slag att slå.",
+inv_replace:" Rundan du spelar avbryts.",
+not_now:"Inte nu",
+challenge_msg:"Jag spelade {n} hål i {name} på {s} slag ({d}). Klarar du att slå mig? Tryck på länken för att anta utmaningen:",
+duel_in_desc:"Fick du en länk är det bara att trycka på den. Du kan också klistra in länken eller koden här.",
+duel_new_desc:"Välj längd. Du spelar först och skickar sedan en länk till en vän som spelar samma hål mot samma bot.",
+duel_ph:"Klistra in länken eller koden här"
 },
 da:{
 gm_threat:"⚠️ Du hører, at botten kan få {k} på stribe i næste træk – i kolonne {c}. Bloker!",
@@ -801,7 +1035,58 @@ sc_hole:'Hul',sc_par:'Par',sc_out:'Ud',sc_in:'Ind',sc_tot:'I alt',sc_you:'Du',
 challenge_text:'Jeg spillede {n} huller i {name} på {s} slag ({d}). Kan du slå mig?\n\nÅbn spillet, gå til »Duel«, og indsæt koden:\n{code}',
 share_round:'{name} 🌑\n{label}\n{s} slag (par {p}, {d})',share_duel:'\nDuel mod {o}: {w}–{l}',share_halved:' ({h} delt)',
 err_nocode:'Fandt ingen gyldig kode. Den ser sådan ud: {ex}',err_count:'Koden har {a} hulresultater, men skulle have haft {b}. Tjek, at hele koden blev kopieret.',
-opponent:'Modstander',friend:'En ven',duel_vs:'Duel mod {o}'
+opponent:'Modstander',friend:'En ven',duel_vs:'Duel mod {o}',
+/* v6 */
+points:"Point",
+pts_earned:"+{n} point",
+pts_desc:"Birdie eller bedre giver 3 point, par 2 og et klaret hul 1. I dueller får du +1 for hvert hul, du vinder.",
+points_title:"Point pr. hul",
+lg_s3:"birdie eller bedre",
+lg_s2:"par",
+lg_s1:"hullet klaret (bogey eller mere)",
+lg_s0:"ikke klaret (tæller som dobbeltbogey)",
+lg_sduel:"for hvert hul, du vinder i en duel",
+rank_title:"Placering",
+scope_friends:"Venner",
+scope_country:"Dit land",
+scope_world:"Verden",
+rank_of:"#{r} af {n}",
+rank_note:"Dit land og verden kommer, når login er på plads.",
+see_board:"Se ranglisten",
+more_stats:"Mere statistik",
+board_soon:"Denne liste kommer, når login er på plads. Så kan du se, hvordan du ligger i forhold til alle andre spillere.",
+board_note:"Vennelisten bygges ud fra de udfordringer, du tager imod.",
+counts_as:"Tæller som {s}.",
+r4:"<b>Par</b> er perfekt spil plus ét træk (to på lange huller). Spiller du perfekt, bliver det birdie eller bedre.",
+r5:"Klarer du det ikke inden for par + 5 træk, eller vinder botten, får du dobbeltbogey (par + 2). Et hul tæller aldrig mere end det.",
+res_loss:"Hullet tæller {s} (dobbeltbogey).",
+rh_loss:"Hullet tæller {s} (dobbeltbogey).",
+pvp_title:"Duel på samme mobil",
+pvp_desc:"To spillere, tomt bræt og ingen bot. I skiftes til at slippe brikker, og hver ser kun lyset omkring sine egne. Første til fire på stribe vinder.",
+pvp_start:"Start duellen",
+pvp_quit:"Afslut",
+pvp_again:"Ny kamp",
+p_yellow:"Gul",
+p_red:"Rød",
+hud_turn:"Tur",
+pvp_pass:"Giv mobilen til {p}",
+pvp_dont_peek:"Ikke kigge! Kun {p} skal se brættet nu.",
+pvp_ready:"Jeg er {p} – vis brættet",
+pvp_turn:"{p}s tur",
+pvp_intro:"Få {k} på stribe før modstanderen. Du ser kun omkring dine egne brikker.",
+pvp_heard:"Du hørte {p} slippe en brik i kolonne {c}.",
+pvp_opp_full:"{p} slap i en fuld kolonne ({c}) og mistede turen.",
+pvp_won:"{p} vandt!",
+pvp_draw:"Uafgjort",
+pvp_note:"Tæller ikke med i dine point.",
+inv_title:"Udfordring fra {o}",
+inv_sub:"{n} huller · {s} slag at slå.",
+inv_replace:" Runden, du er i gang med, bliver afbrudt.",
+not_now:"Ikke nu",
+challenge_msg:"Jeg spillede {n} huller i {name} på {s} slag ({d}). Kan du slå mig? Tryk på linket for at tage udfordringen:",
+duel_in_desc:"Har du fået et link, skal du bare trykke på det. Du kan også indsætte linket eller koden her.",
+duel_new_desc:"Vælg længde. Du spiller først og sender derefter et link til en ven, der spiller de samme huller mod den samme bot.",
+duel_ph:"Indsæt linket eller koden her"
 },
 de:{
 gm_threat:"⚠️ Du hörst, dass der Bot im nächsten Zug {k} in einer Reihe bekommen kann – in Spalte {c}. Blocken!",
@@ -885,7 +1170,58 @@ sc_hole:'Loch',sc_par:'Par',sc_out:'Out',sc_in:'In',sc_tot:'Ges.',sc_you:'Du',
 challenge_text:'Ich habe {n} Löcher in {name} mit {s} Schlägen ({d}) gespielt. Schaffst du es, mich zu schlagen?\n\nÖffne das Spiel, geh zu „Duell“ und füge den Code ein:\n{code}',
 share_round:'{name} 🌑\n{label}\n{s} Schläge (Par {p}, {d})',share_duel:'\nDuell gegen {o}: {w}–{l}',share_halved:' ({h} geteilt)',
 err_nocode:'Kein gültiger Code gefunden. So sieht er aus: {ex}',err_count:'Der Code hat {a} Lochergebnisse, sollte aber {b} haben. Prüfe, ob der ganze Code kopiert wurde.',
-opponent:'Gegner',friend:'Ein Freund',duel_vs:'Duell gegen {o}'
+opponent:'Gegner',friend:'Ein Freund',duel_vs:'Duell gegen {o}',
+/* v6 */
+points:"Punkte",
+pts_earned:"+{n} Punkte",
+pts_desc:"Birdie oder besser bringt 3 Punkte, Par 2 und ein geschafftes Loch 1. In Duellen gibt es +1 für jedes gewonnene Loch.",
+points_title:"Punkte pro Loch",
+lg_s3:"Birdie oder besser",
+lg_s2:"Par",
+lg_s1:"Loch geschafft (Bogey oder mehr)",
+lg_s0:"nicht geschafft (zählt als Doppelbogey)",
+lg_sduel:"für jedes Loch, das du im Duell gewinnst",
+rank_title:"Platzierung",
+scope_friends:"Freunde",
+scope_country:"Dein Land",
+scope_world:"Welt",
+rank_of:"#{r} von {n}",
+rank_note:"Dein Land und die Welt kommen, sobald es eine Anmeldung gibt.",
+see_board:"Zur Rangliste",
+more_stats:"Mehr Statistik",
+board_soon:"Diese Liste kommt, sobald es eine Anmeldung gibt. Dann siehst du, wie du im Vergleich zu allen anderen Spielern stehst.",
+board_note:"Die Freundesliste entsteht aus den Herausforderungen, die du annimmst.",
+counts_as:"Zählt als {s}.",
+r4:"<b>Par</b> ist perfektes Spiel plus ein Zug (zwei auf langen Löchern). Spielst du perfekt, gibt es ein Birdie oder besser.",
+r5:"Schaffst du es nicht innerhalb von Par + 5 Zügen oder gewinnt der Bot, bekommst du ein Doppelbogey (Par + 2). Mehr zählt ein Loch nie.",
+res_loss:"Das Loch zählt {s} (Doppelbogey).",
+rh_loss:"Das Loch zählt {s} (Doppelbogey).",
+pvp_title:"Duell auf einem Handy",
+pvp_desc:"Zwei Spieler, ein leeres Brett und kein Bot. Ihr werft abwechselnd Steine ein, und jeder sieht nur das Licht um die eigenen. Wer zuerst vier in einer Reihe hat, gewinnt.",
+pvp_start:"Duell starten",
+pvp_quit:"Beenden",
+pvp_again:"Neues Spiel",
+p_yellow:"Gelb",
+p_red:"Rot",
+hud_turn:"Am Zug",
+pvp_pass:"Gib das Handy an {p}",
+pvp_dont_peek:"Nicht gucken! Nur {p} darf jetzt das Brett sehen.",
+pvp_ready:"Ich bin {p} – Brett zeigen",
+pvp_turn:"{p} ist dran",
+pvp_intro:"Bring {k} in eine Reihe, bevor es dein Gegner schafft. Du siehst nur rund um deine eigenen Steine.",
+pvp_heard:"Du hast gehört, wie {p} einen Stein in Spalte {c} geworfen hat.",
+pvp_opp_full:"{p} hat in eine volle Spalte ({c}) geworfen und den Zug verloren.",
+pvp_won:"{p} gewinnt!",
+pvp_draw:"Unentschieden",
+pvp_note:"Zählt nicht für deine Punkte.",
+inv_title:"Herausforderung von {o}",
+inv_sub:"{n} Löcher · {s} Schläge zu schlagen.",
+inv_replace:" Deine laufende Runde wird abgebrochen.",
+not_now:"Nicht jetzt",
+challenge_msg:"Ich habe {n} Löcher in {name} mit {s} Schlägen ({d}) gespielt. Schaffst du es, mich zu schlagen? Tipp auf den Link, um die Herausforderung anzunehmen:",
+duel_in_desc:"Hast du einen Link bekommen, tipp einfach darauf. Du kannst den Link oder den Code auch hier einfügen.",
+duel_new_desc:"Wähle die Länge. Du spielst zuerst und schickst dann einen Link an einen Freund, der dieselben Löcher gegen denselben Bot spielt.",
+duel_ph:"Link oder Code hier einfügen"
 },
 es:{
 gm_threat:"⚠️ Oyes que el bot puede hacer {k} en raya en su próxima jugada, en la columna {c}. ¡Bloquéalo!",
@@ -969,7 +1305,58 @@ sc_hole:'Hoyo',sc_par:'Par',sc_out:'Ida',sc_in:'Vuelta',sc_tot:'Total',sc_you:'T
 challenge_text:'He jugado {n} hoyos de {name} en {s} golpes ({d}). ¿Puedes ganarme?\n\nAbre el juego, ve a «Duelo» y pega el código:\n{code}',
 share_round:'{name} 🌑\n{label}\n{s} golpes (par {p}, {d})',share_duel:'\nDuelo contra {o}: {w}–{l}',share_halved:' ({h} empatados)',
 err_nocode:'No se ha encontrado un código válido. Tiene este aspecto: {ex}',err_count:'El código tiene {a} resultados de hoyo, pero debería tener {b}. Comprueba que se ha copiado entero.',
-opponent:'Rival',friend:'Un amigo',duel_vs:'Duelo contra {o}'
+opponent:'Rival',friend:'Un amigo',duel_vs:'Duelo contra {o}',
+/* v6 */
+points:"Puntos",
+pts_earned:"+{n} puntos",
+pts_desc:"Birdie o mejor da 3 puntos, par 2 y un hoyo completado 1. En los duelos ganas +1 por cada hoyo que ganes.",
+points_title:"Puntos por hoyo",
+lg_s3:"birdie o mejor",
+lg_s2:"par",
+lg_s1:"hoyo completado (bogey o más)",
+lg_s0:"no completado (cuenta como doble bogey)",
+lg_sduel:"por cada hoyo que ganes en un duelo",
+rank_title:"Posición",
+scope_friends:"Amigos",
+scope_country:"Tu país",
+scope_world:"Mundo",
+rank_of:"#{r} de {n}",
+rank_note:"Tu país y el mundo llegarán cuando esté listo el inicio de sesión.",
+see_board:"Ver el ranking",
+more_stats:"Más estadísticas",
+board_soon:"Esta lista llegará cuando esté listo el inicio de sesión. Entonces verás cómo vas frente a todos los demás jugadores.",
+board_note:"El ranking de amigos se crea a partir de los retos que aceptas.",
+counts_as:"Cuenta como {s}.",
+r4:"El <b>par</b> es el juego perfecto más una jugada (dos en los hoyos largos). Si juegas perfecto, haces birdie o mejor.",
+r5:"Si no lo consigues en par + 5 jugadas, o si gana el bot, te apuntas doble bogey (par + 2). Un hoyo nunca cuenta más que eso.",
+res_loss:"El hoyo cuenta {s} (doble bogey).",
+rh_loss:"El hoyo cuenta {s} (doble bogey).",
+pvp_title:"Duelo en un mismo móvil",
+pvp_desc:"Dos jugadores, tablero vacío y sin bot. Os turnáis para soltar fichas y cada uno solo ve la luz alrededor de las suyas. Gana el primero que haga cuatro en raya.",
+pvp_start:"Empezar el duelo",
+pvp_quit:"Salir",
+pvp_again:"Nueva partida",
+p_yellow:"Amarillo",
+p_red:"Rojo",
+hud_turn:"Turno",
+pvp_pass:"Pásale el móvil a {p}",
+pvp_dont_peek:"¡Sin mirar! Ahora solo {p} debe ver el tablero.",
+pvp_ready:"Soy {p}: mostrar el tablero",
+pvp_turn:"Turno de {p}",
+pvp_intro:"Haz {k} en raya antes que tu rival. Solo ves alrededor de tus propias fichas.",
+pvp_heard:"Has oído a {p} soltar una ficha en la columna {c}.",
+pvp_opp_full:"{p} soltó en una columna llena ({c}) y perdió el turno.",
+pvp_won:"¡Gana {p}!",
+pvp_draw:"Empate",
+pvp_note:"No cuenta para tus puntos.",
+inv_title:"Reto de {o}",
+inv_sub:"{n} hoyos · {s} golpes que superar.",
+inv_replace:" Se abandonará la ronda que estás jugando.",
+not_now:"Ahora no",
+challenge_msg:"He jugado {n} hoyos de {name} en {s} golpes ({d}). ¿Puedes ganarme? Pulsa el enlace para aceptar el reto:",
+duel_in_desc:"Si te han enviado un enlace, solo tienes que pulsarlo. También puedes pegar aquí el enlace o el código.",
+duel_new_desc:"Elige la duración. Juegas tú primero y luego envías un enlace a un amigo que juega los mismos hoyos contra el mismo bot.",
+duel_ph:"Pega aquí el enlace o el código"
 }
 };
 
@@ -984,7 +1371,7 @@ let R=6,C=7,K=4,B=[];
 const TYPES={
   K:{key:'K',R:6,C:7,K:4,opt:2,pieces:[8,10,12]},
   M:{key:'M',R:7,C:8,K:4,opt:3,pieces:[10,12,14]},
-  L:{key:'L',R:7,C:9,K:5,opt:4,pieces:[14,16,18]}
+  L:{key:'L',R:7,C:9,K:5,opt:3,slack:2,pieces:[16,18,20]}
 };
 const COURSE='MKLMMKMLMMKMLMKMLM';
 
@@ -992,6 +1379,22 @@ const COURSE='MKLMMKMLMMKMLMKMLM';
 let store={daily:{},rounds:[],current:null,name:'',lang:null};
 try{const s=JSON.parse(localStorage.getItem('mb-v2')||'null');if(s&&typeof s==='object') store=Object.assign(store,s);}catch(e){}
 function save(){try{localStorage.setItem('mb-v2',JSON.stringify(store));}catch(e){}}
+function typePar(k){const tp=TYPES[k];return tp.opt+(tp.slack||1);}
+/* Et hull teller aldri mer enn dobbel bogey (par + 2), som i golfens handicapregler. */
+const MAX_OVER=2;
+(function migrate(){
+  if(store.v>=6) return;
+  (store.rounds||[]).forEach(r=>{
+    if(!r.scores||!r.pars) return;
+    if(!r.wins) r.wins=r.scores.map((x,i)=>x-r.pars[i]<4);
+    r.scores=r.scores.map((x,i)=>Math.min(x,r.pars[i]+MAX_OVER));
+    if(r.oppScores) r.oppScores=r.oppScores.map((x,i)=>x==null?x:Math.min(x,r.pars[i]+MAX_OVER));
+    r.strokes=r.scores.reduce((a,b)=>a+b,0);r.par=r.pars.reduce((a,b)=>a+b,0);
+  });
+  Object.values(store.daily||{}).forEach(r=>{if(r.moves==null&&r.win) r.moves=r.score;r.score=Math.min(r.score,r.par+MAX_OVER);});
+  if(store.current&&store.current.scores) store.current.scores=store.current.scores.map((x,i)=>x==null?x:Math.min(x,typePar(COURSE[i])+MAX_OVER));
+  store.v=6;save();
+})();
 
 /* ---------- språk ---------- */
 function detectLang(){
@@ -1035,7 +1438,7 @@ function winAt(r,c){
 }
 /* Spilleren ser lenger enn boten: alle ruter innen to steg (ett steg på skrå). Boten ser bare én rute rundt seg. */
 const PLAYER_VIEW=2;
-function playerSees(r,c){for(let dr=-PLAYER_VIEW;dr<=PLAYER_VIEW;dr++)for(let dc=-PLAYER_VIEW;dc<=PLAYER_VIEW;dc++){if(Math.abs(dr)+Math.abs(dc)>PLAYER_VIEW) continue;const rr=r+dr,cc=c+dc;if(rr>=0&&rr<R&&cc>=0&&cc<C&&B[rr][cc]===1) return true;}return false;}
+function playerSees(r,c,p){p=p||1;for(let dr=-PLAYER_VIEW;dr<=PLAYER_VIEW;dr++)for(let dc=-PLAYER_VIEW;dc<=PLAYER_VIEW;dc++){if(Math.abs(dr)+Math.abs(dc)>PLAYER_VIEW) continue;const rr=r+dr,cc=c+dc;if(rr>=0&&rr<R&&cc>=0&&cc<C&&B[rr][cc]===p) return true;}return false;}
 function seesCell(p,r,c){for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){const rr=r+dr,cc=c+dc;if(rr>=0&&rr<R&&cc>=0&&cc<C&&B[rr][cc]===p) return true;}return false;}
 function knownFilled(p){const k=emptyB().map(r=>r.map(()=>false));for(let c=0;c<C;c++){let top=-1;for(let r=0;r<R;r++) if(B[r][c]===p){top=r;break;}if(top>=0) for(let r=top+1;r<R;r++) k[r][c]=true;}return k;}
 function hash(n){n=n|0;n=Math.imul(n^(n>>>16),0x45d9f3b);n=Math.imul(n^(n>>>16),0x45d9f3b);return (n^(n>>>16))>>>0;}
@@ -1045,16 +1448,18 @@ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a
 /* Boten prøver å vinne selv: den bygger egne rekker, blokkerer trusler den ser eller hører,
    og unngår trekk som gir deg vinnerruten rett over. Den er deterministisk: samme brett og samme trekk gir samme svar. */
 const WEIGHT=[0,1,4,12,40,120];
+/* Lange hull (fem på rad): boten er litt mindre pågående, ellers blir de for vanskelige. */
+const BOT5={w:[0,1,4,12,40,120],noiseDiv:400,lid:true,lazy:50};
 let BOT_IMPL=null;
-function lineScore(r,c,p){
-  const o=3-p;let s=0;
+function lineScore(r,c,p,W){
+  W=W||WEIGHT;const o=3-p;let s=0;
   for(const [dr,dc] of [[0,1],[1,0],[1,1],[1,-1]]){
     for(let k=0;k<K;k++){
       const r0=r-dr*k,c0=c-dc*k,r1=r0+dr*(K-1),c1=c0+dc*(K-1);
       if(r0<0||r0>=R||c0<0||c0>=C||r1<0||r1>=R||c1<0||c1>=C) continue;
       let mine=0,bad=false;
       for(let i=0;i<K;i++){const v=B[r0+dr*i][c0+dc*i];if(v===o){bad=true;break;}if(v===p) mine++;}
-      if(!bad) s+=WEIGHT[mine];
+      if(!bad) s+=W[mine];
     }
   }
   return s;
@@ -1072,17 +1477,19 @@ function botChoose(seed,mv,hist){
   /* 2. Blokker en vinnertrussel den ser (én rute rundt egne brikker). */
   for(const c of valid){const r=landRow(c);B[r][c]=1;const w=winAt(r,c);B[r][c]=0;if(w&&seesCell(2,r,c)) return c;}
   /* 3. Den hører deg: har du stablet K−1 brikker i samme kolonne, legger den lokk på. */
-  for(const c of valid){const r=landRow(c);if(r+K-1<R){let all=true;for(let i=1;i<K;i++) if(B[r+i][c]!==1){all=false;break;}if(all) return c;}}
+  const long=K===5;
+  if(!long||BOT5.lid) for(const c of valid){const r=landRow(c);if(r+K-1<R){let all=true;for(let i=1;i<K;i++) if(B[r+i][c]!==1){all=false;break;}if(all) return c;}}
   /* 4. Ellers: bygg egne rekker. */
   const mid=(C-1)/2;let best=valid[0],bs=-1e9;
   for(const c of valid){
     const r=landRow(c);
     B[r][c]=2;
-    let s=lineScore(r,c,2);
+    const lazy=long&&BOT5.lazy>0&&(hash(seed*131+mv*17)%100)<BOT5.lazy;
+    let s=lazy?0:lineScore(r,c,2,long?BOT5.w:WEIGHT);
     if(r>0){B[r-1][c]=1;if(winAt(r-1,c)) s-=500;B[r-1][c]=0;}
     B[r][c]=0;
     s+=(2-Math.abs(c-mid)*0.5);
-    s+=(hash(seed*977+mv*31+c)%1000)/400;
+    s+=(hash(seed*977+mv*31+c)%1000)/(long?BOT5.noiseDiv:400);
     if(s>bs){bs=s;best=c;}
   }
   return best;
@@ -1127,8 +1534,8 @@ function genHole(type,base){
     if(placed<n) continue;
     const board=copyB(B);
     const opt=optFor(board,seed,tp.opt);
-    if(opt===tp.opt) return cache[key]={type,R:tp.R,C:tp.C,K:tp.K,board,seed,opt,par:opt+1};
-    if(opt>=2&&!fb) fb={type,R:tp.R,C:tp.C,K:tp.K,board,seed,opt,par:opt+1};
+    if(opt===tp.opt) return cache[key]={type,R:tp.R,C:tp.C,K:tp.K,board,seed,opt,par:opt+(tp.slack||1)};
+    if(opt>=2&&!fb) fb={type,R:tp.R,C:tp.C,K:tp.K,board,seed,opt,par:opt+(tp.slack||1)};
   }
   return cache[key]=fb;
 }
@@ -1138,7 +1545,7 @@ function typeDesc(k){return t('desc_'+k);}
 /* ---------- ett hull ---------- */
 function newHole(spec,cfg){return {spec,B:copyB(spec.board),hist:[],moves:0,matches:cfg.matches,maxMatches:cfg.matches,over:null,winLine:null,lastBot:null,seq:[],fullMsg:false,busy:false,flash:false,dropAnim:null,score:null,onDone:cfg.onDone};}
 function use(h){R=h.spec.R;C=h.spec.C;K=h.spec.K;B=h.B;}
-const EXTRA_MOVES=5, LOSS_EXTRA=6;
+const EXTRA_MOVES=5;
 function maxMoves(h){return h.spec.par+EXTRA_MOVES;}
 function play(h,c){
   if(h.busy||h.over) return; use(h);
@@ -1158,7 +1565,7 @@ function play(h,c){
 }
 function endHole(h,win,reason){
   h.over={win,reason};h.busy=false;h.seq.push(win?'🏆':'💀');
-  h.score=win?h.moves:h.spec.par+LOSS_EXTRA;
+  h.score=win?Math.min(h.moves,h.spec.par+MAX_OVER):h.spec.par+MAX_OVER;
   renderGame();
   if(h.onDone) h.onDone(h);
 }
@@ -1169,7 +1576,7 @@ function golfName(diff,win,reason){
 }
 function fmtDiff(d){return d===0?'E':(d>0?'+':'−')+Math.abs(d);}
 function fmtNum(x){return x.toLocaleString(locale(),{minimumFractionDigits:1,maximumFractionDigits:1});}
-function holeEmoji(d){return d<=-1?'🟢':d===0?'⚪':d===1?'🟡':d===2?'🟠':'🔴';}
+function holeEmoji(d,win){return win===false?'🔴':d<=-1?'🟢':d===0?'⚪':d===1?'🟡':'🟠';}
 
 /* ---------- visning av spillflaten ---------- */
 let view='daily';
@@ -1179,9 +1586,12 @@ function activeHole(){
   return null;
 }
 function renderGame(){
-  const h=activeHole(); const g=$('game');
+  const g=$('game');
+  if(view==='duel'){if(pvp){g.hidden=false;return renderPvp();}g.hidden=true;return;}
+  const h=activeHole();
   if(!h){g.hidden=true;return;}
   g.hidden=false; use(h);
+  $('g-par-cell').hidden=false;$('g-turn-cell').hidden=true;$('g-pass').hidden=true;
   $('g-par').textContent=h.spec.par;
   $('g-goal').innerHTML=`<b>${K}</b><span class="pips">${'<i></i>'.repeat(K)}</span>`;
   $('g-goal-cell').classList.toggle('k5',K===5);
@@ -1240,6 +1650,12 @@ function renderGame(){
   $('g-match').disabled=!canPlay||h.matches<1||h.flash;
 }
 $('g-match').addEventListener('click',()=>{
+  if(view==='duel'&&pvp){
+    const v=pvp.turn;if(pvp.busy||pvp.over||pvp.pass||pvp.matches[v]<1) return;
+    pvp.matches[v]--;pvp.flash=true;pvp.busy=true;renderPvp();
+    const game=pvp;setTimeout(()=>{if(pvp!==game) return;pvp.flash=false;pvp.busy=false;renderPvp();},2000);
+    return;
+  }
   const h=activeHole();if(!h||h.busy||h.over||h.matches<1) return;
   h.matches--;h.flash=true;h.busy=true;h.seq.push('🔥');renderGame();
   setTimeout(()=>{h.flash=false;h.busy=false;renderGame();},2000);
@@ -1260,7 +1676,7 @@ function loadDaily(d){
   renderDaily();
 }
 function onDailyDone(h){
-  const res={score:h.score,par:h.spec.par,win:h.over.win,reason:h.over.reason,seq:h.seq.join(''),matches:h.maxMatches-h.matches,type:h.spec.type,K:h.spec.K};
+  const res={score:h.score,moves:h.moves,par:h.spec.par,win:h.over.win,reason:h.over.reason,seq:h.seq.join(''),matches:h.maxMatches-h.matches,type:h.spec.type,K:h.spec.K};
   if(!daily.practice){store.daily[daily.day]=res;save();}
   daily.lastRes=res;daily.fresh=true;
   renderDaily();
@@ -1277,9 +1693,10 @@ function renderDaily(){
 }
 function showDailyResult(res){
   const diff=res.score-res.par;
-  const v=$('d-verdict');v.textContent=starStr(starsFor(diff,res.win))+'  '+golfName(diff,res.win,res.reason);v.className='verdict '+(res.win&&diff<=0?'good':res.win?'':'bad');
+  const v=$('d-verdict');v.textContent=golfName(diff,res.win,res.reason);v.className='verdict '+(res.win&&diff<=0?'good':res.win?'':'bad');
   const fy=res.matches===1?t('match1'):t('matchN',{n:res.matches});
-  $('d-vsub').textContent=(res.win?t('res_win',{s:res.score,p:res.par,m:fy}):t('res_loss',{s:res.score,p:res.par}))+(daily.practice&&daily.fresh?t('practice_suffix'):'');
+  const mv=res.moves||res.score;
+  $('d-vsub').textContent=(res.win?t('res_win',{s:mv,p:res.par,m:fy})+(mv>res.score?' '+t('counts_as',{s:res.score}):''):t('res_loss',{s:res.score,p:res.par}))+(daily.practice&&daily.fresh?t('practice_suffix'):'');
   $('d-seq').textContent=res.seq;
   const sv=store.daily[daily.day];
   $('d-pts').textContent=(!daily.practice||!daily.fresh)&&sv?t('pts_earned',{n:starsFor(sv.score-sv.par,sv.win)}):'';
@@ -1290,7 +1707,7 @@ function showDailyResult(res){
   const avg=keys.length?sum/keys.length:null;
   $('ds-avg').textContent=avg==null?'–':(avg>0?'+':avg<0?'−':'')+fmtNum(Math.abs(avg));
   const saved=store.daily[daily.day]||res, sd=saved.score-saved.par;
-  $('d-share').dataset.text=`${APP_NAME} #${daily.day} 🌑\n${TYPES[saved.type]?typeName(saved.type):''} · ${golfName(sd,saved.win,saved.reason)}${saved.win?' · '+t('moves_par',{s:saved.score,p:saved.par}):''}\n${saved.seq}\n${SITE}`;
+  $('d-share').dataset.text=`${APP_NAME} #${daily.day} 🌑\n${TYPES[saved.type]?typeName(saved.type):''} · ${golfName(sd,saved.win,saved.reason)}${saved.win?' · '+t('moves_par',{s:saved.moves||saved.score,p:saved.par}):''}\n${saved.seq}\n${SITE}`;
   $('d-share').textContent=t('copy_result');
   $('d-countdown').hidden=daily.day!==todayIdx();
   $('d-result').hidden=false;
@@ -1307,7 +1724,7 @@ function holeBase(seed,i){return hash(seed*31+i*7717+5);}
 function courseLabel(kind,holes){const {w}=isoWeek();return (kind==='week'?t('week_n',{w}):kind==='duel'?t('lbl_duel'):t('random'))+t('lbl_holes',{n:holes});}
 function startRound(kind,holes,seed,opp){
   round={kind,holes,seed,opp:opp||null,idx:0,scores:[],wins:[],pars:[],types:[],hole:null,done:false};
-  for(let i=0;i<holes;i++){round.types[i]=COURSE[i];round.pars[i]=TYPES[COURSE[i]].opt+1;}
+  for(let i=0;i<holes;i++){round.types[i]=COURSE[i];round.pars[i]=typePar(COURSE[i]);}
   store.current={kind,holes,seed,opp:round.opp,idx:0,scores:[]};save();
   startRoundHole();
 }
@@ -1326,8 +1743,8 @@ function onRoundHoleDone(h){
 function renderHoleDone(){
   const h=round.hole;if(!h||!h.over){$('r-holedone').hidden=true;return;}
   const diff=h.score-h.spec.par;
-  const v=$('r-verdict');v.textContent=starStr(starsFor(diff,h.over.win))+'  '+golfName(diff,h.over.win,h.over.reason);v.className='verdict '+(h.over.win&&diff<=0?'good':h.over.win?'':'bad');
-  let sub=h.over.win?t('rh_win',{s:h.score,p:h.spec.par}):t('rh_loss',{s:h.score});
+  const v=$('r-verdict');v.textContent=golfName(diff,h.over.win,h.over.reason);v.className='verdict '+(h.over.win&&diff<=0?'good':h.over.win?'':'bad');
+  let sub=(h.over.win?t('rh_win',{s:h.moves,p:h.spec.par})+(h.moves>h.score?' '+t('counts_as',{s:h.score}):''):t('rh_loss',{s:h.score}))+' '+t('pts_earned',{n:starsFor(diff,h.over.win)})+'.';
   if(round.opp){const o=round.opp.scores[round.idx];if(o!=null) sub+=t('opp_used',{o:round.opp.name,n:o})+(h.score<o?t('you_won_hole'):h.score>o?t('opp_won_hole',{o:round.opp.name}):t('halved'));}
   $('r-vsub').textContent=sub;
   $('r-next').textContent=round.idx+1>=round.holes?t('see_result'):t('next_hole');
@@ -1368,7 +1785,7 @@ function renderCard(el,highlight){
     h+=`<tr><td>${esc(t('sc_par'))}</td>`;for(let i=a;i<b;i++) h+=`<td>${round.pars[i]}</td>`;h+=`<td class="tot">${sumArr(round.pars.slice(a,b))}</td></tr>`;
     const row=(name,scores,isMe)=>{let r=`<tr><td>${esc(name)}</td>`;for(let i=a;i<b;i++){const s=scores[i];const cur=isMe&&highlight&&i===round.idx&&!round.done;
       if(s==null){r+=`<td class="${cur?'cur':''}">${cur?'•':''}</td>`;continue;}
-      const d=s-round.pars[i];const cls=d<0?'u':d===1?'o1':d>=4?'x':d>=2?'o2':'';
+      const d=s-round.pars[i];const cls=(isMe&&round.wins[i]===false)?'x':d<0?'u':d===1?'o1':d>=2?'o2':'';
       r+=`<td class="${cur?'cur':''}"><span class="sc ${cls}">${s}</span></td>`;}
       const played=scores.slice(a,b).filter(x=>x!=null);r+=`<td class="tot">${played.length?sumArr(played):''}</td></tr>`;return r;};
     h+=row(me,round.scores,true);
@@ -1380,10 +1797,10 @@ function renderCard(el,highlight){
 function renderRound(){
   const {w}=isoWeek();
   $('r-week-title').textContent=t('week_n',{w});
-  $('r-week-par').textContent=t('par_n',{n:sumArr(COURSE.split('').map(x=>TYPES[x].opt+1))});
+  $('r-week-par').textContent=t('par_n',{n:sumArr(COURSE.split('').map(x=>typePar(x)))});
   $('r-pips').innerHTML=COURSE.split('').map(x=>`<i class="${x}" title="${esc(typeName(x))}"></i>`).join('');
   const colors={K:'var(--amber)',M:'#9AA8FF',L:'var(--coral)'};
-  $('r-types').innerHTML=['K','M','L'].map(x=>`<b style="color:${colors[x]}">${esc(typeName(x))}</b><span>${esc(typeDesc(x))} · ${esc(t('par_n',{n:TYPES[x].opt+1}))}</span>`).join('');
+  $('r-types').innerHTML=['K','M','L'].map(x=>`<b style="color:${colors[x]}">${esc(typeName(x))}</b><span>${esc(typeDesc(x))} · ${esc(t('par_n',{n:typePar(x)}))}</span>`).join('');
   $('r-menu').hidden=!!round;
   $('r-play').hidden=!round||round.done;
   $('r-summary').hidden=!round||!round.done;
@@ -1413,7 +1830,7 @@ function renderRound(){
       sub+=t('duel_line',{w:ms.w,l:ms.l,h:ms.hv,o:round.opp.name,t:round.opp.total});
     }else $('rs-duel').hidden=true;
     $('rs-sub').textContent=sub;
-    $('rs-seq').textContent=round.scores.map((s,i)=>holeEmoji(s-round.pars[i])).join('');
+    $('rs-seq').textContent=round.scores.map((s,i)=>holeEmoji(s-round.pars[i],round.wins[i])).join('');
     $('rs-pts').textContent=t('pts_earned',{n:roundStars({scores:round.scores.slice(0,round.holes),pars:round.pars,wins:round.wins,oppScores:round.opp?round.opp.scores:null})});
     renderCard($('rs-card'),false);
   }
@@ -1423,17 +1840,22 @@ function challengeCode(){
   const name=((store.name||'').trim()||t('friend')).replace(/[.\s]+/g,'_').slice(0,20);
   return `QL.${round.holes}.${round.seed.toString(36)}.${round.scores.map(s=>s.toString(36)).join('')}.${name}.${pointsSummary().total}`;
 }
-$('rs-challenge').addEventListener('click',()=>{
+function challengeLink(){return 'https://'+SITE+'/#'+encodeURIComponent(challengeCode());}
+$('rs-challenge').addEventListener('click',async()=>{
   const strokes=sumArr(round.scores),par=sumArr(round.pars.slice(0,round.holes));
-  const txt=t('challenge_text',{n:round.holes,name:APP_NAME,s:strokes,d:fmtDiff(strokes-par),code:challengeCode()})+'\n\nhttps://'+SITE;
-  copy(txt,$('rs-challenge'),$('rs-fb'),t('challenge_copied'));
+  const msg=t('challenge_msg',{n:round.holes,name:APP_NAME,s:strokes,d:fmtDiff(strokes-par)}),url=challengeLink();
+  if(navigator.share){
+    try{await navigator.share({title:APP_NAME,text:msg,url});return;}
+    catch(e){if(e&&e.name==='AbortError') return;}
+  }
+  copy(msg+'\n'+url,$('rs-challenge'),$('rs-fb'),t('challenge_copied'));
 });
 $('rs-share').addEventListener('click',()=>{
   const strokes=sumArr(round.scores),par=sumArr(round.pars.slice(0,round.holes));
   const ms=matchStatus();
   let txt=t('share_round',{name:APP_NAME,label:courseLabel(round.kind,round.holes),s:strokes,p:par,d:fmtDiff(strokes-par)});
   if(ms) txt+=t('share_duel',{o:round.opp.name,w:ms.w,l:ms.l})+(ms.hv?t('share_halved',{h:ms.hv}):'');
-  txt+='\n'+round.scores.map((s,i)=>holeEmoji(s-round.pars[i])).join('');
+  txt+='\n'+round.scores.map((s,i)=>holeEmoji(s-round.pars[i],round.wins[i])).join('');
   txt+='\n'+SITE;
   copy(txt,$('rs-share'),$('rs-fb'),t('copied'));
 });
@@ -1449,20 +1871,130 @@ $('r-rand18').addEventListener('click',()=>startRound('random',18,Math.floor(Mat
 /* ---------- Duell ---------- */
 function parseChallenge(txt){
   /* Godtar nye (QL.) og eldre koder (QD., QX., GL., MB.). */
-  const m=/(?:QL|QD|QX|GL|MB)\.(3|6|9|18)\.([0-9a-z]+)\.([0-9a-z]+)(?:\.([^\s.]+))?(?:\.(\d+))?/i.exec(txt||'');
+  let src=txt||'';try{src=decodeURIComponent(src);}catch(e){}
+  const m=/(?:QL|QD|QX|GL|MB)\.(3|6|9|18)\.([0-9a-z]+)\.([0-9a-z]+)(?:\.([^\s.]+))?(?:\.(\d+))?/i.exec(src);
   if(!m) return {err:t('err_nocode',{ex:'QL.9.k3j2h1.435443544.Alex'})};
-  const holes=+m[1],seed=parseInt(m[2],36),sc=m[3].toLowerCase().split('').map(ch=>parseInt(ch,36));
+  const holes=+m[1],seed=parseInt(m[2],36);let sc=m[3].toLowerCase().split('').map(ch=>parseInt(ch,36));
   if(sc.length!==holes||sc.some(isNaN)) return {err:t('err_count',{a:sc.length,b:holes})};
+  sc=sc.map((x,i)=>Math.min(x,typePar(COURSE[i])+MAX_OVER));
   const name=(m[4]||t('opponent')).replace(/_/g,' ').slice(0,20);
   return {holes,seed,opp:{name,scores:sc,total:sumArr(sc)},stars:m[5]!=null?+m[5]:null};
 }
 $('du-start').addEventListener('click',()=>{
   const p=parseChallenge($('du-input').value);
   if(p.err){$('du-msg').textContent=p.err;return;}
-  $('du-msg').textContent='';
-  recordFriend(p.opp.name,p.stars,null);
-  startRound('duel',p.holes,p.seed,p.opp);setView('round');
+  $('du-msg').textContent='';$('du-input').value='';
+  acceptChallenge(p);
 });
+function acceptChallenge(p){recordFriend(p.opp.name,p.stars,null);invite=null;startRound('duel',p.holes,p.seed,p.opp);setView('round');}
+/* Utfordring via lenke: quadlume.com/#QL.9.… */
+let invite=null;
+function checkHash(){
+  const raw=(location.hash||'').slice(1);if(!raw) return false;
+  const p=parseChallenge(raw);if(p.err) return false;
+  invite=p;
+  try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}
+  return true;
+}
+window.addEventListener('hashchange',()=>{if(checkHash()) setView('duel');});
+$('du-inv-go').addEventListener('click',()=>{if(invite) acceptChallenge(invite);});
+$('du-inv-no').addEventListener('click',()=>{invite=null;renderDuel();});
+
+/* ---------- Ekte duell på samme mobil: tomt brett, ingen bot ---------- */
+let pvp=null,pvpStarter=1;const pvpScore={1:0,2:0};
+function pvpName(p){return t(p===1?'p_yellow':'p_red');}
+function startPvp(){
+  R=6;C=7;K=4;
+  pvp={R:6,C:7,K:4,B:emptyB(),turn:pvpStarter,matches:{1:1,2:1},moves:{1:0,2:0},over:null,winLine:null,last:null,pass:true,flash:false,busy:false,dropAnim:null};
+  pvpStarter=3-pvpStarter;renderDuel();
+}
+function usePvp(){R=pvp.R;C=pvp.C;K=pvp.K;B=pvp.B;}
+function pvpPlay(c){
+  if(!pvp||pvp.over||pvp.busy||pvp.pass) return;usePvp();
+  const p=pvp.turn;pvp.busy=true;pvp.moves[p]++;
+  const r=landRow(c);
+  if(r<0) pvp.last={p,c,full:true};
+  else{
+    B[r][c]=p;pvp.dropAnim={r,c};pvp.last={p,c,full:false};
+    const w=winAt(r,c);
+    if(w){pvp.winLine=w;pvp.over={winner:p};pvpScore[p]++;pvp.busy=false;return renderDuel();}
+    if(B[0].every(x=>x)){pvp.over={winner:0};pvp.busy=false;return renderDuel();}
+  }
+  renderPvp();
+  const game=pvp;
+  setTimeout(()=>{if(pvp!==game) return;pvp.turn=3-p;pvp.pass=true;pvp.busy=false;renderPvp();},r<0?1300:800);
+}
+function renderPvp(){
+  usePvp();const v=pvp.turn,o=3-v,hide=pvp.pass&&!pvp.over;
+  $('g-par-cell').hidden=true;$('g-turn-cell').hidden=false;
+  $('g-goal').innerHTML=`<b>${K}</b><span class="pips">${'<i></i>'.repeat(K)}</span>`;
+  $('g-goal-cell').classList.remove('k5');
+  $('g-turn').innerHTML=`<i class="pdot${v}"></i>`;$('g-turn').append(pvpName(v));
+  $('g-moves').textContent=pvp.moves[v];
+  const fl=$('g-flames');fl.innerHTML='';const f=document.createElement('span');f.className='flame'+(pvp.matches[v]>0?'':' used');fl.appendChild(f);
+  const reveal=!!pvp.over||pvp.flash,kf=knownFilled(v);
+  const winSet=new Set((pvp.winLine||[]).map(([r,c])=>r+','+c));
+  const bd=$('g-board');bd.innerHTML='';bd.classList.toggle('flash',pvp.flash);
+  bd.style.gridTemplateColumns=`repeat(${C},minmax(0,1fr))`;
+  const canPlay=!pvp.over&&!pvp.busy&&!pvp.pass;
+  for(let c=0;c<C;c++){
+    const col=document.createElement('button');
+    col.type='button';col.className='col';col.disabled=!canPlay;
+    col.style.gridTemplateRows=`repeat(${R},auto)`;
+    col.setAttribute('aria-label',t('col_aria',{c:c+1}));
+    col.addEventListener('click',()=>pvpPlay(c));
+    for(let r=0;r<R;r++){
+      const cell=document.createElement('div');cell.className='cell';
+      const val=B[r][c],vis=!hide&&playerSees(r,c,v);let show=false;
+      if(!hide&&(reveal||vis)){cell.classList.add('lit');show=!!val;}
+      else cell.classList.add(!hide&&kf[r][c]?'fogfill':'fog');
+      if(show){
+        const d=document.createElement('div');d.className='disc p'+val;
+        if(pvp.over&&!playerSees(r,c,v)) d.classList.add('revealed');
+        if(pvp.dropAnim&&pvp.dropAnim.r===r&&pvp.dropAnim.c===c){d.classList.add('drop');d.style.setProperty('--fall',`-${(r+1)*112}%`);}
+        if(winSet.has(r+','+c)) d.classList.add('win');
+        cell.appendChild(d);
+      }
+      col.appendChild(cell);
+    }
+    bd.appendChild(col);
+  }
+  pvp.dropAnim=null;
+  const last=pvp.last,heard=last&&last.p===o&&!pvp.over&&!hide;
+  const mk=$('g-markers');mk.innerHTML='';mk.style.gridTemplateColumns=`repeat(${C},minmax(0,1fr))`;
+  for(let c=0;c<C;c++){const sp=document.createElement('span');sp.textContent='▼';if(heard&&last.c===c) sp.className='on'+(o===1?' m1':'');mk.appendChild(sp);}
+  let main,sub;
+  if(pvp.over){main=pvp.over.winner?t('pvp_won',{p:pvpName(pvp.over.winner)}):t('pvp_draw');sub=t('gm_lit');}
+  else if(hide){main=t('pvp_turn',{p:pvpName(v)});sub='';}
+  else if(pvp.flash){main=t('gm_flash');sub=t('gm_flash_sub');}
+  else if(pvp.busy&&last&&last.p===v&&last.full){main=t('pvp_turn',{p:pvpName(v)});sub=t('gm_full');}
+  else{
+    main=t('pvp_turn',{p:pvpName(v)});
+    sub=heard?(last.full?t('pvp_opp_full',{p:pvpName(o),c:last.c+1}):t('pvp_heard',{p:pvpName(o),c:last.c+1})):t('pvp_intro',{k:K});
+  }
+  $('g-main').textContent=main;$('g-sub').textContent=sub;
+  $('g-match').disabled=!canPlay||pvp.matches[v]<1||pvp.flash;
+  const ov=$('g-pass');ov.hidden=!hide;
+  if(hide){$('g-pass-title').textContent=t('pvp_pass',{p:pvpName(v)});$('g-pass-sub').textContent=t('pvp_dont_peek',{p:pvpName(v)});$('g-pass-go').textContent=t('pvp_ready',{p:pvpName(v)});}
+}
+$('g-pass-go').addEventListener('click',()=>{if(pvp){pvp.pass=false;renderPvp();}});
+$('pvp-start').addEventListener('click',startPvp);
+$('pvp-again').addEventListener('click',startPvp);
+$('pvp-quit').addEventListener('click',()=>{pvp=null;renderDuel();});
+function renderDuel(){
+  $('du-menu').hidden=!!pvp;$('du-pvp').hidden=!pvp;
+  $('du-invite').hidden=!invite;
+  if(invite){
+    $('du-inv-title').textContent=t('inv_title',{o:invite.opp.name});
+    $('du-inv-sub').textContent=t('inv_sub',{n:invite.holes,s:invite.opp.total})+(round&&!round.done?t('inv_replace'):'');
+  }
+  if(pvp){
+    $('pvp-score').innerHTML=`<i class="pdot1"></i>${esc(pvpName(1))} <b>${pvpScore[1]} – ${pvpScore[2]}</b> ${esc(pvpName(2))}<i class="pdot2"></i>`;
+    $('pvp-done').hidden=!pvp.over;
+    if(pvp.over){const el=$('pvp-verdict');el.textContent=pvp.over.winner?t('pvp_won',{p:pvpName(pvp.over.winner)}):t('pvp_draw');el.className='verdict good';}
+  }
+  renderGame();
+}
 document.querySelectorAll('.lengths [data-holes]').forEach(b=>b.addEventListener('click',()=>{
   startRound('random',+b.dataset.holes,Math.floor(Math.random()*2176782335));setView('round');
 }));
@@ -1476,7 +2008,6 @@ function handicap(){
 /* ---------- Stjerner og nivåer ----------
    ⭐ = hullet klart, ⭐⭐ = på par, ⭐⭐⭐ = under par. I dueller: +1 ⭐ for hvert hull du vinner. */
 function starsFor(d,win){if(!win) return 0;return d<0?3:d===0?2:1;}
-function starStr(n){return n>0?'⭐'.repeat(n):'☆';}
 /* Eldre runder mangler «wins»; da regnes et hull som klart hvis det ikke fikk tapsscore. */
 function holeWon(r,i){if(r.wins&&r.wins[i]!=null) return r.wins[i];return r.scores[i]-r.pars[i]<4;}
 function duelHoleStars(scores,oppScores,n){let b=0;if(!oppScores) return 0;for(let i=0;i<n;i++) if(scores[i]!=null&&oppScores[i]!=null&&scores[i]<oppScores[i]) b++;return b;}
@@ -1495,7 +2026,7 @@ function pointsSummary(){
 }
 function renderPoints(){
   const p=pointsSummary();
-  $('p-pts').textContent=p.total.toLocaleString(locale())+' ⭐';
+  $('p-pts').textContent=p.total.toLocaleString(locale());
   $('p-lvl').textContent=t('lvl'+p.lvl);
   const next=LEVELS[p.lvl+1];
   if(next!=null){
@@ -1521,16 +2052,24 @@ function recordFriend(name,stars,ms){
 }
 const loadGlobalLeaderboard=null; /* Plass for fremtidig server: async ()=>[{name,stars}] */
 function levelOf(stars){let l=0;for(let i=0;i<LEVELS.length;i++) if(stars>=LEVELS[i]) l=i;return l;}
-function renderBoard(){
+let boardScope='friends';
+document.querySelectorAll('.seg3 [data-scope]').forEach(b=>b.addEventListener('click',()=>{boardScope=b.dataset.scope;renderBoard();}));
+function friendRows(){
   const me={name:(store.name||'').trim()||t('sc_you'),stars:pointsSummary().total,me:true};
   const friends=Object.values(store.friends||{}).map(f=>({name:f.name,stars:f.stars,w:f.w,l:f.l,t:f.t}));
   const rows=[me,...friends].sort((a,b)=>(b.stars==null?-1:b.stars)-(a.stars==null?-1:a.stars));
-  const myRank=rows.indexOf(me)+1;
+  return {me,friends,rows,rank:rows.indexOf(me)+1};
+}
+function renderBoard(){
+  document.querySelectorAll('.seg3 [data-scope]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.scope===boardScope));
+  $('b-friends').hidden=boardScope!=='friends';$('b-soon').hidden=boardScope==='friends';
+  $('b-soon-title').textContent=t('scope_'+boardScope);
+  const {me,friends,rows,rank:myRank}=friendRows();
   $('b-rank').textContent='#'+myRank;
   $('b-of').textContent=t('board_rank_of',{n:rows.length});
-  $('b-me').textContent=me.stars.toLocaleString(locale())+' ⭐ · '+t('lvl'+levelOf(me.stars));
+  $('b-me').textContent=me.stars.toLocaleString(locale())+' '+t('points').toLowerCase()+' · '+t('lvl'+levelOf(me.stars));
   $('b-empty').hidden=friends.length>0;
-  let html=`<table class="board-t"><thead><tr><th>#</th><th>${esc(t('col_player'))}</th><th class="num">⭐</th><th class="num">${esc(t('col_h2h'))}</th></tr></thead><tbody>`;
+  let html=`<table class="board-t"><thead><tr><th>#</th><th>${esc(t('col_player'))}</th><th class="num">${esc(t('points'))}</th><th class="num">${esc(t('col_h2h'))}</th></tr></thead><tbody>`;
   rows.forEach((r,i)=>{
     const h2h=r.me?'':`${r.w}–${r.l}${r.t?'–'+r.t:''}`;
     html+=`<tr class="${r.me?'me':''}"><td>${i+1}</td><td><span class="pn">${esc(r.name)}</span><span class="pl">${r.stars==null?'':esc(t('lvl'+levelOf(r.stars)))}</span></td><td class="num">${r.stars==null?'–':r.stars.toLocaleString(locale())}</td><td class="num">${h2h}</td></tr>`;
@@ -1539,8 +2078,10 @@ function renderBoard(){
   $('b-table').innerHTML=html;
 }
 
+$('p-toboard').addEventListener('click',()=>{boardScope='friends';setView('board');});
 function renderProfile(){
   renderPoints();
+  const fr=friendRows();$('p-rank-f').textContent=t('rank_of',{r:fr.rank,n:fr.rows.length});
   const h=handicap();
   $('p-hcp').textContent=h==null?'–':fmtNum(Math.round(h*10)/10);
   const need=3-store.rounds.filter(r=>r.holes>=9).length;
@@ -1595,7 +2136,7 @@ function setView(v){
   if(v==='round') renderRound();
   if(v==='profile') renderProfile();
   if(v==='board') renderBoard();
-  if(v==='duel') renderGame();
+  if(v==='duel'){$('du-slot').appendChild(g);renderDuel();}
   try{localStorage.setItem('mb-view',v);}catch(e){}
 }
 for(const b of document.querySelectorAll('.tabs button')) b.addEventListener('click',()=>setView(b.dataset.view));
@@ -1614,12 +2155,13 @@ loadDaily(todayIdx());
 if(store.current&&store.current.seed!=null){
   const c=store.current;
   round={kind:c.kind,holes:c.holes,seed:c.seed,opp:c.opp,idx:0,scores:(c.scores||[]).slice(),wins:(c.wins||[]).slice(),pars:[],types:[],hole:null,done:false};
-  for(let i=0;i<c.holes;i++){round.types[i]=COURSE[i];round.pars[i]=TYPES[COURSE[i]].opt+1;}
+  for(let i=0;i<c.holes;i++){round.types[i]=COURSE[i];round.pars[i]=typePar(COURSE[i]);}
   for(let i=0;i<round.scores.length;i++) if(round.scores[i]!=null) round.pars[i]=genHole(round.types[i],holeBase(round.seed,i)).par;
   round.idx=round.scores.filter(x=>x!=null).length;
   if(round.idx>=round.holes){finishRound();}else startRoundHole();
 }
 let startView='daily';try{startView=localStorage.getItem('mb-view')||'daily';}catch(e){}
+if(checkHash()) startView='duel';
 setView(['daily','round','duel','board','profile'].includes(startView)?startView:'daily');
 
 })();

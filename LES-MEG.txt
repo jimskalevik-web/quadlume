@@ -1,29 +1,20 @@
-QUADLUME – installerbar app
+QUADLUME – installerbar app (quadlume.com)
 
-1. LEGG APPEN UT (gratis, Netlify)
-   - Pakk ut zip-filen, så du har mappen «quadlume-app».
-   - Gå til https://app.netlify.com/drop og dra hele mappen inn.
-   - Lag en gratis konto og gjør krav på nettstedet («claim»), ellers slettes det.
-   - Du får en adresse som slutter på .netlify.app. Noter den.
+OPPDATERE SPILLET (GitHub Pages)
+1. Pakk ut zip-filen, så du har mappen «quadlume-app».
+2. Gå til github.com/jimskalevik-web/quadlume
+3. Klikk «Add file» → «Upload files».
+4. Åpne mappen quadlume-app, marker ALT inni den (Ctrl + A) og dra det inn i GitHub-vinduet.
+   Filene med samme navn blir erstattet.
+5. Klikk «Commit changes». Etter 1–2 minutter ligger den nye versjonen på quadlume.com.
 
-2. KOBLE TIL QUADLUME.COM
-   I Netlify: Domain management → Add a domain → skriv quadlume.com.
-   Hos Domeneshop: Mine domener → quadlume.com → DNS. Slett eventuelle
-   eksisterende A-/CNAME-poster for @ og www (f.eks. parkeringsside), og legg inn:
-     Type A      Vert: (tom / @)   Verdi: 75.2.60.5
-     Type CNAME  Vert: www          Verdi: <din-side>.netlify.app
-   Det kan ta fra noen minutter til 24 timer før adressen virker.
-   Netlify lager HTTPS-sertifikat automatisk når DNS er på plass.
+Appen på telefonen henter ny versjon neste gang den åpnes
+(lukk den helt og åpne den igjen, gjerne to ganger).
 
-3. INSTALLER APPEN
-   - iPhone: Åpne quadlume.com i Safari → Del → «Legg til på Hjem-skjerm».
-   - Android: Åpne i Chrome → menyen (tre prikker) → «Installer app».
-   - PC/Mac: Åpne i Chrome eller Edge → installer-ikonet i adressefeltet.
+INSTALLERE APPEN
+- iPhone: Åpne quadlume.com i Safari → Del → «Legg til på Hjem-skjerm».
+- Android: Åpne i Chrome → menyen (tre prikker) → «Installer app».
+- PC/Mac: Åpne i Chrome eller Edge → installer-ikonet i adressefeltet.
 
-OPPDATERE APPEN SENERE
-   Netlify → Deploys → dra inn den nye mappen.
-   Endre VERSION øverst i sw.js (f.eks. quadlume-v2), så telefonene henter ny versjon.
-
-Språk: Appen velger norsk, svensk, dansk, engelsk, tysk eller spansk ut fra enheten.
-Spilleren kan bytte språk øverst til høyre.
-Resultater og handicap lagres på hver enkelt enhet.
+Språk: norsk, svensk, dansk, engelsk, tysk og spansk. Velges automatisk, og kan byttes øverst til høyre.
+Poeng, runder og vennetabell lagres på hver enkelt enhet.

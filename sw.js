@@ -1,5 +1,5 @@
 // Quadlume – lagrer appen lokalt så den virker uten nett.
-const VERSION = 'quadlume-v5';
+const VERSION = 'quadlume-v6';
 const SHELL = ['./', './index.html', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png',
   './icons/apple-touch-icon.png', './icons/favicon-32.png'];
