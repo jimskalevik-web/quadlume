@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Quadlume</title>
 <meta name="description" content="Daily four-in-a-row puzzles.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://quadlume.com/nott/">
+<meta property="og:title" content="Quadlume – fire på rad-nøtt">
+<meta property="og:description" content="Vinn på færrest mulig trekk. Ny nøtt hver dag.">
+<meta property="og:image" content="https://quadlume.com/nott/icons/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0A0F1E">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon-32.png" sizes="32x32">
@@ -50,7 +58,10 @@ h1{font-family:var(--display);font-weight:800;font-size:clamp(26px,8vw,34px);lin
 .pips{display:flex;gap:6px;align-items:center}
 .pips i{width:14px;height:14px;border-radius:50%;border:2px solid var(--amber);box-sizing:border-box}
 .pips i.used{background:var(--amber);box-shadow:0 0 8px var(--amber-glow)}
-.pips span{margin-left:6px;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.pips{gap:8px;flex-wrap:wrap}
+.pips span{color:var(--text);font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;background:var(--ink-2);border:1px solid var(--line);border-radius:999px;padding:4px 11px}
+.pips span.over{border-color:var(--coral);color:var(--coral)}
+.fine{color:var(--muted);font-size:13px;margin:0}
 .banner{border:1px solid var(--amber);border-radius:12px;padding:10px 12px;background:rgba(246,183,60,.08);font-size:14px}
 
 .status{min-height:44px;display:flex;flex-direction:column;justify-content:center}
@@ -137,17 +148,21 @@ input[type=text]{width:100%;box-sizing:border-box;background:var(--ink);color:va
 
   <div class="actions" id="wrong-actions" hidden>
     <button class="btn primary" id="retry" type="button" data-t="retry"></button>
-    <button class="btn" id="hint" type="button" data-t="hint" hidden></button>
   </div>
 
   <div class="panel" id="result" hidden>
-    <div class="verdict" data-t="solved"></div>
+    <div class="verdict" id="verdict"></div>
     <div class="resline" id="res-line"></div>
     <div class="seq" id="res-seq"></div>
+    <p class="fine" id="res-locked" hidden></p>
     <p id="res-cmp" hidden></p>
     <div class="actions">
       <button class="btn primary" id="next" type="button" data-t="next_nut"></button>
       <button class="btn" id="challenge" type="button" data-t="challenge"></button>
+    </div>
+    <div class="actions">
+      <button class="btn small" id="again" type="button" data-t="again"></button>
+      <button class="btn small" id="hint" type="button" data-t="hint" hidden></button>
     </div>
     <div><label class="k" for="name" data-t="name_label"></label>
       <input type="text" id="name" maxlength="20" data-tp="name_ph" autocomplete="nickname"></div>
@@ -240,134 +255,171 @@ function redReply(S,n){
   }
   return best;
 }
+/* Rødts stil når flere trekk er like gode: bygger ikke egne linjer og stopper ikke gule før det trengs.
+   Det gjør rød til en ren forsvarer som sjelden vinner selv. */
+const DIRS4=[[1,0],[0,1],[1,1],[1,-1]];
+function redTaste(S,c,r){
+  let v=0;
+  for(const [dc,dr] of DIRS4) for(let k=0;k<4;k++){
+    const c0=c-dc*k,r0=r-dr*k,c3=c0+dc*3,r3=r0+dr*3;
+    if(c0<0||c3<0||c0>=W||c3>=W||r0<0||r3<0||r0>=H||r3>=H) continue;
+    let red=0,yel=0;
+    for(let i=0;i<4;i++){const x=S.g[c0+dc*i][r0+dr*i];if(x===2) red++;else if(x===1) yel++;}
+    if(yel===0) v-=red*red*0.5;
+    if(red===1&&yel>0) v-=yel*yel*0.3;
+  }
+  return v;
+}
+/* Rødt trekk i fritt spill. depth = hvor mange gule trekk frem rød forsvarer seg mot (minst 1).
+   Appen bruker depth = mål − brukte trekk, så gul aldri kan vinne på færre trekk enn målet,
+   mens rød blir lettere å slå når målet er passert. */
+function redMove(S,depth){
+  const d=Math.max(1,depth);let best=-1,bs=-1e9;
+  for(let c=0;c<W;c++){
+    if(S.h[c]>=H) continue;
+    const r=drop(S,c,2);let s;
+    if(lineAt(S,c,r)) s=1000;
+    else{const m=minWin(S,d);s=(m===0?500:m*10)+Math.max(-9,redTaste(S,c,r)*0.15)-Math.abs(c-3)*0.05;}
+    undo(S,c);
+    if(s>bs){bs=s;best=c;}
+  }
+  return best;
+}
+function boardFull(S){for(let c=0;c<W;c++) if(S.h[c]<H) return false;return true;}
 const LANGS=[['nb','Norsk'],['en','English'],['sv','Svenska'],['da','Dansk'],['de','Deutsch'],['es','Español']];
 const LOCALES={nb:'nb-NO',en:'en-GB',sv:'sv-SE',da:'da-DK',de:'de-DE',es:'es-ES'};
 const I18N={
 nb:{language:'Språk',tagline:'Fire på rad-nøtter. Finn trekkene som vinner.',
 daily_no:'Dagens nøtt #{n}',extra_no:'Nøtt {n}',chal_no:'Utfordring',diff_3:'Lett',diff_4:'Middels',diff_5:'Vanskelig',
-task:'Gul vinner på {n} trekk',moves:'Trekk {a} av {n}',
-st_start:'Du er gul. Trykk på en kolonne.',st_good:'Riktig! Rød svarer …',st_next:'Riktig. Finn neste trekk.',
-st_wrong:'Rød slapp unna',st_wrong_sub:'Det trekket vinner ikke på {n} trekk.',st_hint:'Pilen viser riktig trekk.',
+
+st_start:'Du er gul. Trykk på en kolonne.',
+
 st_done:'Fire på rad!',st_solved_before:'Du har løst denne nøtten.',
-retry:'Prøv igjen',hint:'Vis et trekk',
-solved:'Løst!',res_1:'På første forsøk',res_n:'På {n} forsøk',res_hint:'Med hint',
+retry:'Prøv igjen',
+
 challenge:'Utfordre en venn',next_nut:'En nøtt til',back_daily:'‹ Dagens nøtt',
 streak:'dager på rad',total:'nøtter løst',next_in:'Ny nøtt om',
-chal_from:'{o} løste denne nøtten: {r}. Klarer du det bedre?',cmp_win:'Du slo {o}!',cmp_tie:'Likt med {o}.',cmp_loss:'{o} var bedre denne gangen.',
-share_msg:'Jeg løste denne Quadlume-nøtten: {r}. Klarer du det bedre?',
+cmp_win:'Du slo {o}!',cmp_tie:'Likt med {o}.',cmp_loss:'{o} var bedre denne gangen.',
+
 name_label:'Navnet ditt i utfordringer',name_ph:'F.eks. Alex',friend:'En venn',
 inst_title:'Legg Quadlume på hjemskjermen',inst_text:'Da er dagens nøtt ett trykk unna.',inst_btn:'Installer',
 inst_ios:'Trykk Del-knappen nederst i Safari og velg «Legg til på Hjem-skjerm».',inst_other:'Åpne menyen i nettleseren (⋮) og velg «Installer app» eller «Legg til på startskjermen».',close:'Lukk',
 notif_title:'Varsel når dagens nøtt er klar',notif_text:'Du får et varsel og et merke på app-ikonet.',notif_btn:'Slå på varsel',notif_on:'Varsel er slått på.',
 notif_denied:'Varsler er blokkert. Du kan slå dem på i innstillingene for nettstedet.',notif_unsup:'Nettleseren støtter ikke varsler her. Installer appen først og prøv igjen.',
-push_title:'Dagens nøtt er klar',push_body:'Finner du trekkene som vinner?',
-how_title:'Slik spiller du',how1:'Du er gul. Finn trekkene som gir <b>fire på rad</b> innen antall trekk som står over brettet.',
-how2:'Rød forsvarer seg så godt det går. Bare trekk som fortsatt vinner i tide, godtas.',how3:'Alle får samme nøtt hver dag. Den er lettest på mandag og vanskeligst i helgen.',
+push_title:'Dagens nøtt er klar',
+how_title:'Slik spiller du',
+how3:'Alle får samme nøtt hver dag. Den er lettest på mandag og vanskeligst i helgen.',
+task:'Vinn på færrest mulig trekk',best:'Beste mulige: {n}',yours:'Dine trekk: {k}',st_wait:'Rød svarer …',st_turn:'Din tur.',st_again:'Ny runde. Trekkene dine teller videre.',st_lost:'Rød fikk fire på rad.',st_draw:'Brettet er fullt.',st_carry:'Prøv igjen – trekkene dine teller videre.',st_retry:'Prøv igjen.',st_hint:'Pilen viser beste trekk.',again:'Spill igjen',hint:'Vis beste trekk',v_perfect:'Perfekt!',v_won:'Du vant!',res_perfect:'{k} trekk – beste mulige',res_moves:'{k} trekk · beste mulige er {n}',res_locked:'Resultatet ditt: {k} trekk (første seier teller)',n_moves:'{k} trekk',chal_from:'{o} vant på {k} trekk. Klarer du det på færre?',share_msg:'Jeg vant denne Quadlume-nøtten på {k} trekk. Klarer du det på færre?',how1:'Du er gul. Få <b>fire på rad</b> før rød – på færrest mulig trekk.',how2:'Tallet over brettet viser det beste som er mulig. Første gang du vinner, er resultatet ditt.',push_body:'Hvor få trekk trenger du?',
 copied:'Kopiert!',col_aria:'Slipp i kolonne {c}'},
 en:{language:'Language',tagline:'Four-in-a-row puzzles. Find the winning moves.',
 daily_no:'Daily puzzle #{n}',extra_no:'Puzzle {n}',chal_no:'Challenge',diff_3:'Easy',diff_4:'Medium',diff_5:'Hard',
-task:'Yellow wins in {n} moves',moves:'Move {a} of {n}',
-st_start:'You’re yellow. Tap a column.',st_good:'Correct! Red replies …',st_next:'Correct. Find the next move.',
-st_wrong:'Red got away',st_wrong_sub:'That move doesn’t win in {n} moves.',st_hint:'The arrow shows the right move.',
+
+st_start:'You’re yellow. Tap a column.',
+
 st_done:'Four in a row!',st_solved_before:'You’ve solved this puzzle.',
-retry:'Try again',hint:'Show a move',
-solved:'Solved!',res_1:'On the first try',res_n:'In {n} tries',res_hint:'With a hint',
+retry:'Try again',
+
 challenge:'Challenge a friend',next_nut:'One more puzzle',back_daily:'‹ Daily puzzle',
 streak:'day streak',total:'puzzles solved',next_in:'New puzzle in',
-chal_from:'{o} solved this puzzle: {r}. Can you do better?',cmp_win:'You beat {o}!',cmp_tie:'Level with {o}.',cmp_loss:'{o} did better this time.',
-share_msg:'I solved this Quadlume puzzle: {r}. Can you do better?',
+cmp_win:'You beat {o}!',cmp_tie:'Level with {o}.',cmp_loss:'{o} did better this time.',
+
 name_label:'Your name in challenges',name_ph:'E.g. Alex',friend:'A friend',
 inst_title:'Add Quadlume to your home screen',inst_text:'Then the daily puzzle is one tap away.',inst_btn:'Install',
 inst_ios:'Tap the Share button at the bottom of Safari and choose “Add to Home Screen”.',inst_other:'Open the browser menu (⋮) and choose “Install app” or “Add to Home screen”.',close:'Close',
 notif_title:'Get notified when the daily puzzle is ready',notif_text:'You get a notification and a badge on the app icon.',notif_btn:'Turn on notifications',notif_on:'Notifications are on.',
 notif_denied:'Notifications are blocked. You can turn them on in the site settings.',notif_unsup:'This browser doesn’t support notifications here. Install the app first and try again.',
-push_title:'The daily puzzle is ready',push_body:'Can you find the winning moves?',
-how_title:'How to play',how1:'You’re yellow. Find the moves that give <b>four in a row</b> within the number of moves shown above the board.',
-how2:'Red defends as well as it can. Only moves that still win in time are accepted.',how3:'Everyone gets the same puzzle each day. It’s easiest on Monday and hardest at the weekend.',
+push_title:'The daily puzzle is ready',
+how_title:'How to play',
+how3:'Everyone gets the same puzzle each day. It’s easiest on Monday and hardest at the weekend.',
+task:'Win in as few moves as possible',best:'Best possible: {n}',yours:'Your moves: {k}',st_wait:'Red replies …',st_turn:'Your turn.',st_again:'New round. Your moves keep counting.',st_lost:'Red got four in a row.',st_draw:'The board is full.',st_carry:'Try again – your moves keep counting.',st_retry:'Try again.',st_hint:'The arrow shows the best move.',again:'Play again',hint:'Show the best move',v_perfect:'Perfect!',v_won:'You won!',res_perfect:'{k} moves – the best possible',res_moves:'{k} moves · the best possible is {n}',res_locked:'Your result: {k} moves (your first win counts)',n_moves:'{k} moves',chal_from:'{o} won in {k} moves. Can you do it in fewer?',share_msg:'I won this Quadlume puzzle in {k} moves. Can you do it in fewer?',how1:'You’re yellow. Get <b>four in a row</b> before red – in as few moves as possible.',how2:'The number above the board is the best possible. Your first win is your result.',push_body:'How few moves do you need?',
 copied:'Copied!',col_aria:'Drop in column {c}'},
 sv:{language:'Språk',tagline:'Fyra i rad-nötter. Hitta dragen som vinner.',
 daily_no:'Dagens nöt #{n}',extra_no:'Nöt {n}',chal_no:'Utmaning',diff_3:'Lätt',diff_4:'Medel',diff_5:'Svår',
-task:'Gul vinner på {n} drag',moves:'Drag {a} av {n}',
-st_start:'Du är gul. Tryck på en kolumn.',st_good:'Rätt! Röd svarar …',st_next:'Rätt. Hitta nästa drag.',
-st_wrong:'Röd kom undan',st_wrong_sub:'Det draget vinner inte på {n} drag.',st_hint:'Pilen visar rätt drag.',
+
+st_start:'Du är gul. Tryck på en kolumn.',
+
 st_done:'Fyra i rad!',st_solved_before:'Du har löst den här nöten.',
-retry:'Försök igen',hint:'Visa ett drag',
-solved:'Löst!',res_1:'På första försöket',res_n:'På {n} försök',res_hint:'Med ledtråd',
+retry:'Försök igen',
+
 challenge:'Utmana en vän',next_nut:'En nöt till',back_daily:'‹ Dagens nöt',
 streak:'dagar i rad',total:'lösta nötter',next_in:'Ny nöt om',
-chal_from:'{o} löste den här nöten: {r}. Klarar du det bättre?',cmp_win:'Du slog {o}!',cmp_tie:'Lika med {o}.',cmp_loss:'{o} var bättre den här gången.',
-share_msg:'Jag löste den här Quadlume-nöten: {r}. Klarar du det bättre?',
+cmp_win:'Du slog {o}!',cmp_tie:'Lika med {o}.',cmp_loss:'{o} var bättre den här gången.',
+
 name_label:'Ditt namn i utmaningar',name_ph:'T.ex. Alex',friend:'En vän',
 inst_title:'Lägg Quadlume på hemskärmen',inst_text:'Då är dagens nöt ett tryck bort.',inst_btn:'Installera',
 inst_ios:'Tryck på Dela-knappen längst ned i Safari och välj ”Lägg till på hemskärmen”.',inst_other:'Öppna webbläsarens meny (⋮) och välj ”Installera app” eller ”Lägg till på startskärmen”.',close:'Stäng',
 notif_title:'Avisering när dagens nöt är klar',notif_text:'Du får en avisering och en bricka på appikonen.',notif_btn:'Slå på aviseringar',notif_on:'Aviseringar är på.',
 notif_denied:'Aviseringar är blockerade. Du kan slå på dem i webbplatsens inställningar.',notif_unsup:'Webbläsaren stöder inte aviseringar här. Installera appen först och försök igen.',
-push_title:'Dagens nöt är klar',push_body:'Hittar du dragen som vinner?',
-how_title:'Så spelar du',how1:'Du är gul. Hitta dragen som ger <b>fyra i rad</b> inom det antal drag som står ovanför brädet.',
-how2:'Röd försvarar sig så gott det går. Bara drag som fortfarande vinner i tid godkänns.',how3:'Alla får samma nöt varje dag. Den är lättast på måndag och svårast på helgen.',
+push_title:'Dagens nöt är klar',
+how_title:'Så spelar du',
+how3:'Alla får samma nöt varje dag. Den är lättast på måndag och svårast på helgen.',
+task:'Vinn på så få drag som möjligt',best:'Bästa möjliga: {n}',yours:'Dina drag: {k}',st_wait:'Röd svarar …',st_turn:'Din tur.',st_again:'Ny omgång. Dina drag räknas vidare.',st_lost:'Röd fick fyra i rad.',st_draw:'Brädet är fullt.',st_carry:'Försök igen – dina drag räknas vidare.',st_retry:'Försök igen.',st_hint:'Pilen visar bästa draget.',again:'Spela igen',hint:'Visa bästa draget',v_perfect:'Perfekt!',v_won:'Du vann!',res_perfect:'{k} drag – bästa möjliga',res_moves:'{k} drag · bästa möjliga är {n}',res_locked:'Ditt resultat: {k} drag (första vinsten räknas)',n_moves:'{k} drag',chal_from:'{o} vann på {k} drag. Klarar du det på färre?',share_msg:'Jag vann den här Quadlume-nöten på {k} drag. Klarar du det på färre?',how1:'Du är gul. Få <b>fyra i rad</b> före röd – på så få drag som möjligt.',how2:'Talet ovanför brädet visar det bästa som går. Första gången du vinner är ditt resultat.',push_body:'Hur få drag behöver du?',
 copied:'Kopierat!',col_aria:'Släpp i kolumn {c}'},
 da:{language:'Sprog',tagline:'Fire på stribe-nødder. Find de træk, der vinder.',
 daily_no:'Dagens nød #{n}',extra_no:'Nød {n}',chal_no:'Udfordring',diff_3:'Let',diff_4:'Mellem',diff_5:'Svær',
-task:'Gul vinder på {n} træk',moves:'Træk {a} af {n}',
-st_start:'Du er gul. Tryk på en kolonne.',st_good:'Rigtigt! Rød svarer …',st_next:'Rigtigt. Find det næste træk.',
-st_wrong:'Rød slap væk',st_wrong_sub:'Det træk vinder ikke på {n} træk.',st_hint:'Pilen viser det rigtige træk.',
+
+st_start:'Du er gul. Tryk på en kolonne.',
+
 st_done:'Fire på stribe!',st_solved_before:'Du har løst denne nød.',
-retry:'Prøv igen',hint:'Vis et træk',
-solved:'Løst!',res_1:'I første forsøg',res_n:'På {n} forsøg',res_hint:'Med hint',
+retry:'Prøv igen',
+
 challenge:'Udfordr en ven',next_nut:'En nød til',back_daily:'‹ Dagens nød',
 streak:'dage i træk',total:'nødder løst',next_in:'Ny nød om',
-chal_from:'{o} løste denne nød: {r}. Kan du gøre det bedre?',cmp_win:'Du slog {o}!',cmp_tie:'Lige med {o}.',cmp_loss:'{o} var bedre denne gang.',
-share_msg:'Jeg løste denne Quadlume-nød: {r}. Kan du gøre det bedre?',
+cmp_win:'Du slog {o}!',cmp_tie:'Lige med {o}.',cmp_loss:'{o} var bedre denne gang.',
+
 name_label:'Dit navn i udfordringer',name_ph:'Fx Alex',friend:'En ven',
 inst_title:'Læg Quadlume på hjemmeskærmen',inst_text:'Så er dagens nød ét tryk væk.',inst_btn:'Installer',
 inst_ios:'Tryk på Del-knappen nederst i Safari, og vælg »Føj til hjemmeskærm«.',inst_other:'Åbn browserens menu (⋮), og vælg »Installer app« eller »Føj til startskærm«.',close:'Luk',
 notif_title:'Notifikation, når dagens nød er klar',notif_text:'Du får en notifikation og et mærke på appikonet.',notif_btn:'Slå notifikationer til',notif_on:'Notifikationer er slået til.',
 notif_denied:'Notifikationer er blokeret. Du kan slå dem til i indstillingerne for webstedet.',notif_unsup:'Browseren understøtter ikke notifikationer her. Installer appen først, og prøv igen.',
-push_title:'Dagens nød er klar',push_body:'Kan du finde de træk, der vinder?',
-how_title:'Sådan spiller du',how1:'Du er gul. Find de træk, der giver <b>fire på stribe</b> inden for det antal træk, der står over brættet.',
-how2:'Rød forsvarer sig så godt, den kan. Kun træk, der stadig vinder i tide, godkendes.',how3:'Alle får den samme nød hver dag. Den er lettest om mandagen og sværest i weekenden.',
+push_title:'Dagens nød er klar',
+how_title:'Sådan spiller du',
+how3:'Alle får den samme nød hver dag. Den er lettest om mandagen og sværest i weekenden.',
+task:'Vind på færrest mulige træk',best:'Bedst mulige: {n}',yours:'Dine træk: {k}',st_wait:'Rød svarer …',st_turn:'Din tur.',st_again:'Ny runde. Dine træk tæller videre.',st_lost:'Rød fik fire på stribe.',st_draw:'Brættet er fyldt.',st_carry:'Prøv igen – dine træk tæller videre.',st_retry:'Prøv igen.',st_hint:'Pilen viser det bedste træk.',again:'Spil igen',hint:'Vis det bedste træk',v_perfect:'Perfekt!',v_won:'Du vandt!',res_perfect:'{k} træk – bedst mulige',res_moves:'{k} træk · bedst mulige er {n}',res_locked:'Dit resultat: {k} træk (første sejr tæller)',n_moves:'{k} træk',chal_from:'{o} vandt på {k} træk. Kan du gøre det på færre?',share_msg:'Jeg vandt denne Quadlume-nød på {k} træk. Kan du gøre det på færre?',how1:'Du er gul. Få <b>fire på stribe</b> før rød – på færrest mulige træk.',how2:'Tallet over brættet viser det bedst mulige. Første gang du vinder, er dit resultat.',push_body:'Hvor få træk skal du bruge?',
 copied:'Kopieret!',col_aria:'Slip i kolonne {c}'},
 de:{language:'Sprache',tagline:'Vier-gewinnt-Rätsel. Finde die Gewinnzüge.',
 daily_no:'Tagesrätsel #{n}',extra_no:'Rätsel {n}',chal_no:'Herausforderung',diff_3:'Leicht',diff_4:'Mittel',diff_5:'Schwer',
-task:'Gelb gewinnt in {n} Zügen',moves:'Zug {a} von {n}',
-st_start:'Du bist Gelb. Tipp auf eine Spalte.',st_good:'Richtig! Rot antwortet …',st_next:'Richtig. Finde den nächsten Zug.',
-st_wrong:'Rot ist entkommen',st_wrong_sub:'Dieser Zug gewinnt nicht in {n} Zügen.',st_hint:'Der Pfeil zeigt den richtigen Zug.',
+
+st_start:'Du bist Gelb. Tipp auf eine Spalte.',
+
 st_done:'Vier in einer Reihe!',st_solved_before:'Du hast dieses Rätsel gelöst.',
-retry:'Nochmal versuchen',hint:'Einen Zug zeigen',
-solved:'Gelöst!',res_1:'Beim ersten Versuch',res_n:'In {n} Versuchen',res_hint:'Mit Hinweis',
+retry:'Nochmal versuchen',
+
 challenge:'Freund herausfordern',next_nut:'Noch ein Rätsel',back_daily:'‹ Tagesrätsel',
 streak:'Tage in Folge',total:'Rätsel gelöst',next_in:'Neues Rätsel in',
-chal_from:'{o} hat dieses Rätsel gelöst: {r}. Schaffst du es besser?',cmp_win:'Du hast {o} geschlagen!',cmp_tie:'Gleichauf mit {o}.',cmp_loss:'{o} war diesmal besser.',
-share_msg:'Ich habe dieses Quadlume-Rätsel gelöst: {r}. Schaffst du es besser?',
+cmp_win:'Du hast {o} geschlagen!',cmp_tie:'Gleichauf mit {o}.',cmp_loss:'{o} war diesmal besser.',
+
 name_label:'Dein Name in Herausforderungen',name_ph:'Z. B. Alex',friend:'Ein Freund',
 inst_title:'Quadlume zum Startbildschirm hinzufügen',inst_text:'Dann ist das Tagesrätsel nur einen Tipp entfernt.',inst_btn:'Installieren',
 inst_ios:'Tipp unten in Safari auf „Teilen“ und wähle „Zum Home-Bildschirm“.',inst_other:'Öffne das Browsermenü (⋮) und wähle „App installieren“ oder „Zum Startbildschirm hinzufügen“.',close:'Schließen',
 notif_title:'Benachrichtigung, wenn das Tagesrätsel bereit ist',notif_text:'Du bekommst eine Benachrichtigung und ein Kennzeichen am App-Symbol.',notif_btn:'Benachrichtigungen einschalten',notif_on:'Benachrichtigungen sind eingeschaltet.',
 notif_denied:'Benachrichtigungen sind blockiert. Du kannst sie in den Website-Einstellungen einschalten.',notif_unsup:'Der Browser unterstützt hier keine Benachrichtigungen. Installiere zuerst die App und versuch es noch einmal.',
-push_title:'Das Tagesrätsel ist bereit',push_body:'Findest du die Gewinnzüge?',
-how_title:'So wird gespielt',how1:'Du bist Gelb. Finde die Züge, die <b>vier in einer Reihe</b> bringen, innerhalb der Zugzahl über dem Brett.',
-how2:'Rot verteidigt sich, so gut es geht. Nur Züge, die noch rechtzeitig gewinnen, werden angenommen.',how3:'Alle bekommen jeden Tag dasselbe Rätsel. Montags ist es am leichtesten, am Wochenende am schwersten.',
+push_title:'Das Tagesrätsel ist bereit',
+how_title:'So wird gespielt',
+how3:'Alle bekommen jeden Tag dasselbe Rätsel. Montags ist es am leichtesten, am Wochenende am schwersten.',
+task:'Gewinne mit möglichst wenigen Zügen',best:'Bestmöglich: {n}',yours:'Deine Züge: {k}',st_wait:'Rot antwortet …',st_turn:'Du bist dran.',st_again:'Neue Runde. Deine Züge zählen weiter.',st_lost:'Rot hat vier in einer Reihe.',st_draw:'Das Brett ist voll.',st_carry:'Versuch es noch einmal – deine Züge zählen weiter.',st_retry:'Versuch es noch einmal.',st_hint:'Der Pfeil zeigt den besten Zug.',again:'Noch einmal spielen',hint:'Besten Zug zeigen',v_perfect:'Perfekt!',v_won:'Gewonnen!',res_perfect:'{k} Züge – bestmöglich',res_moves:'{k} Züge · bestmöglich sind {n}',res_locked:'Dein Ergebnis: {k} Züge (der erste Sieg zählt)',n_moves:'{k} Züge',chal_from:'{o} hat in {k} Zügen gewonnen. Schaffst du es mit weniger?',share_msg:'Ich habe dieses Quadlume-Rätsel in {k} Zügen gewonnen. Schaffst du es mit weniger?',how1:'Du bist Gelb. Schaffe <b>vier in einer Reihe</b> vor Rot – mit möglichst wenigen Zügen.',how2:'Die Zahl über dem Brett ist das Bestmögliche. Dein erster Sieg ist dein Ergebnis.',push_body:'Wie wenige Züge brauchst du?',
 copied:'Kopiert!',col_aria:'In Spalte {c} werfen'},
 es:{language:'Idioma',tagline:'Acertijos de cuatro en raya. Encuentra las jugadas ganadoras.',
 daily_no:'Acertijo del día n.º {n}',extra_no:'Acertijo {n}',chal_no:'Reto',diff_3:'Fácil',diff_4:'Medio',diff_5:'Difícil',
-task:'El amarillo gana en {n} jugadas',moves:'Jugada {a} de {n}',
-st_start:'Eres el amarillo. Pulsa una columna.',st_good:'¡Correcto! El rojo responde…',st_next:'Correcto. Encuentra la siguiente jugada.',
-st_wrong:'El rojo se ha escapado',st_wrong_sub:'Esa jugada no gana en {n} jugadas.',st_hint:'La flecha muestra la jugada correcta.',
+
+st_start:'Eres el amarillo. Pulsa una columna.',
+
 st_done:'¡Cuatro en raya!',st_solved_before:'Ya has resuelto este acertijo.',
-retry:'Intentar de nuevo',hint:'Mostrar una jugada',
-solved:'¡Resuelto!',res_1:'Al primer intento',res_n:'En {n} intentos',res_hint:'Con pista',
+retry:'Intentar de nuevo',
+
 challenge:'Retar a un amigo',next_nut:'Otro acertijo',back_daily:'‹ Acertijo del día',
 streak:'días seguidos',total:'acertijos resueltos',next_in:'Nuevo acertijo en',
-chal_from:'{o} resolvió este acertijo: {r}. ¿Puedes hacerlo mejor?',cmp_win:'¡Has ganado a {o}!',cmp_tie:'Empate con {o}.',cmp_loss:'{o} lo hizo mejor esta vez.',
-share_msg:'He resuelto este acertijo de Quadlume: {r}. ¿Puedes hacerlo mejor?',
+cmp_win:'¡Has ganado a {o}!',cmp_tie:'Empate con {o}.',cmp_loss:'{o} lo hizo mejor esta vez.',
+
 name_label:'Tu nombre en los retos',name_ph:'P. ej. Alex',friend:'Un amigo',
 inst_title:'Añade Quadlume a tu pantalla de inicio',inst_text:'Así tendrás el acertijo del día a un toque.',inst_btn:'Instalar',
 inst_ios:'Pulsa el botón Compartir en la parte inferior de Safari y elige «Añadir a pantalla de inicio».',inst_other:'Abre el menú del navegador (⋮) y elige «Instalar aplicación» o «Añadir a pantalla de inicio».',close:'Cerrar',
 notif_title:'Aviso cuando el acertijo del día esté listo',notif_text:'Recibirás una notificación y una marca en el icono de la app.',notif_btn:'Activar notificaciones',notif_on:'Las notificaciones están activadas.',
 notif_denied:'Las notificaciones están bloqueadas. Puedes activarlas en los ajustes del sitio.',notif_unsup:'El navegador no admite notificaciones aquí. Instala primero la app e inténtalo de nuevo.',
-push_title:'El acertijo del día está listo',push_body:'¿Encuentras las jugadas ganadoras?',
-how_title:'Cómo se juega',how1:'Eres el amarillo. Encuentra las jugadas que dan <b>cuatro en raya</b> dentro del número de jugadas indicado sobre el tablero.',
-how2:'El rojo se defiende lo mejor que puede. Solo se aceptan las jugadas que siguen ganando a tiempo.',how3:'Todos reciben el mismo acertijo cada día. El lunes es el más fácil y el fin de semana, el más difícil.',
+push_title:'El acertijo del día está listo',
+how_title:'Cómo se juega',
+how3:'Todos reciben el mismo acertijo cada día. El lunes es el más fácil y el fin de semana, el más difícil.',
+task:'Gana en el menor número de jugadas',best:'Mejor posible: {n}',yours:'Tus jugadas: {k}',st_wait:'El rojo responde …',st_turn:'Te toca.',st_again:'Nueva ronda. Tus jugadas siguen contando.',st_lost:'El rojo hizo cuatro en raya.',st_draw:'El tablero está lleno.',st_carry:'Inténtalo de nuevo: tus jugadas siguen contando.',st_retry:'Inténtalo de nuevo.',st_hint:'La flecha muestra la mejor jugada.',again:'Jugar otra vez',hint:'Mostrar la mejor jugada',v_perfect:'¡Perfecto!',v_won:'¡Has ganado!',res_perfect:'{k} jugadas: lo mejor posible',res_moves:'{k} jugadas · lo mejor posible es {n}',res_locked:'Tu resultado: {k} jugadas (cuenta tu primera victoria)',n_moves:'{k} jugadas',chal_from:'{o} ganó en {k} jugadas. ¿Puedes hacerlo en menos?',share_msg:'He ganado este acertijo de Quadlume en {k} jugadas. ¿Puedes hacerlo en menos?',how1:'Eres el amarillo. Haz <b>cuatro en raya</b> antes que el rojo, en el menor número de jugadas.',how2:'El número sobre el tablero es lo mejor posible. Tu primera victoria es tu resultado.',push_body:'¿Cuántas jugadas necesitas?',
 copied:'¡Copiado!',col_aria:'Soltar en la columna {c}'}
 };
 const APP_NAME='Quadlume',BASE_URL='https://quadlume.com/nott/';
@@ -376,8 +428,9 @@ const $=id=>document.getElementById(id);
 const EMBEDDED=(()=>{try{return window.top!==window.self;}catch(e){return true;}})();
 
 /* ---------- lagring og språk ---------- */
-let store={v:2,lang:null,name:'',daily:{},cur:null,extra:0,notif:false,instX:0};
-try{const s=JSON.parse(localStorage.getItem('qn-v1')||'null');if(s&&typeof s==='object'){const old=(s.v||1)<2;store=Object.assign(store,s);if(old){store.v=2;store.cur=null;store.base=(store.base||0)+(store.extra||0);store.extra=0;store.fresh=true;}}}catch(e){}
+let store={v:3,lang:null,name:'',daily:{},xr:{},pr:{},opps:{},cur:null,extra:0,base:0,notif:false,instX:0};
+let oldV=3;
+try{const s=JSON.parse(localStorage.getItem('qn-v1')||'null');if(s&&typeof s==='object'){oldV=s.v||1;store=Object.assign(store,s);store.v=3;}}catch(e){}
 function save(){try{localStorage.setItem('qn-v1',JSON.stringify(store));}catch(e){}}
 function detectLang(){
   const list=(navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||'en']);
@@ -415,7 +468,9 @@ function ladderSpec(i){
   const pool=PUZZLES['l'+N];return {seq:pool[cnt[N]%pool.length],N};
 }
 
-/* ---------- spilltilstand ---------- */
+/* ---------- spilltilstand ----------
+   Fritt spill: du spiller til noen har fire på rad. Resultatet er antall gule trekk frem til første seier
+   (trekk i tapte runder teller med). Etter det er «Spill igjen» bare trening. */
 let mode=null,game=null;
 function modeKey(m){return m.kind==='daily'?'d'+m.day:m.kind==='extra'?'x'+m.idx:'c'+m.src.t+m.src.id;}
 function specFor(m){
@@ -423,50 +478,88 @@ function specFor(m){
   if(m.kind==='extra') return ladderSpec(m.idx);
   return m.src.t==='d'?dailySpec(m.src.id):ladderSpec(m.src.id);
 }
+function puzzleId(m){return m.kind==='daily'?'d'+m.day:m.kind==='extra'?'x'+m.idx:m.src.t+m.src.id;}
+function getRes(m){
+  if(m.kind==='daily') return store.daily[m.day]||null;
+  const xi=m.kind==='extra'?m.idx:m.src.t==='x'?m.src.id:-1;
+  if(xi>=0) return store.xr[xi]!=null?{k:store.xr[xi]}:null;
+  return store.daily[m.src.id]||(store.pr[m.src.id]!=null?{k:store.pr[m.src.id]}:null);
+}
+function setRes(m,k){
+  if(m.kind==='daily') store.daily[m.day]={k};
+  else if(m.kind==='extra'){store.xr[m.idx]=k;store.extra=Math.max(store.extra,m.idx+1);}
+  else if(m.src.t==='x') store.xr[m.src.id]=k;
+  else store.pr[m.src.id]=k;
+}
+function count(g){return (g.practice?0:g.base)+g.used;}
+function starsFor(k,N){return k<=N?3:k<=N+2?2:1;}
+function freshBoard(g){g.S=fromSeq(g.spec.seq);g.n=g.N;g.track=true;g.used=0;g.seq='';g.winLine=null;g.dropAnim=null;}
+function yellowMove(g,c){
+  const on=g.track&&g.n>0&&winningMoves(g.S,g.n).includes(c);
+  const r=drop(g.S,c,1);g.used++;g.seq+=c;g.dropAnim={c,r};
+  const line=lineAt(g.S,c,r);if(line){g.winLine=line;return 'win';}
+  g.track=on;if(on) g.n--;
+  return boardFull(g.S)?'draw':'go';
+}
+function redTurn(g){
+  const rc=redMove(g.S,g.N-g.used);const rr=drop(g.S,rc,2);g.dropAnim={c:rc,r:rr};
+  const line=lineAt(g.S,rc,rr);if(line){g.winLine=line;return 'loss';}
+  return boardFull(g.S)?'draw':'go';
+}
+function saveCur(){if(game.practice) return;store.cur={key:modeKey(mode),base:game.base,seq:game.seq};save();}
 function open(m){
-  mode=m;const spec=specFor(m),key=modeKey(m);
-  const cur=store.cur&&store.cur.key===key?store.cur:null;
-  game={spec,S:fromSeq(spec.seq),n:spec.N,used:0,fails:cur?cur.fails:0,hint:cur?(+cur.hint||0):0,hf:cur?(cur.hf||0):0,phase:'play',winLine:null,dropAnim:null,msg:'start'};
-  if(m.kind==='daily'&&store.daily[m.day]){const r=store.daily[m.day];game.fails=r.a-1;game.hint=r.h?1:0;game.phase='done';game.msg='before';}
+  if(!store.opps||typeof store.opps!=='object') store.opps={};
+  if(!m.opp&&store.opps[puzzleId(m)]) m.opp=store.opps[puzzleId(m)];   /* husk hvem som utfordret deg på denne nøtten */
+  mode=m;const spec=specFor(m),key=modeKey(m),res=getRes(m);
+  if(m.kind==='extra'&&res&&store.extra<m.idx+1){store.extra=m.idx+1;save();}
+  const cur=!res&&store.cur&&store.cur.key===key?store.cur:null;
+  const g=game={spec,N:spec.N,res,practice:!!res,base:cur?(+cur.base||0):0,lastK:res?res.k:0,hint:0,phase:res?'done':'play',msg:res?'before':'start'};
+  freshBoard(g);
+  if(cur&&cur.seq){
+    /* fortsett der du slapp: rød svarer likt hver gang, så trekkene dine er nok */
+    let end='';
+    for(const ch of String(cur.seq)){const c=+ch;if(!(c>=0&&c<W)||g.S.h[c]>=H){end='bad';break;}
+      end=yellowMove(g,c);if(end!=='go') break;end=redTurn(g);if(end!=='go') break;end='';}
+    g.dropAnim=null;
+    if(end==='win'){finish(true);return;}
+    if(end==='loss'||end==='draw'){g.base+=g.used;freshBoard(g);saveCur();g.msg='again';}
+    else if(end==='bad'){freshBoard(g);}
+    else g.msg='turn';
+  }else if(g.base>0) g.msg='again';
   render();
 }
-function saveCur(){store.cur={key:modeKey(mode),fails:game.fails,hint:game.hint,hf:game.hf};save();}
-function reset(){const g=game;g.S=fromSeq(g.spec.seq);g.n=g.spec.N;g.used=0;g.winLine=null;g.dropAnim=null;g.phase='play';g.msg=g.hint?'hint':'start';render();}
+function reset(){const g=game;freshBoard(g);g.phase='play';g.msg=g.hint?'hint':(!g.practice&&g.base>0)?'again':'start';render();}
 
 function tap(c){
   const g=game;if(!g||g.phase!=='play'||g.S.h[c]>=H) return;
-  const good=winningMoves(g.S,g.n).includes(c);
-  const r=drop(g.S,c,1);g.dropAnim={c,r};g.used++;
-  if(good){
-    const line=lineAt(g.S,c,r);
-    if(line){g.winLine=line;return finish();}
-    g.n--;g.phase='busy';g.msg='good';render();
-    setTimeout(()=>{if(game!==g) return;const rc=redReply(g.S,g.n);const rr=drop(g.S,rc,2);g.dropAnim={c:rc,r:rr};g.phase='play';g.msg='next';render();},650);
-  }else{
-    g.phase='busy';g.msg='wrong';render();
-    setTimeout(()=>{
-      if(game!==g) return;
-      const rc=redReply(g.S,Math.max(1,g.n-1));
-      if(rc>=0){const rr=drop(g.S,rc,2);g.dropAnim={c:rc,r:rr};const l=lineAt(g.S,rc,rr);if(l) g.winLine=l;}
-      g.fails++;saveCur();g.phase='wrong';render();
-      const b=$('board');b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake');
-    },650);
-  }
+  const o=yellowMove(g,c);
+  if(o==='win') return finish();
+  saveCur();
+  if(o==='draw') return fail('draw');
+  g.phase='busy';g.msg='wait';render();
+  setTimeout(()=>{
+    if(game!==g) return;
+    const o2=redTurn(g);
+    if(o2!=='go') return fail(o2);
+    g.phase='play';g.msg='turn';render();
+  },600);
 }
-function finish(){
-  const g=game;g.phase='done';g.msg='done';
-  const a=g.fails+1,h=g.hint?1:0,today=todayIdx();
-  if(mode.kind==='daily'){if(!store.daily[mode.day]) store.daily[mode.day]={a,h};}
-  else if(mode.kind==='extra'){store.extra=Math.max(store.extra,mode.idx+1);}
-  store.cur=null;save();render();updateBadge();writeState();
+function fail(kind){
+  const g=game;g.phase=kind==='loss'?'lost':'draw';g.msg=g.phase;
+  if(!g.practice){g.base+=g.used;g.used=0;g.seq='';saveCur();}
+  render();
+  const b=$('board');b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake');
+}
+function finish(quiet){
+  const g=game;g.lastK=count(g);g.phase='done';g.msg='done';
+  if(!g.practice){setRes(mode,g.lastK);g.res=getRes(mode);g.practice=true;store.cur=null;save();updateBadge();writeState();}
+  render();
 }
 $('retry').addEventListener('click',reset);
-$('hint').addEventListener('click',()=>{game.hint++;game.hf=game.fails;saveCur();reset();});
+$('again').addEventListener('click',reset);
+$('hint').addEventListener('click',()=>{game.hint++;reset();});
 
 /* ---------- resultat ---------- */
-function resText(a,h){return h?t('res_hint'):a===1?t('res_1'):t('res_n',{n:a});}
-function lcFirst(s){return s.charAt(0).toLowerCase()+s.slice(1);}
-function rankOf(a,h){return h?99:a;}
 function streak(){const td=todayIdx();let d=store.daily[td]?td:td-1,n=0;while(store.daily[d]){n++;d--;}return n;}
 function totalSolved(){return Object.keys(store.daily).length+store.extra+(store.base||0);}
 
@@ -477,14 +570,16 @@ function render(){
   const chip=$('chip');chip.className='chip n'+N;
   $('chip-text').textContent=(mode.kind==='daily'?t('daily_no',{n:mode.day}):mode.kind==='extra'?t('extra_no',{n:mode.idx+1}):t('chal_no'))+' · '+t('diff_'+N);
   $('back-daily').hidden=mode.kind==='daily';
-  $('task').textContent=t('task',{n:N});
+  $('task').textContent=t('task');
   const pips=$('pips');pips.innerHTML='';
-  for(let i=0;i<N;i++){const p=document.createElement('i');if(i<g.used) p.className='used';pips.appendChild(p);}
-  if(g.phase!=='done'){const sp=document.createElement('span');sp.textContent=t('moves',{a:Math.min(g.used+1,N),n:N});pips.appendChild(sp);}
+  const k=g.phase==='done'?g.lastK:count(g);
+  const s1=document.createElement('span');s1.textContent=t('best',{n:N});pips.appendChild(s1);
+  const s2=document.createElement('span');s2.textContent=t('yours',{k});if(k>N) s2.className='over';pips.appendChild(s2);
 
   const opp=mode.opp,bn=$('chal-banner');
   bn.hidden=!opp||g.phase==='done';
-  if(opp) bn.textContent=t('chal_from',{o:opp.name,r:lcFirst(resText(opp.a,opp.h))});
+  if(opp) bn.textContent=opp.k?t('chal_from',{o:opp.name,k:opp.k}):'';
+  if(opp&&!opp.k) bn.hidden=true;
 
   const winSet=new Set((g.winLine||[]).map(([c,r])=>c+','+r));
   const bd=$('board');bd.innerHTML='';
@@ -506,29 +601,33 @@ function render(){
   }
   g.dropAnim=null;
   const mk=$('markers');mk.innerHTML='';
-  const key=(g.hint>g.used&&g.phase==='play')?winningMoves(S,g.n)[0]:-1;
+  const key=(g.hint>g.used&&g.track&&g.n>0&&g.phase==='play')?winningMoves(S,g.n)[0]:-1;
   for(let c=0;c<W;c++){const s=document.createElement('span');s.textContent='▼';if(c===key) s.className='on';mk.appendChild(s);}
 
   const st=$('status');let main='',sub='',cls='';
   if(g.msg==='start'){main=t('st_start');}
-  else if(g.msg==='hint'){main=t('st_start');sub=t('st_hint');}
-  else if(g.msg==='good'){main=t('st_good');cls='ok';}
-  else if(g.msg==='next'){main=t('st_next');cls='ok';}
-  else if(g.msg==='wrong'){main=t('st_wrong');sub=t('st_wrong_sub',{n:N});cls='bad';}
+  else if(g.msg==='hint'){main=t('st_start');}
+  else if(g.msg==='again'){main=t('st_again');}
+  else if(g.msg==='wait'){main=t('st_wait');}
+  else if(g.msg==='turn'){main=t('st_turn');}
+  else if(g.msg==='lost'||g.msg==='draw'){main=t(g.msg==='lost'?'st_lost':'st_draw');sub=t(g.practice?'st_retry':'st_carry');cls='bad';}
   else if(g.msg==='done'){main=t('st_done');cls='ok';}
   else if(g.msg==='before'){main=t('st_solved_before');}
+  if(key>=0) sub=t('st_hint');
   st.className='status '+cls;$('st-main').textContent=main;$('st-sub').textContent=sub;
 
-  $('wrong-actions').hidden=g.phase!=='wrong';
-  $('hint').hidden=!(g.fails-g.hf>=3&&g.hint<N-1);
+  $('wrong-actions').hidden=!(g.phase==='lost'||g.phase==='draw');
 
   const done=g.phase==='done';$('result').hidden=!done;
   if(done){
-    const a=g.fails+1,h=g.hint;
-    $('res-line').textContent=resText(a,h);
-    $('res-seq').textContent='🟥'.repeat(Math.min(g.fails,8))+(h?'💡':'')+'🟩';
-    const cmp=$('res-cmp');cmp.hidden=!opp;
-    if(opp){const me=rankOf(a,h),ot=rankOf(opp.a,opp.h);cmp.textContent=t(me<ot?'cmp_win':me>ot?'cmp_loss':'cmp_tie',{o:opp.name})+' ('+opp.name+': '+lcFirst(resText(opp.a,opp.h))+')';}
+    const kk=g.lastK,mine=g.res?g.res.k:kk;
+    $('verdict').textContent=t(kk<=N?'v_perfect':'v_won');
+    $('res-line').textContent=kk<=N?t('res_perfect',{k:kk}):t('res_moves',{k:kk,n:N});
+    $('res-seq').textContent='⭐'.repeat(starsFor(kk,N));
+    const lk=$('res-locked');lk.hidden=mine===kk;lk.textContent=t('res_locked',{k:mine});
+    const cmp=$('res-cmp');cmp.hidden=!(opp&&opp.k);
+    if(opp&&opp.k){cmp.textContent=t(mine<opp.k?'cmp_win':mine>opp.k?'cmp_loss':'cmp_tie',{o:opp.name})+' ('+opp.name+': '+t('n_moves',{k:opp.k})+')';}
+    $('hint').hidden=!(mine>N&&g.hint<N-1);
     $('name').value=store.name||'';
     $('countdown').hidden=!(mode.kind==='daily'&&mode.day===todayIdx());
   }
@@ -543,10 +642,11 @@ function toast(msg){const el=document.createElement('div');el.className='toast';
 function challengeLink(){
   const src=mode.kind==='daily'?['d',mode.day]:mode.kind==='extra'?['x',mode.idx]:[mode.src.t,mode.src.id];
   const name=((store.name||'').trim()||t('friend')).replace(/[.\s]+/g,'_').slice(0,20);
-  return BASE_URL+'#c.'+src[0]+'.'+src[1]+'.'+(game.fails+1)+'.'+(game.hint?1:0)+'.'+encodeURIComponent(name);
+  return BASE_URL+'#k.'+src[0]+'.'+src[1]+'.'+game.res.k+'.'+encodeURIComponent(name);
 }
 $('challenge').addEventListener('click',async()=>{
-  const msg=t('share_msg',{r:lcFirst(resText(game.fails+1,game.hint))}),url=challengeLink();
+  if(!game.res) return;
+  const msg=t('share_msg',{k:game.res.k}),url=challengeLink();
   if(navigator.share){try{await navigator.share({title:APP_NAME,text:msg,url});return;}catch(e){if(e&&e.name==='AbortError') return;}}
   try{await navigator.clipboard.writeText(msg+'\n'+url);toast(t('copied'));}catch(e){toast(url);}
 });
@@ -554,10 +654,14 @@ let viaChallenge=false;
 function parseHash(){
   let raw=(location.hash||'').slice(1);if(!raw) return null;
   try{raw=decodeURIComponent(raw);}catch(e){}
-  const m=/^c\.(d|x)\.(\d+)\.(\d+)\.(0|1)\.(.+)$/.exec(raw);if(!m) return null;
+  let m=/^k\.(d|x)\.(\d+)\.(\d+)\.(.+)$/.exec(raw),opp=null;
+  if(m) opp={name:m[4].replace(/_/g,' ').slice(0,20),k:Math.max(1,Math.min(99,+m[3]))};
+  else{m=/^c\.(d|x)\.(\d+)\./.exec(raw);if(!m) return null;} /* eldre lenker: åpne nøtten uten sammenligning */
   try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}
-  const id=+m[2],opp={name:m[5].replace(/_/g,' ').slice(0,20),a:Math.max(1,+m[3]),h:+m[4]===1};
-  if(m[1]==='d'){const td=todayIdx();if(id>td||id<1) return null;if(id===td) return {kind:'daily',day:td,opp};}
+  const id=+m[2];
+  if(m[1]==='d'){const td=todayIdx();if(id>td||id<1) return null;}
+  if(opp){if(!store.opps||typeof store.opps!=='object') store.opps={};const ks=Object.keys(store.opps);if(ks.length>30) delete store.opps[ks[0]];store.opps[m[1]+id]=opp;save();}
+  if(m[1]==='d'&&id===todayIdx()) return {kind:'daily',day:id,opp};
   return {kind:'chal',src:{t:m[1],id},opp};
 }
 window.addEventListener('hashchange',()=>{const m=parseHash();if(m){viaChallenge=true;open(m);}});
@@ -624,7 +728,15 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden){tick();up
 applyStatic();
 const first=parseHash();
 if(first) viaChallenge=true;
-if(store.fresh){delete store.daily[todayIdx()];delete store.fresh;save();}
+if(oldV<3){
+  if(oldV<2){store.base=(store.base||0)+(store.extra||0);store.extra=0;}
+  delete store.fresh;store.cur=null;
+  if(!store.xr||typeof store.xr!=='object') store.xr={};
+  if(!store.pr||typeof store.pr!=='object') store.pr={};
+  delete store.daily[todayIdx()];   /* dagens nøtt kan prøves på nytt med de nye reglene */
+  for(const d in store.daily){const e=store.daily[d];if(!e||e.k==null) store.daily[d]={k:dailySpec(+d).N};}
+  save();
+}
 open(first||{kind:'daily',day:todayIdx()});
 tick();updateBadge();writeState();
 
